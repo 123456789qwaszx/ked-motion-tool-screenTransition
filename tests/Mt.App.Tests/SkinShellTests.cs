@@ -106,58 +106,6 @@ public class SkinShellTests
     }
 
     [Fact]
-    public void 붙는_리그를_만들면_부모_밑에_서서_따라간다()
-    {
-        HeadlessUi.Run(() =>
-        {
-            MainWindow window = NewWindow();
-            window.Show();
-
-            try
-            {
-                window.Session.LoadRig(EmojiRigFixture.WriteDump(TestDocuments.FixturePath("rig-schemas.json")));
-                MotionEditor editor = window.Session.Editor;
-                SceneAsset Scene() => editor.Document.ActiveSceneAsset!;
-                Assert.Contains(EmojiRigFixture.RigKind, window.AttachableRigs);
-                Assert.DoesNotContain("character", window.AttachableRigs);
-
-                // 붙는 리그 만들기(하이어아키 메뉴와 같은 길) — 만들고 붙이는 것이 한 칸, 만든 것이 골라진다.
-                long revision = editor.Revision;
-                string id = window.CreateAttachedFromMenu(EmojiRigFixture.RigKind, "s1");
-                Assert.Equal("emoji1", id);
-                Assert.Equal(revision + 1, editor.Revision);
-                Assert.Equal(("s1", SceneObject.DefaultAttachNode), (Scene().Find(id)!.AttachTo, Scene().Find(id)!.AttachNode));
-                Assert.Equal(id, window.Viewport.SelectedObjectId);
-                Assert.Equal(2, window.HierarchyObjectCount);
-                Assert.True(window.SkinFormState.Visible);
-
-                // 스킨을 입히고 조각 하나에 그림 — 캐릭터 머리 근처가 아니라 붙는 노드의 가운데에 선다(자리는 오프셋으로 옮긴다).
-                window.AddSkinFromForm();
-                editor.SetSkinPart("skin", "Emoji_Part1", "art/sweat.png");
-                Quad rest = window.Viewport.PartQuad(id, "Emoji_Part1")!.Value;
-
-                // 부모를 옮기면 따라간다 — 캐릭터의 그림이 간 만큼(깊이 배율이 곱해진 화면 거리) 그대로.
-                float characterRest = window.Viewport.ObjectQuad("s1")!.Value.Center.X;
-                editor.SetObjectPlacement(null, "s1", 150f, 0f, 0f, 1f, 1f);
-                float characterMoved = window.Viewport.ObjectQuad("s1")!.Value.Center.X - characterRest;
-                Assert.True(characterMoved > 100f);
-                Assert.Equal(rest.Center.X + characterMoved, window.Viewport.PartQuad(id, "Emoji_Part1")!.Value.Center.X, 1);
-                editor.Undo();
-
-                // 부모를 지우면 붙은 것도 같이 — 한 칸.
-                editor.RemoveSceneObject(null, "s1");
-                Assert.Empty(Scene().Objects);
-                editor.Undo();
-                Assert.Equal(2, Scene().Objects.Count);
-            }
-            finally
-            {
-                window.Close();
-            }
-        });
-    }
-
-    [Fact]
     public void 불투명도_칸에_값을_넣으면_알파_채널의_키가_되고_조각이_그만큼_흐려진다()
     {
         HeadlessUi.Run(() =>
@@ -169,7 +117,7 @@ public class SkinShellTests
             {
                 window.Session.LoadRig(EmojiRigFixture.WriteDump(TestDocuments.FixturePath("rig-schemas.json")));
                 MotionEditor editor = window.Session.Editor;
-                string id = window.CreateAttachedFromMenu(EmojiRigFixture.RigKind, "s1");
+                string id = window.PlaceRig(EmojiRigFixture.RigKind);
                 window.AddSkinFromForm();
                 editor.SetSkinPart("skin", "Emoji_Part1", "art/sweat.png");
                 editor.AddMotion("vanish", EmojiRigFixture.RigKind, 1f, MotionEnd.Commit);
@@ -262,8 +210,7 @@ public class SkinShellTests
             {
                 window.Session.LoadRig(EmojiRigFixture.WriteDump(TestDocuments.FixturePath("rig-schemas.json")));
                 MotionEditor editor = window.Session.Editor;
-                string id = window.CreateAttachedFromMenu(EmojiRigFixture.RigKind, "s1");
-                window.Session.Editor.AttachObject(null, id, null); // 연출은 어디에도 안 붙은 세트가 연기한다
+                string id = window.PlaceRig(EmojiRigFixture.RigKind);
                 window.AddSkinFromForm();
                 editor.RenameSkin("skin", "땀");
                 editor.SetSkinPart("땀", "Emoji_Part1", "art/sweat.png");
@@ -347,132 +294,6 @@ public class SkinShellTests
                 editor.RemoveEmoji("emoji");
                 Assert.Null(window.Viewport.EmojiName);
                 Assert.False(window.EmojiFormState.Enabled);
-            }
-            finally
-            {
-                window.Close();
-            }
-        });
-    }
-
-    [Fact]
-    public void 덤프에_이모지_리그가_없어도_툴이_리그를_정의해_바로_이모지를_만든다()
-    {
-        HeadlessUi.Run(() =>
-        {
-            MainWindow window = NewWindow(); // 내장 덤프 — character · screenEffect뿐
-            window.Show();
-
-            try
-            {
-                MotionEditor editor = window.Session.Editor;
-                Assert.DoesNotContain(RigTemplates.EmojiKind, window.Session.Rig!.RigKinds);
-                Assert.Contains(RigTemplates.EmojiKind, window.AttachableRigs); // 그래도 메뉴에는 있다 — 만들 때 정의한다
-
-                // 붙는 리그 만들기 ▸ emoji — 리그 정의 + 오브젝트 + 붙이기가 되돌리기 한 칸.
-                long revision = editor.Revision;
-                string id = window.CreateAttachedFromMenu(RigTemplates.EmojiKind, "s1");
-                Assert.Equal(revision + 1, editor.Revision);
-                Assert.NotNull(editor.Document.FindRig(RigTemplates.EmojiKind));
-                Assert.Contains(RigTemplates.EmojiKind, window.Session.Rig!.RigKinds);          // 세션의 리그에 합쳐졌다
-                Assert.True(window.Viewport.CurrentPose()!.Contains($"{id}/Emoji_Part1"));       // 뷰포트에 섰다
-                Assert.Equal("s1/CharSlot_Scale", window.Viewport.CurrentPose()!.GetParentKey($"{id}/__root"));
-                Assert.Equal(0, window.ProblemRowsShown);
-
-                // 스킨 칸이 서고(조각 넷), 스킨을 입혀 조각을 그린다.
-                window.InspectorTab = 1;
-                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Assert.True(window.SkinFormState.Visible);
-                window.AddSkinFromForm();
-                Assert.Equal(4, window.SkinFormState.PartRows);
-                editor.SetSkinPart("skin", "Emoji_Part1", "art/sweat.png");
-                Assert.Equal(new[] { "Emoji_Part1" }, window.Viewport.DrawnParts(editor.Document.ActiveSceneAsset!.Find(id)!));
-
-                // 모션 — 이 리그의 노드에, 불투명도도.
-                editor.AddMotion("pop", RigTemplates.EmojiKind, 0.2f, MotionEnd.Commit, MotionChannelMode.Absolute);
-                editor.AddChannel("pop", "Emoji_Body", MotionChannelKind.Position);
-                editor.SetKeys("pop", "Emoji_Body", MotionChannelKind.Position, Axis.Y, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.2f, 40f) });
-                window.SelectMotion("pop");
-                window.Viewport.SelectedObjectId = id;
-                window.Viewport.SelectedNode = "Emoji_Part1";
-                Assert.True(window.Viewport.CanTakeAlpha("Emoji_Part1"));
-                Assert.Equal(0, window.ProblemRowsShown);
-
-                // 이모지 정의 — 리그가 이미 있으니 그대로 쓴다.
-                window.InspectorTab = 3;
-                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                window.AddEmojiFromForm();
-                window.UpdateSelectedEmoji(e => { e.Enter = "pop"; e.HoldSeconds = 0.5f; });
-                Assert.Equal(RigTemplates.EmojiKind, editor.Document.FindEmoji("emoji")!.Rig);
-                Assert.Equal(0.7, window.Viewport.Clock.Duration, 4);
-                Assert.Equal(0, window.ProblemRowsShown);
-
-                // 조각이 넷인 본으로 섰다. 조각을 줄이면(편집기 명령) 뷰포트의 리그가 바로 따라온다.
-                editor.SetRigParts(RigTemplates.EmojiKind, 2, 160f);
-                Assert.False(window.Viewport.CurrentPose()!.Contains($"{id}/Emoji_Part3"));
-                editor.Undo();
-                Assert.True(window.Viewport.CurrentPose()!.Contains($"{id}/Emoji_Part3"));
-
-                // 내보내기 셋: 리그(덤프와 같은 모양) · 모션 · 이모지.
-                string directory = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", $"emoji-out-{Guid.NewGuid():N}");
-                Directory.CreateDirectory(directory);
-                Assert.True(window.Session.ExportRigs(Path.Combine(directory, "rigs.json")), window.Session.Status);
-                Assert.True(window.Session.Export(Path.Combine(directory, "motions.json")), window.Session.Status);
-                Assert.True(window.Session.ExportEmojis(Path.Combine(directory, "emojis.json")), window.Session.Status);
-                Assert.Contains("\"hasImage\": true", File.ReadAllText(Path.Combine(directory, "rigs.json")), StringComparison.Ordinal);
-                Assert.Contains("\"rig\": \"emoji\"", File.ReadAllText(Path.Combine(directory, "motions.json")), StringComparison.Ordinal);
-
-                // 저장하고 다시 열어도 리그가 선다.
-                string saved = Path.Combine(directory, "a.motion-authoring.json");
-                window.Session.Save(saved);
-                window.Session.New();
-                Assert.DoesNotContain(RigTemplates.EmojiKind, window.Session.Rig!.RigKinds);
-                window.Session.Open(saved);
-                Assert.Contains(RigTemplates.EmojiKind, window.Session.Rig!.RigKinds);
-                Assert.True(window.Viewport.CurrentPose()!.Contains($"{id}/Emoji_Part1"));
-            }
-            finally
-            {
-                window.Close();
-            }
-        });
-    }
-
-    [Fact]
-    public void 씬_탭의_배역_칸에_키를_적으면_한_칸으로_들어가고_붙은_오브젝트에서는_잠긴다()
-    {
-        HeadlessUi.Run(() =>
-        {
-            MainWindow window = NewWindow();
-            window.Show();
-
-            try
-            {
-                window.Session.LoadRig(EmojiRigFixture.WriteDump(TestDocuments.FixturePath("rig-schemas.json")));
-                MotionEditor editor = window.Session.Editor;
-                string id = window.CreateAttachedFromMenu(EmojiRigFixture.RigKind, "s1");
-                window.InspectorTab = 1; // 씬 탭
-                window.Viewport.SelectedObjectId = "s1";
-                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Assert.True(window.ObjectCharacterBox.IsEnabled);
-                Assert.Equal("", window.ObjectCharacterBox.Text);
-
-                long revision = editor.Revision;
-                window.ObjectCharacterBox.Focus();
-                window.ObjectCharacterBox.Text = "bandi";
-                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
-                Assert.Equal("bandi", editor.Document.ActiveSceneAsset!.Find("s1")!.Character);
-                Assert.Equal(revision + 1, editor.Revision);
-
-                editor.Undo();
-                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Assert.Null(editor.Document.ActiveSceneAsset!.Find("s1")!.Character);
-                Assert.Equal("", window.ObjectCharacterBox.Text);
-
-                // 붙은 것은 부모의 배역을 따른다 — 칸이 잠긴다.
-                window.Viewport.SelectedObjectId = id;
-                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Assert.False(window.ObjectCharacterBox.IsEnabled);
             }
             finally
             {
@@ -600,7 +421,7 @@ public class SkinShellTests
             {
                 window.Session.LoadRig(EmojiRigFixture.WriteDump(TestDocuments.FixturePath("rig-schemas.json")));
                 MotionEditor editor = window.Session.Editor;
-                string id = window.CreateAttachedFromMenu(EmojiRigFixture.RigKind, "s1");
+                string id = window.PlaceRig(EmojiRigFixture.RigKind);
                 window.AddSkinFromForm();
                 window.InspectorTab = 1; // 씬 탭
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
@@ -669,8 +490,7 @@ public class SkinShellTests
             try
             {
                 MotionEditor editor = window.Session.Editor;
-                string id = window.CreateAttachedFromMenu(RigTemplates.EmojiKind, "s1"); // 리그도 그 자리에서 정의된다
-                window.Session.Editor.AttachObject(null, id, null); // 연출은 어디에도 안 붙은 세트가 연기한다
+                string id = window.PlaceRig(RigTemplates.EmojiKind); // 리그도 그 자리에서 정의된다
                 window.InspectorTab = 3;
                 Assert.Equal("emoji", window.AddEmojiFromForm());
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
@@ -719,8 +539,7 @@ public class SkinShellTests
             try
             {
                 MotionEditor editor = window.Session.Editor;
-                string id = window.CreateAttachedFromMenu(RigTemplates.EmojiKind, "s1");
-                window.Session.Editor.AttachObject(null, id, null); // 연출은 어디에도 안 붙은 세트가 연기한다
+                string id = window.PlaceRig(RigTemplates.EmojiKind);
                 window.InspectorTab = 3;
                 window.AddEmojiFromForm();
                 window.NewEmojiSkinFromForm();
@@ -808,8 +627,7 @@ public class SkinShellTests
             try
             {
                 MotionEditor editor = window.Session.Editor;
-                string id = window.CreateAttachedFromMenu(RigTemplates.EmojiKind, "s1");
-                window.Session.Editor.AttachObject(null, id, null); // 연출은 어디에도 안 붙은 세트가 연기한다
+                string id = window.PlaceRig(RigTemplates.EmojiKind);
                 KeyAsset Linear(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Linear };
                 editor.AddMotion("pop", RigTemplates.EmojiKind, 0.2f, MotionEnd.Commit, MotionChannelMode.Absolute);
                 editor.AddChannel("pop", "Emoji_Body", MotionChannelKind.Position);
@@ -1240,7 +1058,6 @@ public class SkinShellTests
 
                 // 장면에 세트를 놓으면 그것이 연기한다(보기 전용 오브젝트는 물러난다).
                 string placed = window.PlaceSetFromMenu("set");
-                Assert.Null(editor.Document.ActiveSceneAsset!.ParentOf(editor.Document.ActiveSceneAsset!.Find(placed)!));
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 window.SelectEmoji("set");
                 Assert.Equal(placed, view.EmojiActor?.Id);

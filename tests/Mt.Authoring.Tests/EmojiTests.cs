@@ -28,7 +28,6 @@ public class EmojiTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddSceneObject(null, "e1", EmojiRigFixture.RigKind);
-        editor.AttachObject(null, "e1", "s1");
         editor.AddSkin("땀", EmojiRigFixture.RigKind);
         editor.SetSkinPart("땀", Part, "art/sweat.png");
 

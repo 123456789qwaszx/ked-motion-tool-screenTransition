@@ -467,8 +467,8 @@ public partial class MainWindow
             id = $"{stem}_{i.ToString(CultureInfo.InvariantCulture)}";
         }
 
-        float width = RigTemplates.DefaultPartSize;
-        float height = RigTemplates.DefaultPartSize;
+        float width = MotionEditor.DefaultImageSize;
+        float height = MotionEditor.DefaultImageSize;
 
         if (PngSizeOf(path) is { } size)
         {

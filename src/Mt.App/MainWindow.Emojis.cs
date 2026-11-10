@@ -57,7 +57,7 @@ public partial class MainWindow
         panel.Children.Add(_emojiList);
 
         Button add = SmallButton("연출 추가", (_, _) => Guard("연출 추가", () => AddEmoji()));
-        ToolTip.SetTip(add, "새 연출 — 세트를 열어 두었으면 그 세트의 것으로, 아니면 고른 오브젝트의 리그(없으면 이모지 리그)로 만든다");
+        ToolTip.SetTip(add, "새 연출 — 세트를 열어 두었으면 그 세트의 것으로, 아니면 고른 오브젝트의 리그로 만든다");
         panel.Children.Add(new StackPanel
         {
             Orientation = Orientation.Horizontal,
@@ -491,26 +491,25 @@ public partial class MainWindow
         SceneObject? selected = _viewport.SelectedObject;
         // 세트를 열어 두었으면 그 세트의 연출이다.
         string? openSet = SelectedSet;
-        // 리그: 연 세트, 아니면 고른 오브젝트의 것(조각이 있으면), 아니면 조각이 있는 첫 리그, 그것도 없으면 이모지 리그를 툴이 정의한다.
+        // 리그: 연 세트, 아니면 고른 오브젝트의 것(조각이 있으면), 아니면 조각이 있는 첫 리그.
         string rig = openSet
             ?? (selected is not null && RigParts.Of(_session.Rig, selected.Rig).Count > 0
                 ? selected.Rig
-                : _session.Rig?.RigKinds.FirstOrDefault(k => RigParts.Of(_session.Rig, k).Count > 0) ?? RigTemplates.EmojiKind);
+                : _session.Rig?.RigKinds.FirstOrDefault(k => RigParts.Of(_session.Rig, k).Count > 0)
+                  ?? throw new InvalidOperationException("연출을 세울 세트가 없다 — 세트를 먼저 만든다."));
 
-        // 이름: 이모지 리그면 emoji, 그 밖의 세트면 그 세트의 이름에서.
-        string stem = rig == RigTemplates.EmojiKind ? "emoji" : rig;
-        string name = stem;
+        // 이름은 그 세트의 이름에서.
+        string name = rig;
 
         for (int n = 2; editor.Document.FindEmoji(name) is not null; n++)
         {
-            name = $"{stem}_{n}";
+            name = $"{rig}_{n}";
         }
 
         string? skin = openSet is not null ? _viewport.SetSkin : selected is not null && selected.Rig == rig ? selected.Skin : null;
 
         editor.Batch(MotionChangeKind.Document, () =>
         {
-            EnsureRigDefined(rig);
             editor.AddEmoji(name, rig);
 
             if (skin is not null)

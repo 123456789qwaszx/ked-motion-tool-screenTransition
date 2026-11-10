@@ -250,13 +250,13 @@ public sealed class ViewportView : Control
     private (SceneAsset Source, string Rig)? _cueSceneOf;
 
     /// <summary>
-    /// 화면에 서는 연출을 보는 중이고 문서의 씬에 그 세트가 (어디에도 안 붙은 채) 놓여 있지 않으면 — 씬의 사본에 그 세트 하나를 맨 앞 층에 더한 보기 전용 씬.
+    /// 화면에 서는 연출을 보는 중이고 문서의 씬에 그 세트가 놓여 있지 않으면 — 씬의 사본에 그 세트 하나를 맨 앞 층에 더한 보기 전용 씬.
     /// 화면 연출을 만들자마자 오브젝트를 놓지 않고도 본다.
     /// </summary>
     private SceneAsset? CueScene()
     {
         if (_editor is null || _emojiName is null || _editor.Document.FindEmoji(_emojiName) is not { } emoji || _editor.Document.ActiveSceneAsset is not { } scene
-            || scene.Objects.Any(o => o.Rig == emoji.Rig && scene.ParentOf(o) is null))
+            || scene.Objects.Any(o => o.Rig == emoji.Rig))
         {
             return null;
         }
@@ -1124,7 +1124,7 @@ public sealed class ViewportView : Control
 
     public EmojiAsset? ShownEmoji => _editor is not null && _emojiName is not null ? _editor.Document.FindEmoji(_emojiName) : null;
 
-    /// <summary>연출을 연기할 오브젝트 — 어디에도 안 붙은 그 세트. 없으면 null(미리볼 데가 없다).</summary>
+    /// <summary>연출을 연기할 오브젝트 — 씬에 놓인 그 세트. 없으면 null(미리볼 데가 없다).</summary>
     public SceneObject? EmojiActor
     {
         get
@@ -1134,7 +1134,7 @@ public sealed class ViewportView : Control
                 return null;
             }
 
-            return scene.Objects.FirstOrDefault(o => o.Rig == emoji.Rig && scene.ParentOf(o) is null);
+            return scene.Objects.FirstOrDefault(o => o.Rig == emoji.Rig);
         }
     }
 

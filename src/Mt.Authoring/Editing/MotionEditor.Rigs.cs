@@ -6,8 +6,8 @@ namespace Mt.Authoring.Editing;
 // 툴에서 정의하는 리그의 명령(PLAN-parts.md §9) — 각각 되돌리기 한 칸.
 public sealed partial class MotionEditor
 {
-    /// <summary>조각 수의 상한 — 터무니없는 값이 화면을 메우지 않게.</summary>
-    public const int MaxRigParts = 16;
+    /// <summary>새 그림 오브젝트의 처음 크기(px) — 그림을 주면 그림의 크기로 바뀐다.</summary>
+    public const float DefaultImageSize = 160f;
 
     /// <summary>캐릭터 리그·무대 뼈대는 툴에서 정의하지 않는다.</summary>
     private static readonly string[] ReservedRigKinds = { SceneObject.DefaultRig, "stage" };
@@ -47,40 +47,6 @@ public sealed partial class MotionEditor
         Mutate(MotionChangeKind.Document, () => Document.Rigs.Remove(rig));
     }
 
-    /// <summary>
-    /// 조각(그림 노드)의 수와 크기를 바꾼다 — 조각을 1번부터 다시 세운다. 다른 노드는 그대로다. 줄이면 없어진 조각을 쓰던 채널·스킨 칸은 남고 검증이 알린다.
-    /// </summary>
-    public void SetRigParts(string kind, int count, float size)
-    {
-        RigAsset rig = RequireRig(kind);
-
-        if (count < 1 || count > MaxRigParts)
-        {
-            throw new InvalidOperationException($"조각은 1~{MaxRigParts}개다 ('{count}')");
-        }
-
-        if (!float.IsFinite(size) || size <= 0f)
-        {
-            throw new InvalidOperationException($"조각 크기는 0보다 큰 수다 ('{size}')");
-        }
-
-        // 지금 조각의 이름 머리와 부모를 잇는다(Emoji_Part1 → "Emoji_Part"). 조각이 하나도 없던 리그면 마지막 노드 밑에 새로.
-        RigNodeAsset? first = rig.Nodes.FirstOrDefault(n => n.Image);
-        string stem = first is null ? "Part" : first.Id.TrimEnd('0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
-        string parent = first?.Parent ?? rig.Nodes.LastOrDefault()?.Id ?? "";
-        bool alpha = first?.Alpha ?? true;
-
-        Mutate(MotionChangeKind.Document, () =>
-        {
-            rig.Nodes.RemoveAll(n => n.Image);
-
-            for (int i = 1; i <= count; i++)
-            {
-                rig.Nodes.Add(new RigNodeAsset { Id = $"{stem}{i}", Parent = parent, Width = size, Height = size, Image = true, Alpha = alpha });
-            }
-        });
-    }
-
     // ── 리그 편집기(PLAN-parts.md §12) — 노드를 하나씩 짓고 옮긴다 ────────
 
     /// <summary>
@@ -97,7 +63,7 @@ public sealed partial class MotionEditor
             throw new KeyNotFoundException($"부모 노드 '{under}'가 리그 '{kind}'에 없다.");
         }
 
-        var node = new RigNodeAsset { Id = name, Parent = under, Image = image, Alpha = image, Width = image ? RigTemplates.DefaultPartSize : 0f, Height = image ? RigTemplates.DefaultPartSize : 0f };
+        var node = new RigNodeAsset { Id = name, Parent = under, Image = image, Alpha = image, Width = image ? DefaultImageSize : 0f, Height = image ? DefaultImageSize : 0f };
         int at = under.Length == 0 ? rig.Nodes.Count : SubtreeEnd(rig, rig.Nodes.FindIndex(n => n.Id == under));
         Mutate(MotionChangeKind.Document, () => rig.Nodes.Insert(at, node));
         return node;
@@ -163,14 +129,6 @@ public sealed partial class MotionEditor
             foreach (EmojiAsset emoji in Document.Emojis.Where(e => e.Rig == kind && e.AnchorNode == id))
             {
                 emoji.AnchorNode = name;
-            }
-
-            foreach (SceneAsset scene in Document.Scenes)
-            {
-                foreach (SceneObject o in scene.Objects.Where(o => o.AttachNode == id && scene.ParentOf(o)?.Rig == kind))
-                {
-                    o.AttachNode = name;
-                }
             }
         });
     }

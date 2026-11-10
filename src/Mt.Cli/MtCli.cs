@@ -119,7 +119,7 @@ public static class MtCli
             ["scenes"] = new JsonArray(document.Scenes.Select(s => (JsonNode)new JsonObject
             {
                 ["name"] = s.Name,
-                ["objects"] = new JsonArray(s.Objects.Select(o => (JsonNode)new JsonObject { ["id"] = o.Id, ["rig"] = o.Rig, ["attachTo"] = o.AttachTo }).ToArray()),
+                ["objects"] = new JsonArray(s.Objects.Select(o => (JsonNode)new JsonObject { ["id"] = o.Id, ["rig"] = o.Rig }).ToArray()),
             }).ToArray()),
         });
         return 0;

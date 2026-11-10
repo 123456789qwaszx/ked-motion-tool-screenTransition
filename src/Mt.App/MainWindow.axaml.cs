@@ -156,10 +156,8 @@ public partial class MainWindow : Window
 
     private readonly CheckBox _objVisible = new() { Content = "보이기", FontSize = 11 };
     private readonly TextBox _objId = new() { FontSize = 11, Width = 90 };
-    private readonly TextBox _objCharacter = new() { FontSize = 11, Width = 90, PlaceholderText = "(기본값)" };
 
-    /// <summary>테스트 손잡이 — "씬" 탭의 배역 키 칸.</summary>
-    internal TextBox ObjectCharacterBox => _objCharacter;
+
     private readonly TextBlock _objSummary = new() { FontSize = 11, Opacity = 0.8, TextWrapping = TextWrapping.Wrap };
     private readonly Expander _placementExpander = new() { Header = "시작 배치", FontSize = 11, IsExpanded = false };
 
@@ -1873,15 +1871,6 @@ public partial class MainWindow : Window
             Spacing = 4,
             Children = { Small("자리"), _objPlace, Small("focus"), _objPlaceFocus },
         });
-        panel.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { Small("배역"), _objCharacter } });
-        ToolTip.SetTip(_objCharacter, "배역 키(런타임 cast의 characterKey) — 기준점 표(presets/focus.json)의 그 배역 값으로 자리·깊이·이모지의 붙는 자리를 푼다. 비우면 표의 기본값");
-        OnCommit(_objCharacter, text =>
-        {
-            if (!_refreshing && _viewport.SelectedObject is { } o)
-            {
-                Guard("배역", () => _session.Editor.SetObjectCharacter(null, o.Id, text));
-            }
-        });
         ToolTip.SetTip(_objPlace, "place — focus 프리셋 점이 이 화면 지점에 오도록 CharSlot_Track_Focus를 푼다(코어 place 폴드, 런타임과 같은 함수). 없으면 Track_Focus는 0");
         ToolTip.SetTip(_objPlaceFocus, "place가 맞추는 focus 프리셋(bust 기본)");
         _objPlace.SelectionChanged += (_, _) =>
@@ -2251,24 +2240,13 @@ public partial class MainWindow : Window
                 c.IsEnabled = has;
             }
 
-            // 붙은 오브젝트의 무대·층·자리는 부모의 것이다 — 제 칸은 뜻이 없어 잠근다. 오프셋·회전·배율은 붙는 자리에 대한 값으로 남는다.
-            SceneObject? attachedTo = selected is null ? null : _viewport.Scene?.ParentOf(selected);
-
-            foreach (Control c in new Control[] { _objLayer, _objStage, _objPlace })
-            {
-                c.IsEnabled = has && attachedTo is null;
-            }
-
-            _objPlaceFocus.IsEnabled = has && attachedTo is null && selected!.Place is not null;
+            _objPlaceFocus.IsEnabled = has && selected!.Place is not null;
 
             _objSummary.Text = selected is null
                 ? "오브젝트 없음 — 왼쪽 하이어아키에서 층(Content)을 우클릭해 만든다"
-                : attachedTo is not null ? $"{selected.Id} · {selected.Rig} · ↳ {attachedTo.Id}의 {selected.AttachNode ?? "루트"}에 붙었다"
                 : $"{selected.Id} · {selected.Rig} · {StageNodes.ContentOf(selected.Stage, selected.Layer)}"
                   + (_viewport.Motion is null || _viewport.CanWear(selected) ? "" : " · 지금 모션은 이 리그에 안 맞는다");
             _objId.Text = selected?.Id ?? "";
-            _objCharacter.Text = selected?.Character ?? "";
-            _objCharacter.IsEnabled = has && attachedTo is null;
             _objStage.SelectedIndex = selected is null ? -1 : StageNodes.Stages.ToList().IndexOf(selected.Stage);
 
             var places = new List<string> { NoPlaceToken };
@@ -2315,7 +2293,7 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// 유니티 <c>PresentataionUIRoot</c> 그대로: 뼈대 노드를 덤프의 parent대로 중첩하고, 최상위 오브젝트는 그 무대·층의
-    /// <c>Stage{NN}Depth_{Layer}_Content</c> 밑에, 리그 노드는 덤프의 parent 그대로, 자식 오브젝트는 붙은 노드 밑에.
+    /// <c>Stage{NN}Depth_{Layer}_Content</c> 밑에, 리그 노드는 덤프의 parent 그대로.
     /// 압축 보기는 뼈대를 Stage › 층(Content)만 남긴다(데이터는 같다). 펼침 상태는 키로 기억한다(오브젝트는 기본 접힘).
     /// </summary>
     private void RebuildHierarchy()
@@ -2416,21 +2394,9 @@ public partial class MainWindow : Window
             }
         }
 
-        // 붙은 오브젝트는 제 층이 아니라 부모 오브젝트 밑에 보인다 — 부모를 먼저 세운다.
-        foreach (SceneObject o in scene.Objects.Where(o => scene.ParentOf(o) is null))
-        {
-            TreeViewItem under = contentItems.GetValueOrDefault((o.Stage, o.Layer)) ?? root;
-            BuildObjectItem(scene, o, under, nodeWasSelected, ref selectedItem);
-        }
-
         foreach (SceneObject o in scene.Objects)
         {
-            if (scene.ParentOf(o) is not { } parent)
-            {
-                continue;
-            }
-
-            TreeViewItem under = _hierarchyParents.Keys.FirstOrDefault(i => i.Tag is HierarchyNode { NodeId: null } node && node.ObjectId == parent.Id) ?? root;
+            TreeViewItem under = contentItems.GetValueOrDefault((o.Stage, o.Layer)) ?? root;
             BuildObjectItem(scene, o, under, nodeWasSelected, ref selectedItem);
         }
 
@@ -2647,7 +2613,7 @@ public partial class MainWindow : Window
             return item;
         }
 
-        // 세트 보기 — 씬의 메뉴(캐릭터 만들기·레이어·붙이기)가 아니라 세트의 오브젝트를 짓는 메뉴.
+        // 세트 보기 — 씬의 메뉴(캐릭터 만들기·레이어)가 아니라 세트의 오브젝트를 짓는 메뉴.
         if (_viewport.SetView is not null)
         {
             AddSetMenu(target);
@@ -2677,7 +2643,6 @@ public partial class MainWindow : Window
 
             _hierarchyMenu.Items.Add(layer);
             _hierarchyMenu.Items.Add(new Separator());
-            AddAttachMenu(scene!, o);
         }
 
         string where = target switch
@@ -2887,6 +2852,9 @@ public partial class MainWindow : Window
             RebuildHierarchy();
         }
     }
+
+    /// <summary>테스트 손잡이 — 하이어아키의 "세트 놓기 ▸ (세트)".</summary>
+    internal string PlaceSetFromMenu(string kind) => CreateObject(kind, null);
 
     /// <summary>테스트 손잡이 — 컨트롤러 항목 위에서 "만들기"(그 오브젝트의 무대·층에).</summary>
     internal string CreateObjectAtController(string rig, string objectId, string controllerId)

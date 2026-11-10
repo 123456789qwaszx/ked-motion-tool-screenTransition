@@ -14,8 +14,6 @@ public static class StageNodes
     public const string Prefix = "stage/";
 
     public const string ShotRoot = "StageShot_Root";
-    public const string PanRoot = "StagePan_Root";
-    public const string ZoomRoot = "StageZoom_Root";
 
     public static readonly string[] Stages = { "stage00", "stage01", "stage02" };
 
@@ -35,10 +33,6 @@ public static class StageNodes
     public static string StageRootOf(string stage) => $"{StageName(stage)}_Root";
 
     public static string LayerRootOf(string stage, string layer) => $"{StageName(stage)}Depth_{LayerName(layer)}_Root";
-
-    public static string FramingTransformOf(string stage, string layer) => $"{StageName(stage)}Depth_{LayerName(layer)}_FramingTransform";
-
-    public static string FramingScaleOf(string stage, string layer) => $"{StageName(stage)}Depth_{LayerName(layer)}_FramingScale";
 
     /// <summary>오브젝트가 서는 자리 — 런타임 <c>GetDepthContent(stage, layer)</c>와 같은 노드.</summary>
     public static string ContentOf(string stage, string layer) => $"{StageName(stage)}Depth_{LayerName(layer)}_Content";
@@ -67,19 +61,4 @@ public static class StageNodes
 
         return false;
     }
-
-    /// <summary>
-    /// 깊이 층의 샷 응답(패럴랙스) — 런타임 <c>PresentationResponseProfile.Depth*</c>의 상수 그대로.
-    /// pan을 따라가는 비율(x,y)과 zoom 배율의 지수. focus 산개(<c>focusSpreadPixelsPerZoom</c>)는 focus 점이 (0,0)이고
-    /// 층 루트도 (0,0)이라 항상 0 — 툴은 focus 점을 갖지 않으므로 넣지 않는다.
-    /// 원본: ked-presentation-runtime <c>Runtime/ShotResponse/Core/PresentationResponseProfile.cs</c>.
-    /// </summary>
-    public static (Vec2 PanResponse, float ZoomScaleResponse) ResponseOf(string layer) => layer switch
-    {
-        SceneLayers.Far => (new Vec2(-0.04f, 0f), -0.15f),
-        SceneLayers.Back => (new Vec2(-0.02f, 0f), -0.08f),
-        SceneLayers.Front => (new Vec2(0.02f, 0f), 0.04f),
-        SceneLayers.Close => (new Vec2(0.2f, 0f), 0.16f),
-        _ => (Vec2.Zero, 0f),
-    };
 }

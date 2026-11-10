@@ -116,34 +116,3 @@ public static class RigAssetCodec
 
     private static Float3Dto F3(float x, float y, float z) => new() { x = x, y = y, z = z };
 }
-
-/// <summary>리그의 본 — 처음부터 노드를 하나씩 짓지 않게.</summary>
-public static class RigTemplates
-{
-    public const string EmojiKind = "emoji";
-    public const int DefaultParts = 4;
-    public const float DefaultPartSize = 160f;
-
-    /// <summary>
-    /// 이모지 리그: <c>Emoji_Anchor</c>(자리) › <c>Emoji_Body</c>(묶음 전체의 움직임·불투명도) › <c>Emoji_Part1…N</c>(조각 그림 — 따로 움직이고 따로 흐려진다).
-    /// </summary>
-    public static RigAsset Emoji(string kind = EmojiKind, int parts = DefaultParts, float partSize = DefaultPartSize)
-    {
-        var rig = new RigAsset
-        {
-            Kind = kind,
-            Nodes =
-            {
-                new RigNodeAsset { Id = "Emoji_Anchor" },
-                new RigNodeAsset { Id = "Emoji_Body", Parent = "Emoji_Anchor", Alpha = true },
-            },
-        };
-
-        for (int i = 1; i <= parts; i++)
-        {
-            rig.Nodes.Add(new RigNodeAsset { Id = $"Emoji_Part{i}", Parent = "Emoji_Body", Width = partSize, Height = partSize, Image = true, Alpha = true });
-        }
-
-        return rig;
-    }
-}

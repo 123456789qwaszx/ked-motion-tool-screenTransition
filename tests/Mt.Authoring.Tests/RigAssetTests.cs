@@ -20,7 +20,6 @@ public class RigAssetTests
         var editor = new MotionEditor(new MotionDocument());
         editor.AddRig(RigTemplates.Emoji());
         editor.AddSceneObject(null, "e1", RigTemplates.EmojiKind);
-        editor.AttachObject(null, "e1", "s1");
         return editor;
     }
 
@@ -39,9 +38,8 @@ public class RigAssetTests
         Assert.Equal(new[] { "Emoji_Body", "Emoji_Part1", "Emoji_Part2", "Emoji_Part3", "Emoji_Part4" }, rig.AlphaNodeIds[RigTemplates.EmojiKind].OrderBy(n => n, StringComparer.Ordinal));
         Assert.Contains("Emoji_Anchor", rig.NodeIds[RigTemplates.EmojiKind]);
 
-        // 씬에 서고(캐릭터의 슬롯 끝에 붙어), 조각은 정의한 크기다.
+        // 씬에 서고, 조각은 정의한 크기다.
         RectNodeTree tree = ScenePreview.Build(rig, editor.Document.ActiveSceneAsset!);
-        Assert.Equal("s1/CharSlot_Scale", tree.GetParentKey("e1/__root"));
         Assert.Equal("e1/Emoji_Body", tree.GetParentKey("e1/Emoji_Part2"));
         Assert.Equal(RigTemplates.DefaultPartSize, tree.GetRectSize("e1/Emoji_Part1").X, 3);
 
@@ -72,7 +70,7 @@ public class RigAssetTests
     }
 
     [Fact]
-    public void 편집기는_세울_수_있는_리그만_받고_조각을_다시_세운다()
+    public void 편집기는_세울_수_있는_리그만_받는다()
     {
         MotionEditor editor = NewEditor();
         long revision = editor.Revision;
@@ -83,19 +81,7 @@ public class RigAssetTests
         Assert.Throws<InvalidOperationException>(() => editor.AddRig(new RigAsset { Kind = "x", Nodes = { new RigNodeAsset { Id = "A", Parent = "B" }, new RigNodeAsset { Id = "B" } } })); // 부모가 뒤에
         Assert.Throws<InvalidOperationException>(() => editor.AddRig(new RigAsset { Kind = "x", Nodes = { new RigNodeAsset { Id = "A" }, new RigNodeAsset { Id = "A" } } }));
         Assert.Throws<InvalidOperationException>(() => editor.AddRig(new RigAsset { Kind = "x", Nodes = { new RigNodeAsset { Id = "a/b" } } }));
-        Assert.Throws<InvalidOperationException>(() => editor.SetRigParts(RigTemplates.EmojiKind, 0, 100f));
-        Assert.Throws<InvalidOperationException>(() => editor.SetRigParts(RigTemplates.EmojiKind, 3, 0f));
-        Assert.Throws<KeyNotFoundException>(() => editor.SetRigParts("character", 3, 100f)); // 덤프의 리그는 못 고친다
         Assert.Equal(revision, editor.Revision);
-
-        // 조각 여섯, 크기 96 — 한 칸. 다른 노드는 그대로다.
-        editor.SetRigParts(RigTemplates.EmojiKind, 6, 96f);
-        Assert.Equal(revision + 1, editor.Revision);
-        RigAsset rig = editor.Document.FindRig(RigTemplates.EmojiKind)!;
-        Assert.Equal(new[] { "Emoji_Anchor", "Emoji_Body", "Emoji_Part1", "Emoji_Part2", "Emoji_Part3", "Emoji_Part4", "Emoji_Part5", "Emoji_Part6" }, rig.Nodes.Select(n => n.Id));
-        Assert.All(rig.Nodes.Where(n => n.Image), n => Assert.Equal((96f, "Emoji_Body", true), (n.Width, n.Parent, n.Alpha)));
-        editor.Undo();
-        Assert.Equal(4, editor.Document.FindRig(RigTemplates.EmojiKind)!.Nodes.Count(n => n.Image));
 
         // 받은 객체를 문서에 꽂지 않는다 — 밖에서 고쳐도 문서는 그대로.
         RigAsset given = RigTemplates.Emoji("prop");
