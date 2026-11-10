@@ -63,4 +63,14 @@ public sealed partial class MotionEditor
 
         return motion.Events[index];
     }
+
+    private static float ClampAt(float at)
+    {
+        if (!float.IsFinite(at))
+        {
+            throw new InvalidOperationException($"이벤트 키의 시각은 수여야 한다 ('{at}')");
+        }
+
+        return Math.Max(0f, at);
+    }
 }

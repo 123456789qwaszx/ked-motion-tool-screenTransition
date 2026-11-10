@@ -7,7 +7,7 @@ using Mt.Cli;
 
 namespace Mt.Authoring.Tests;
 
-/// <summary><c>mt</c> 명령줄 — 창 없이 검증·내보내기·포즈·굽기. 결과는 stdout의 JSON, 종료 코드 0·1·2.</summary>
+/// <summary><c>mt</c> 명령줄 — 창 없이 검증·내보내기·포즈. 결과는 stdout의 JSON, 종료 코드 0·1·2.</summary>
 public class MtCliTests
 {
     private static (int Code, JsonNode? Json, string Out, string Err) Run(params string[] args)
@@ -30,19 +30,12 @@ public class MtCliTests
         return (code, json, text, stderr.ToString());
     }
 
-    /// <summary>nod·bow + 두 캐릭터 + 클립(s1에 bow@0 · lean 없이 nod@0.5는 s2) + nod에 이벤트 하나. 임시 폴더에 저장한다.</summary>
+    /// <summary>nod·bow + 두 캐릭터 + nod에 이벤트 하나. 임시 폴더에 저장한다.</summary>
     private static string WriteDocument(Action<MotionEditor>? more = null)
     {
         var editor = new MotionEditor(Fixtures.NodBowDocument());
         editor.AddSceneObject(null, "s2", "character");
         editor.AddMotionEvent("nod", 0.3f, "emoji", "땀");
-        editor.AddClip("greet");
-        editor.AddClipRole("greet", "a", "character", "s1");
-        editor.AddClipRole("greet", "b", "character", "s2");
-        editor.AddClipTrack("greet", "a");
-        editor.AddClipTrack("greet", "b");
-        editor.AddClipBlock("greet", 0, "bow", 0f);
-        editor.AddClipBlock("greet", 1, "nod", 0.5f);
         more?.Invoke(editor);
 
         string directory = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", $"cli-{Guid.NewGuid():N}");
@@ -62,7 +55,7 @@ public class MtCliTests
         Assert.Equal(2, code);
         Assert.Contains("모르는 명령", err, StringComparison.Ordinal);
         Assert.Equal(2, Run("validate").Code);                                  // 문서가 없다
-        Assert.Equal(2, Run("pose", WriteDocument(), "--time", "0.1").Code);    // --motion도 --clip도 없다
+        Assert.Equal(2, Run("pose", WriteDocument(), "--time", "0.1").Code);    // --motion이 없다
         Assert.Equal(2, Run("pose", WriteDocument(), "--motion", "nod", "--time", "soon").Code);
         Assert.Equal(2, Run("pose", WriteDocument(), "--motion").Code);         // 값이 없다
 
@@ -80,8 +73,6 @@ public class MtCliTests
         Assert.Equal(0, code);
         Assert.Equal(new[] { "nod", "bow" }, json!["motions"]!.AsArray().Select(m => m!["name"]!.GetValue<string>()));
         Assert.Equal(1, json["motions"]![0]!["events"]!.GetValue<int>());
-        Assert.Equal("greet", json["clips"]![0]!["name"]!.GetValue<string>());
-        Assert.Equal(1.1, json["clips"]![0]!["duration"]!.GetValue<double>(), 3);
         Assert.Equal(new[] { "s1", "s2" }, json["scenes"]![0]!["objects"]!.AsArray().Select(o => o!["id"]!.GetValue<string>()));
     }
 
@@ -93,17 +84,11 @@ public class MtCliTests
         Assert.True(json!["ok"]!.GetValue<bool>());
         Assert.Empty(json["problems"]!.AsArray());
 
-        // 모션의 길이를 줄이면 키가 길이 밖 — 모션의 문제이자 그 모션을 쓰는 클립의 문제다.
+        // 모션의 길이를 줄이면 키가 길이 밖 — 막는 문제다.
         (code, json, _, _) = Run("validate", WriteDocument(e => e.SetDuration("nod", 0.3f)));
         Assert.Equal(1, code);
         Assert.False(json!["ok"]!.GetValue<bool>());
         Assert.Contains(json["problems"]!.AsArray(), p => p!["kind"]!.GetValue<string>() == "motion" && p["name"]!.GetValue<string>() == "nod" && p["blocking"]!.GetValue<bool>());
-        Assert.Contains(json["problems"]!.AsArray(), p => p!["kind"]!.GetValue<string>() == "clip" && p["name"]!.GetValue<string>() == "greet");
-
-        // 알림뿐이면 0이다(빈 클립).
-        (code, json, _, _) = Run("validate", WriteDocument(e => e.AddClip("empty")));
-        Assert.Equal(0, code);
-        Assert.Single(json!["problems"]!.AsArray());
     }
 
     [Fact]
@@ -150,40 +135,6 @@ public class MtCliTests
         Assert.Equal("s2", json!["object"]!.GetValue<string>());
         Assert.Equal(8.0, json["nodes"]!["CharacterPortrait_SwayPivot"]!["euler"]![2]!.GetValue<double>(), 3);
         Assert.Equal(1, Run("pose", document, "--motion", "bow", "--time", "0", "--object", "nobody").Code);
-
-        // 클립: 0.8초 — s1의 bow는 끝나 8이 남았고, s2는 nod의 0.3초이며 이벤트가 그 캐릭터 이름으로 울렸다.
-        (code, json, _, _) = Run("pose", document, "--clip", "greet", "--time", "0.8");
-        Assert.Equal(0, code);
-        Assert.Equal(8.0, json!["objects"]!["s1"]!["CharacterPortrait_SwayPivot"]!["euler"]![2]!.GetValue<double>(), 3);
-        Assert.Equal(-18.0, json["objects"]!["s2"]!["CharacterPortrait_Track_Move_Y"]!["position"]![1]!.GetValue<double>(), 3);
-        Assert.Equal(1.0, json["objects"]!["s2"]!["opacity"]!.GetValue<double>(), 3);
-        Assert.Equal(("s2", "emoji"), (json["events"]![0]!["object"]!.GetValue<string>(), json["events"]![0]!["name"]!.GetValue<string>()));
-        Assert.Equal(0.0, json["camera"]!["zoom"]!.GetValue<double>(), 3);
-    }
-
-    [Fact]
-    public void bake는_클립의_한_캐릭터를_모션_하나로_구워_문서에_더한다()
-    {
-        string document = WriteDocument();
-        string target = Path.Combine(Path.GetDirectoryName(document)!, "baked.motion-authoring.json");
-        (int code, JsonNode? json, _, _) = Run("bake", document, "--clip", "greet", "--object", "s2", "--name", "greet_s2", "--out", target);
-        Assert.Equal(0, code);
-        Assert.Equal("greet_s2", json!["motion"]!.GetValue<string>());
-        Assert.Equal("restore", json["end"]!.GetValue<string>());
-        Assert.Equal(1, json["events"]!.GetValue<int>());
-
-        // 원본은 그대로, --out에 구운 모션이 든 문서가 선다 — 다시 읽어 pose로 확인한다.
-        Assert.Null(MotionDocumentJson.Read(File.ReadAllText(document)).Find("greet_s2"));
-        Assert.NotNull(MotionDocumentJson.Read(File.ReadAllText(target)).Find("greet_s2"));
-        (_, json, _, _) = Run("pose", target, "--motion", "greet_s2", "--time", "0.8", "--object", "s2");
-        Assert.Equal(-18.0, json!["nodes"]!["CharacterPortrait_Track_Move_Y"]!["position"]![1]!.GetValue<double>(), 2);
-        Assert.Equal(0, Run("validate", target).Code);
-
-        // 이름이 겹치거나 구울 것이 없으면 1 — 문서는 안 바뀐다.
-        string before = File.ReadAllText(target);
-        Assert.Equal(1, Run("bake", target, "--clip", "greet", "--object", "s2", "--name", "nod").Code);
-        Assert.Equal(2, Run("bake", target, "--clip", "greet", "--object", "s2").Code);
-        Assert.Equal(before, File.ReadAllText(target));
     }
 
     [Fact]

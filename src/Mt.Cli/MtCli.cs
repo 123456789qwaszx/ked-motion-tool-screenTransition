@@ -14,10 +14,10 @@ using Mt.Authoring.Validation;
 namespace Mt.Cli;
 
 /// <summary>
-/// <c>mt</c> — 모션 툴의 명령줄 입구. 창 없이 저작 원본(<c>*.motion-authoring.json</c>)을 읽어 검증·내보내기·포즈 조회·굽기를 한다.
+/// <c>mt</c> — 모션 툴의 명령줄 입구. 창 없이 저작 원본(<c>*.motion-authoring.json</c>)을 읽어 검증·내보내기·포즈 조회를 한다.
 ///
 /// 설계 원칙: **결과는 표준 출력에 JSON 하나**(기계가 읽는다), 사람에게 하는 말은 표준 오류, 종료 코드는 0 = 됨 · 1 = 막는 문제가 있다 · 2 = 쓰는 법이 틀렸다.
-/// 화면과 같은 함수를 지난다(<see cref="MotionValidator"/> · <see cref="MotionExport"/> · <see cref="ClipPreview"/> · <see cref="ClipBake"/>) —
+/// 화면과 같은 함수를 지난다(<see cref="MotionValidator"/> · <see cref="MotionExport"/> · <see cref="MotionPreview"/>) —
 /// 여기서 통과한 것은 앱에서도 통과하고, 여기서 읽은 포즈는 뷰포트가 보이는 포즈다.
 /// </summary>
 public static class MtCli
@@ -25,14 +25,11 @@ public static class MtCli
     public const string Usage = """
         mt — ked-motion-tool 명령줄 (결과는 stdout의 JSON, 종료 코드 0 됨 · 1 막는 문제 · 2 쓰는 법)
 
-          mt info     <문서>                                   모션·클립·스킨·씬의 목록
-          mt validate <문서> [--rig <덤프>]                    문제 목록(모션·클립). 막는 문제가 있으면 종료 코드 1
+          mt info     <문서>                                   모션·스킨·씬의 목록
+          mt validate <문서> [--rig <덤프>]                    문제 목록. 막는 문제가 있으면 종료 코드 1
           mt export   <문서> <motions.json> [--rig <덤프>]     motions.json 내보내기(검증을 지나야 나간다)
           mt pose     <문서> --motion <이름> --time <초> [--object <id>] [--mode relative|absolute] [--rig <덤프>]
-          mt pose     <문서> --clip <이름> --time <초> [--rig <덤프>]
-                                                               그 시각의 포즈 — 모션·클립이 건드리는 노드의 값, 불투명도, 방금 울린 이벤트
-          mt bake     <문서> --clip <이름> --object <id> --name <새 모션> [--out <문서>] [--rig <덤프>]
-                                                               클립에서 그 캐릭터에 얹힌 블록을 모션 하나로 구워 문서에 더한다
+                                                               그 시각의 포즈 — 모션이 건드리는 노드의 값, 불투명도, 방금 울린 이벤트
 
           mt emojis   <문서> <emojis.json> [--rig <덤프>]      이모지 정의 내보내기(emojis/1-draft — 스킨은 풀어서, 모션은 이름으로)
 
@@ -69,7 +66,6 @@ public static class MtCli
                 "validate" => Validate(options, stdout),
                 "export" => Export(options, stdout),
                 "pose" => Pose(options, stdout),
-                "bake" => Bake(options, stdout),
                 "emojis" => Emojis(options, stdout),
                 "rigs" => Rigs(options, stdout),
                 _ => throw new UsageException($"모르는 명령 '{args[0]}'"),
@@ -110,25 +106,11 @@ public static class MtCli
             });
         }
 
-        var clips = new JsonArray();
-
-        foreach (ClipAsset c in document.Clips)
-        {
-            clips.Add(new JsonObject
-            {
-                ["name"] = c.Name,
-                ["duration"] = ClipTiming.DurationOf(document, c),
-                ["roles"] = new JsonArray(c.Roles.Select(r => (JsonNode)new JsonObject { ["name"] = r.Name, ["rig"] = r.Rig, ["object"] = r.Object }).ToArray()),
-                ["blocks"] = c.Tracks.Sum(t => t.Blocks.Count),
-            });
-        }
-
         Write(stdout, new JsonObject
         {
             ["ok"] = true,
             ["schema"] = document.Schema,
             ["motions"] = motions,
-            ["clips"] = clips,
             ["emojis"] = new JsonArray(document.Emojis.Select(e => (JsonNode)new JsonObject
             {
                 ["name"] = e.Name, ["rig"] = e.Rig, ["skin"] = e.Skin, ["enter"] = e.Enter, ["hold"] = e.Hold, ["exit"] = e.Exit, ["holdSeconds"] = e.HoldSeconds,
@@ -231,44 +213,7 @@ public static class MtCli
         var alphas = new Dictionary<string, float>(StringComparer.Ordinal);
         var result = new JsonObject { ["ok"] = true, ["time"] = time };
 
-        if (options.Value("clip") is { } clipName)
-        {
-            ClipAsset clip = document.FindClip(clipName) ?? throw new KeyNotFoundException($"클립 '{clipName}'이 없다.");
-            SceneAsset scene = ClipPreview.SceneOf(document, clip) ?? throw new InvalidOperationException($"클립 '{clipName}'의 씬이 없다.");
-            ClipStage stage = ClipStage.Build(document, clip, s => BuildTree(rig, s))!;
-            RectNodeTree pose = ClipPreview.Pose(stage.TreeAt(time), document, clip, time, null, stage.CameraAt(time), null, alphas);
-            CameraSettings camera = ClipPreview.CameraAt(document, clip, stage.CameraAt(time), time) ?? stage.CameraAt(time);
-
-            // 클립이 건드리는 노드만 — 배역마다, 그 배역의 블록이 쓰는 (노드, 종류).
-            var objects = new JsonObject();
-
-            foreach (ClipTrack track in clip.Tracks.Where(t => !t.IsCamera))
-            {
-                if (ClipPreview.ObjectOf(document, clip, track) is not { } actor)
-                {
-                    continue;
-                }
-
-                var nodes = objects[actor.Id] as JsonObject ?? new JsonObject();
-                objects[actor.Id] = nodes;
-
-                foreach (ChannelAsset channel in track.Blocks.Where(b => b.IsMotion).SelectMany(b => document.Find(b.Motion)?.Channels ?? Enumerable.Empty<ChannelAsset>()))
-                {
-                    AddNodeValue(nodes, pose, alphas, actor, channel);
-                }
-
-                nodes["opacity"] = stage.OpacityOf(actor.Id, time);
-            }
-
-            result["clip"] = clip.Name;
-            result["duration"] = ClipTiming.DurationOf(document, clip);
-            result["objects"] = objects;
-            result["camera"] = new JsonObject { ["zoom"] = camera.Zoom, ["panX"] = camera.PanX, ["panY"] = camera.PanY };
-            result["events"] = new JsonArray(ClipPreview.EventsBetween(document, clip, time - EventWindow, time)
-                .Select(e => (JsonNode)new JsonObject { ["time"] = e.Time, ["object"] = e.ObjectId, ["name"] = e.Name, ["value"] = e.Value }).ToArray());
-            _ = scene;
-        }
-        else if (options.Value("motion") is { } motionName)
+        if (options.Value("motion") is { } motionName)
         {
             MotionAsset motion = document.Find(motionName) ?? throw new KeyNotFoundException($"모션 '{motionName}'이 없다.");
             SceneAsset scene = document.ActiveSceneAsset ?? throw new InvalidOperationException("씬이 없다.");
@@ -301,44 +246,15 @@ public static class MtCli
                 result["nodes"] = nodes;
             }
 
-            result["events"] = new JsonArray(ClipPreview.EventsBetween(motion, time - EventWindow, time)
+            result["events"] = new JsonArray(MotionEvents.Between(motion, time - EventWindow, time)
                 .Select(e => (JsonNode)new JsonObject { ["time"] = e.T, ["name"] = e.Name, ["value"] = e.Value }).ToArray());
         }
         else
         {
-            throw new UsageException("pose에는 --motion 또는 --clip이 있어야 한다");
+            throw new UsageException("pose에는 --motion이 있어야 한다");
         }
 
         Write(stdout, result);
-        return 0;
-    }
-
-    private static int Bake(Options options, TextWriter stdout)
-    {
-        string path = options.Positional(0, "문서 경로");
-        MotionDocument document = Load(options, out RigSchemaFile rig);
-        string clipName = options.Required("clip");
-        string objectId = options.Required("object");
-        string name = options.Required("name");
-        ClipAsset clip = document.FindClip(clipName) ?? throw new KeyNotFoundException($"클립 '{clipName}'이 없다.");
-        SceneAsset scene = ClipPreview.SceneOf(document, clip) ?? throw new InvalidOperationException($"클립 '{clipName}'의 씬이 없다.");
-
-        var editor = new MotionEditor(document);
-        MotionAsset baked = ClipBake.Bake(editor, BuildTree(rig, scene), clip.Name, objectId, name);
-        string target = options.Value("out") ?? path;
-        File.WriteAllText(target, MotionDocumentJson.Write(editor.Document));
-
-        Write(stdout, new JsonObject
-        {
-            ["ok"] = true,
-            ["path"] = Path.GetFullPath(target),
-            ["motion"] = baked.Name,
-            ["duration"] = baked.Duration,
-            ["end"] = baked.End == MotionEnd.Restore ? "restore" : "commit",
-            ["channels"] = new JsonArray(baked.Channels.Select(c => (JsonNode)$"{c.Node} {ChannelKindLabel.Of(c.Kind)}").ToArray()),
-            ["keys"] = baked.Channels.Sum(c => (c.X?.Keys.Count ?? 0) + (c.Y?.Keys.Count ?? 0) + (c.Z?.Keys.Count ?? 0)),
-            ["events"] = baked.Events.Count,
-        });
         return 0;
     }
 
@@ -362,12 +278,6 @@ public static class MtCli
         foreach (EmojiProblem p in EmojiValidator.Validate(document, nodeIds))
         {
             problems.Add(new JsonObject { ["kind"] = "emoji", ["name"] = p.EmojiName, ["message"] = p.Message, ["blocking"] = p.Blocking });
-            blocking |= p.Blocking;
-        }
-
-        foreach (ClipProblem p in ClipValidator.Validate(document, nodeIds))
-        {
-            problems.Add(new JsonObject { ["kind"] = "clip", ["name"] = p.ClipName, ["message"] = p.Message, ["blocking"] = p.Blocking });
             blocking |= p.Blocking;
         }
 

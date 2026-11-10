@@ -23,7 +23,7 @@ public static class MotionPreview
     }
 
     /// <summary>
-    /// mode를 쓰는 쪽이 정하는 포즈 — 연출 클립의 블록이 그 "쓰는 쪽"이다(재생에서는 motion 커맨드의 인자).
+    /// mode를 쓰는 쪽이 정하는 포즈(재생에서는 motion 커맨드의 인자).
     /// 모션의 <see cref="MotionAsset.PreviewMode"/>는 읽지 않는다.
     /// </summary>
     /// <param name="alphas">

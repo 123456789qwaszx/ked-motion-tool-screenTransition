@@ -610,7 +610,7 @@ public class RigAssetTests
         Assert.Equal(-100f, PosedAt(editor, "Ground", 1.0).Y, 1);
 
         // 품은 애니메이션의 이벤트가 그 시각에 울린다(1.5 + 0.1).
-        MotionEventAsset thud = Assert.Single(ClipPreview.EventsBetween(motion, 0, 2));
+        MotionEventAsset thud = Assert.Single(MotionEvents.Between(motion, 0, 2));
         Assert.Equal(("thud", 1.6f), (thud.Name, MathF.Round(thud.T, 3)));
 
         // 산출물: 한 덩어리 모션으로 나간다 — 규칙을 지나고, 런타임은 재생 블록을 모른다.

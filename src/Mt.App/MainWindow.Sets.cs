@@ -429,8 +429,7 @@ public partial class MainWindow
 
         if (SelectedSet is { } kind)
         {
-            // 세트를 열면 클립·연출 보기를 떠난다. 그 세트의 것이 아닌 모션도 풀린다(이 세트가 연기할 수 없다).
-            DeselectClip();
+            // 세트를 열면 연출 보기를 떠난다. 그 세트의 것이 아닌 모션도 풀린다(이 세트가 연기할 수 없다).
             DeselectEmoji();
 
             if (SelectedMotion is { } motion && _session.Editor.Document.Find(motion)?.Rig != kind)
@@ -476,7 +475,7 @@ public partial class MainWindow
         }
     }
 
-    /// <summary>세트 보기를 떠난다 — 클립·연출을 골랐거나 다른 리그의 모션을 골랐을 때.</summary>
+    /// <summary>세트 보기를 떠난다 — 연출을 골랐거나 다른 리그의 모션을 골랐을 때.</summary>
     private void DeselectSet()
     {
         if (SelectedSet is null)

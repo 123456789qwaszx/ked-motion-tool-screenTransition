@@ -36,7 +36,7 @@ public class EmojiExampleShots
 
                 window.Session.Open(Path.Combine(root!.FullName, "examples", "emoji", "emoji-examples.motion-authoring.json"));
                 Directory.CreateDirectory(directory);
-                window.InspectorTab = 4;
+                window.InspectorTab = 3;
 
                 void Shot(string name)
                 {
@@ -84,7 +84,7 @@ public class EmojiExampleShots
                 window.InspectorTab = 1;
                 Shot("skin-panel");
                 window.Session.Editor.Undo();
-                window.InspectorTab = 4;
+                window.InspectorTab = 3;
 
                 // "이모지" 탭 — 그 이모지의 스킨을 그 자리에서 고친다.
                 window.SelectEmoji("말줄임점풍선");
@@ -128,17 +128,6 @@ public class EmojiExampleShots
                 while (window.Session.Editor.Document.FindRig("set") is not null)
                 {
                     window.Session.Editor.Undo();
-                }
-
-                window.InspectorTab = 4;
-
-                window.SelectClip("emoji_demo");
-
-                foreach (double t in new[] { 0.6, 3.0, 7.5 })
-                {
-                    Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                    window.Viewport.ScrubTo(t);
-                    Shot($"clip-{t:0.0}");
                 }
             }
             finally

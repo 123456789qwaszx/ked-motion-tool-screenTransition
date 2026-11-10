@@ -202,7 +202,7 @@ internal static class EmojiExamples
         Emoji(editor, "행복한벚꽃", "emoji_bloom", "emoji_sway", "emoji_fade", null, 0f, 0f);
     }
 
-    /// <summary>캐릭터 쪽 — 이벤트 키로 이모지를 띄우는 모션 셋과, 그것을 이어 놓은 클립.</summary>
+    /// <summary>캐릭터 쪽 — 이벤트 키로 이모지를 띄우고 끄는 모션들.</summary>
     private static void Character(MotionEditor editor)
     {
         const string Hop = "CharacterPortrait_Track_Move_Y";
@@ -222,15 +222,5 @@ internal static class EmojiExamples
         editor.AddMotion("react_calm", SceneObject.DefaultRig, 0.4f);
         Curve(editor, "react_calm", Hop, MotionChannelKind.Position, Axis.Y, K(0f, 0f), K(0.2f, -6f), K(0.4f, 0f));
         editor.AddMotionEvent("react_calm", 0f, "emoji_off");
-
-        // 놀람 → 기쁨(꽃이 머문다) → 진정(꽃이 진다) → 생각(점 풍선이 머문다) → 진정.
-        editor.AddClip("emoji_demo");
-        editor.AddClipRole("emoji_demo", "a", SceneObject.DefaultRig, "s1");
-        editor.AddClipTrack("emoji_demo", "a");
-        editor.AddClipBlock("emoji_demo", 0, "react_surprise", 0.3f);
-        editor.AddClipBlock("emoji_demo", 0, "react_happy", 2f);
-        editor.AddClipBlock("emoji_demo", 0, "react_calm", 4.5f);
-        editor.AddClipBlock("emoji_demo", 0, "react_think", 5.5f);
-        editor.AddClipBlock("emoji_demo", 0, "react_calm", 9f);
     }
 }

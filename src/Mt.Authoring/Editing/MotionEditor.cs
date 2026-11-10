@@ -198,11 +198,9 @@ public sealed partial class MotionEditor
             throw new InvalidOperationException($"오브젝트 '{newId}'가 이미 있다.");
         }
 
-        // 이 오브젝트에 묶인 클립 배역도 같은 칸에서 따라온다 — 이름만 바꿨는데 묶임이 끊기지 않게.
         Mutate(MotionChangeKind.Scene, () =>
         {
             o.Id = newId;
-            RetargetClipObjects(scene, id, newId);
 
             foreach (SceneObject attached in scene.Objects.Where(c => string.Equals(c.AttachTo, id, StringComparison.Ordinal)))
             {
@@ -498,7 +496,6 @@ public sealed partial class MotionEditor
         bool active = Document.ActiveScene == scene.Name;
         Mutate(MotionChangeKind.Scene, () =>
         {
-            RetargetClipScenes(name, newName);
             scene.Name = newName;
 
             if (active)
@@ -584,11 +581,10 @@ public sealed partial class MotionEditor
             throw new InvalidOperationException($"모션 '{newName}'이 이미 있다.");
         }
 
-        // 이 모션을 쓰는 클립 블록의 참조도 같은 칸에서 따라온다.
+        // 이 모션을 쓰는 연출의 참조도 같은 칸에서 따라온다.
         Mutate(MotionChangeKind.Metadata, () =>
         {
             motion.Name = newName;
-            RetargetClipMotions(name, newName);
             RetargetEmojiMotions(name, newName);
 
             // 이 애니메이션을 트는 재생 블록도 따라온다.
@@ -1485,9 +1481,6 @@ public enum MotionChangeKind
 
     /// <summary>리그 덤프·기준 해상도·미리보기 설정.</summary>
     Document,
-
-    /// <summary>연출 클립 — 클립·배역·트랙·블록(<c>PLAN-clip.md</c>). 모션의 키는 그대로다.</summary>
-    Clip,
 }
 
 public sealed class MotionChangedEventArgs : EventArgs

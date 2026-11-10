@@ -45,7 +45,7 @@ public class EmojiEventTests
 
     /// <summary>nod를 s1이 연기할 때 그 시각까지 울린 이벤트.</summary>
     private static List<(double, string?, string, string?)> Fired(MotionEditor editor, double until)
-        => ClipPreview.EventsBetween(editor.Document.Find("nod")!, double.NegativeInfinity, until).Select(e => ((double)e.T, (string?)"s1", e.Name, e.Value)).ToList();
+        => MotionEvents.Between(editor.Document.Find("nod")!, double.NegativeInfinity, until).Select(e => ((double)e.T, (string?)"s1", e.Name, e.Value)).ToList();
 
     private static List<EmojiPlay> Plays(MotionEditor editor, double t) => EmojiEvents.Resolve(editor.Document, Scene(editor), Fired(editor, t), t);
 
@@ -129,30 +129,6 @@ public class EmojiEventTests
         editor.UpdateMotionEvent("nod", 1, 0.1f, "emoji", "sweat");
         editor.AttachObject(null, "e1", null);
         Assert.Empty(Plays(editor, 0.3));
-    }
-
-    [Fact]
-    public void 클립에서는_블록의_바퀴마다_뜨고_끈_블록은_안_띄운다()
-    {
-        MotionEditor editor = NewEditor();
-        editor.UpdateEmoji("sweat", new EmojiAsset { Enter = "pop", Exit = "out", HoldSeconds = 0.1f }); // 수명 0.6초
-        editor.AddMotionEvent("nod", 0.1f, "emoji", "sweat");
-        editor.AddClip("clip");
-        editor.AddClipRole("clip", "a", "character", "s1");
-        editor.AddClipTrack("clip", "a");
-        editor.AddClipBlock("clip", 0, "nod", 1f);
-        editor.SetClipBlockRepeat("clip", 0, 0, 2); // 1.0~1.6, 1.6~2.2 — 1.1초와 1.7초에 울린다
-        ClipAsset clip = editor.Document.FindClip("clip")!;
-
-        List<EmojiPlay> At(double t) => EmojiEvents.Resolve(editor.Document, Scene(editor), ClipPreview.EventsBetween(editor.Document, clip, double.NegativeInfinity, t), t);
-
-        Assert.Empty(At(1.0));
-        Assert.Equal(0.2, Assert.Single(At(1.3)).Local, 4);
-        Assert.Equal(0.1, Assert.Single(At(1.8)).Local, 4); // 둘째 바퀴가 다시 띄웠다
-        Assert.Empty(At(2.4));
-
-        editor.SetClipBlockMuted("clip", 0, 0, true);
-        Assert.Empty(At(1.3));
     }
 
     // ── 붙는 자리(로케이터) — PLAN-parts.md §11 ─────────────────────────

@@ -42,7 +42,7 @@ public static class EmojiEvents
 
     /// <summary>
     /// 그 시각에 돌고 있는 이모지들. <paramref name="fired"/>는 처음부터 그 시각까지 울린 이벤트(시각 순) —
-    /// 모션 하나면 그 모션의 것을 연기하는 캐릭터의 id와 함께, 클립이면 <see cref="ClipPreview.EventsBetween(MotionDocument, ClipAsset, double, double, Func{ClipTrack, bool}?)"/>.
+    /// 그 모션의 것(<see cref="MotionEvents.Between"/>)을 연기하는 캐릭터의 id와 함께.
     /// </summary>
     public static List<EmojiPlay> Resolve(
         MotionDocument document,

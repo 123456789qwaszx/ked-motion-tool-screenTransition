@@ -481,7 +481,7 @@ public sealed class TimeSliderView : Control
             }
         }
 
-        // 클립·이모지 안에서 모션을 고치는 중 — 묶인 모션은 없지만, 고치는 모션의 키가 시계의 어디에 놓였는지 보인다(보기만: 범위 선택·키 옮기기는 그래프에서).
+        // 이모지 안에서 모션을 고치는 중 — 묶인 모션은 없지만, 고치는 모션의 키가 시계의 어디에 놓였는지 보인다(보기만: 범위 선택·키 옮기기는 그래프에서).
         if (Motion is null && KeyTicks != KeyTickMode.None && Viewport?.ContextKeyTimes() is { Count: > 0 } contextTimes)
         {
             foreach (double t in contextTimes)

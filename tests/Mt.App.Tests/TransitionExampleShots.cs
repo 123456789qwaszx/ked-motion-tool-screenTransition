@@ -46,7 +46,7 @@ public class TransitionExampleShots
                 }
 
                 // 연출을 본다 — 씬에 세트가 없어도 보기 전용 오브젝트가 대신 선다. 캐릭터(자리표시)는 그 뒤에 있다.
-                window.InspectorTab = 4;
+                window.InspectorTab = 3;
                 window.SelectEmoji("station");
 
                 foreach (double t in new[] { 0.1, 0.3, 0.6, 0.9, 1.2, 1.7, 2.5, 2.8, 3.05 })
@@ -64,7 +64,7 @@ public class TransitionExampleShots
 
                 // 기둥과 노을.
                 window.Session.Open(Path.Combine(root!.FullName, "examples", "transitions", "pillar", "pillar.motion-authoring.json"));
-                window.InspectorTab = 4;
+                window.InspectorTab = 3;
                 window.SelectEmoji("pillar");
                 window.StageOnlyChecked = true;
 
@@ -95,7 +95,7 @@ public class TransitionExampleShots
                 foreach (string name in new[] { "lapis", "heredity", "mercury" })
                 {
                     window.Session.Open(Path.Combine(root!.FullName, "examples", "transitions", name, name + ".motion-authoring.json"));
-                    window.InspectorTab = 4;
+                    window.InspectorTab = 3;
                     window.SelectEmoji(name);
                     window.StageOnlyChecked = true;
 

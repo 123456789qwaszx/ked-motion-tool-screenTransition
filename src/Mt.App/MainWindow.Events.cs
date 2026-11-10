@@ -5,7 +5,7 @@ using Mt.Authoring.Model;
 namespace Mt.App;
 
 // 이벤트 키의 셸(PLAN-parts.md §2.5) — "모션" 탭 아래. 재생이 그 시각을 지나는 순간 런타임이 이름과 값으로 알리는 표시다("이 프레임에 이모지·소리").
-// 그래프가 묶은 모션의 것을 보인다 — 클립 안에서 블록을 골랐을 때도 그 블록의 모션.
+// 그래프가 묶은 모션의 것을 보인다.
 public partial class MainWindow
 {
     private readonly StackPanel _eventRows = new() { Spacing = 3 };

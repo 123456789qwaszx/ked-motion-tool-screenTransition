@@ -93,7 +93,7 @@ public static class EmojiValidator
                 {
                     Block($"{label} 모션 '{name}'이 없다");
                 }
-                else if (!ClipValidator.Wears(emoji.Rig ?? "", motion, rigNodeIds))
+                else if (!Wears(emoji.Rig ?? "", motion, rigNodeIds))
                 {
                     Block($"{label} 모션 '{name}'의 리그 '{motion.Rig}'가 이모지의 리그 '{emoji.Rig}'에 안 맞는다");
                 }
@@ -112,6 +112,20 @@ public static class EmojiValidator
         }
 
         return problems;
+    }
+
+    /// <summary>그 리그가 모션을 입을 수 있나 — rigKind가 같거나, 채널의 노드가 전부 그 리그에 있다.</summary>
+    private static bool Wears(string rig, MotionAsset motion, IReadOnlyDictionary<string, ICollection<string>>? rigNodeIds)
+    {
+        if (string.Equals(rig, motion.Rig, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        return motion.Channels.Count > 0
+            && rigNodeIds is not null
+            && rigNodeIds.TryGetValue(rig, out ICollection<string>? nodes)
+            && motion.Channels.All(c => nodes.Contains(c.Node));
     }
 }
 

@@ -1369,56 +1369,6 @@
     }
   ],
   "activeScene": "scene",
-  "clips": [
-    {
-      "name": "emoji_demo",
-      "scene": "scene",
-      "roles": [
-        {
-          "name": "a",
-          "rig": "character",
-          "object": "s1"
-        }
-      ],
-      "tracks": [
-        {
-          "role": "a",
-          "blocks": [
-            {
-              "at": 0.3,
-              "kind": "motion",
-              "motion": "react_surprise",
-              "mode": "relative"
-            },
-            {
-              "at": 2,
-              "kind": "motion",
-              "motion": "react_happy",
-              "mode": "relative"
-            },
-            {
-              "at": 4.5,
-              "kind": "motion",
-              "motion": "react_calm",
-              "mode": "relative"
-            },
-            {
-              "at": 5.5,
-              "kind": "motion",
-              "motion": "react_think",
-              "mode": "relative"
-            },
-            {
-              "at": 9,
-              "kind": "motion",
-              "motion": "react_calm",
-              "mode": "relative"
-            }
-          ]
-        }
-      ]
-    }
-  ],
   "skins": [
     {
       "name": "느낌물음표",

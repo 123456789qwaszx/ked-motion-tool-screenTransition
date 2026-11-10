@@ -50,7 +50,7 @@ public sealed class SceneAsset
     /// <summary>그 오브젝트에 붙은 것들(목록 순).</summary>
     public IEnumerable<SceneObject> AttachedTo(string id) => Objects.Where(o => ParentOf(o) is { } p && string.Equals(p.Id, id, StringComparison.Ordinal));
 
-    /// <summary>값이 같은 사본 — 연출 클립의 상태 블록이 원본을 건드리지 않고 "그때의 씬"을 만든다.</summary>
+    /// <summary>값이 같은 사본.</summary>
     public SceneAsset Clone() => new()
     {
         Name = Name,

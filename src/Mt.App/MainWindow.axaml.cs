@@ -243,15 +243,15 @@ public partial class MainWindow : Window
             _currentTime.Text = TimeText.Format(_graph.CurrentTime, Display);
             SyncTime(() =>
             {
-                // 그래프·도프 시트는 모션의 시각, 뷰포트는 시계의 시각 — 클립 안에서 블록의 모션을 고칠 때는 블록의 시작만큼 어긋난다.
-                _viewport.ScrubTo(_graph.CurrentTime + _blockOffset);
+                // 그래프·도프 시트는 모션의 시각, 뷰포트는 시계의 시각 — 연출 안에서 구간의 모션을 고칠 때는 구간의 시작만큼 어긋난다.
+                _viewport.ScrubTo(_graph.CurrentTime + _contextOffset);
                 _dope.CurrentTime = _graph.CurrentTime;
             });
         };
         _dope.CurrentTimeChanged += (_, _) => SyncTime(() =>
         {
             _graph.CurrentTime = _dope.CurrentTime;
-            _viewport.ScrubTo(_dope.CurrentTime + _blockOffset);
+            _viewport.ScrubTo(_dope.CurrentTime + _contextOffset);
         });
         _graph.CurvesChanged += (_, _) =>
         {
@@ -260,20 +260,15 @@ public partial class MainWindow : Window
         };
         _viewport.TimeChanged += (_, _) =>
         {
-            // 반복하는 블록은 바퀴가 넘어갈 때 시각 차가 바뀐다 — 그래프의 시각이 모션 길이 안에서 다시 돈다.
-            if (SelectedClip is not null && _graph.MotionName is not null)
+            if (_viewport.EmojiName is not null && _graph.MotionName is not null)
             {
-                _blockOffset = _viewport.ClipBlockTimeOffset;
-            }
-            else if (_viewport.EmojiName is not null && _graph.MotionName is not null)
-            {
-                _blockOffset = _viewport.EmojiPhaseTimeOffset; // 머묾은 바퀴가 넘어갈 때 시각 차가 바뀐다
+                _contextOffset = _viewport.EmojiPhaseTimeOffset; // 머묾은 바퀴가 넘어갈 때 시각 차가 바뀐다
             }
 
             SyncTime(() =>
             {
-                _graph.CurrentTime = _viewport.Time - _blockOffset;
-                _dope.CurrentTime = _viewport.Time - _blockOffset;
+                _graph.CurrentTime = _viewport.Time - _contextOffset;
+                _dope.CurrentTime = _viewport.Time - _contextOffset;
             });
             RefreshChannelBox();
             RefreshCameraPanel();
@@ -595,7 +590,7 @@ public partial class MainWindow : Window
             _showStageSkeleton.IsChecked = _settings.ShowStageSkeleton;
             _collapsedGroups.Clear();
             _collapsedGroups.UnionWith(_settings.CollapsedChannelBoxGroups);
-            _inspectorTabs.SelectedIndex = Math.Clamp(_settings.InspectorTab, 0, 4);
+            _inspectorTabs.SelectedIndex = Math.Clamp(_settings.InspectorTab, 0, 3);
             int autoSaveIndex = Array.IndexOf(AutoSaveMinutes, _settings.AutoSaveMinutes);
             _autoSaveCombo.SelectedIndex = autoSaveIndex < 0 ? 2 : autoSaveIndex;
             _timeDisplayCombo.SelectedIndex = (int)_settings.TimeDisplay;
@@ -627,10 +622,6 @@ public partial class MainWindow : Window
         _timeSlider.SnapEnabled = _settings.SnapEnabled;
         _timeSlider.SnapStep = _settings.SnapStep;
         _timeSlider.TimeDisplay = _settings.TimeDisplay;
-        _timeline.SnapEnabled = _settings.SnapEnabled;
-        _timeline.SnapStep = _settings.SnapStep;
-        _timeline.TimeDisplay = _settings.TimeDisplay;
-        _timeline.InvalidateVisual();
         _rangeSlider.TimeDisplay = _settings.TimeDisplay;
         _timeSlider.InvalidateVisual();
         _rangeSlider.InvalidateVisual();
@@ -956,15 +947,8 @@ public partial class MainWindow : Window
             new TabItem { Header = "도프 시트", Content = _dope, FontSize = 12 },
         };
 
-        // 타임라인은 탭이 아니라 그래프·도프 시트 **위**에 선다(클립을 고른 동안만) — 블록을 고르면 바로 아래에서 그 모션의 커브를 고친다.
-        // 둘 사이의 스플리터를 끌면 타임라인의 높이가 바뀌고 설정에 남는다. 트랙이 높이보다 많으면 타임라인 안에서 세로로 굴린다.
-        _editorsGrid.Children.Add(BuildTimeline());
-        Grid.SetRow(_timelineSplitter, 1);
-        _editorsGrid.Children.Add(_timelineSplitter);
         Grid.SetRow(_editorTabs, 2);
-        _editorsGrid.Children.Add(_editorTabs);
-        Grid.SetRow(_editorsGrid, 2);
-        grid.Children.Add(_editorsGrid);
+        grid.Children.Add(_editorTabs);
         return grid;
     }
 
@@ -1620,8 +1604,8 @@ public partial class MainWindow : Window
 
     private void BindMotion(string? name)
     {
-        // 세트 보기는 그 세트의 모션만 연기한다 — 클립·연출을 골랐거나 다른 리그의 모션을 골랐으면 세트를 닫는다.
-        if (SelectedSet is { } openSet && (name is null ? SelectedClip is not null || SelectedEmoji is not null : _session.Editor.Document.Find(name)?.Rig != openSet))
+        // 세트 보기는 그 세트의 모션만 연기한다 — 연출을 골랐거나 다른 리그의 모션을 골랐으면 세트를 닫는다.
+        if (SelectedSet is { } openSet && (name is null ? SelectedEmoji is not null : _session.Editor.Document.Find(name)?.Rig != openSet))
         {
             DeselectSet();
             return; // DeselectSet이 다시 묶는다
@@ -1632,12 +1616,7 @@ public partial class MainWindow : Window
         _dope.Controllers = _session.ControllersOf(name is null ? null : _session.Editor.Document.Find(name)?.Rig);
         _dope.Bind(_session.Editor, name);
 
-        // 모션이 없고 클립을 골랐으면 뷰포트(와 그 시계)는 클립의 것이다 — 그래프·도프 시트·타임 슬라이더의 키 틱은 빈다.
-        if (name is null && SelectedClip is { } clip)
-        {
-            _viewport.BindClip(_session.Editor, clip);
-        }
-        else if (name is null && SelectedEmoji is { } emoji)
+        if (name is null && SelectedEmoji is { } emoji)
         {
             // 이모지 정의를 골랐다 — 뷰포트(와 시계)는 그 수명의 것이다.
             _viewport.BindEmoji(_session.Editor, emoji);
@@ -1648,9 +1627,7 @@ public partial class MainWindow : Window
         }
 
         _timeSlider.Bind(_session.Editor, name);
-        _timeline.Bind(_session.Editor);
-        _blockOffset = 0;
-        SyncBlockContext(); // 클립을 보는 중이면 고른 블록의 모션을 그래프에 다시 묶는다
+        _contextOffset = 0;
         SyncEmojiContext(); // 이모지를 보는 중이면 고치는 구간의 모션을
         RefreshSelectedNode();
     }
@@ -1816,7 +1793,7 @@ public partial class MainWindow : Window
         });
 
         Button addCameraButton = SmallButton("카메라 모션 추가", (_, _) => Guard("카메라 모션 추가", () => AddCameraMotion()));
-        ToolTip.SetTip(addCameraButton, "카메라(zoom·pan)를 키와 커브로 움직이는 모션 — 이름 camera, camera_2…, 길이 1초, 유지·절대값. 지금 씬 카메라 값으로 처음·끝 키가 선다. 오른쪽 '모션' 탭의 카메라 칸에 값을 넣으면 그 시각에 키, 커브는 그래프에서. 클립의 카메라 트랙에 놓는다. motions.json에는 나가지 않는다");
+        ToolTip.SetTip(addCameraButton, "카메라(zoom·pan)를 키와 커브로 움직이는 모션 — 이름 camera, camera_2…, 길이 1초, 유지·절대값. 지금 씬 카메라 값으로 처음·끝 키가 선다. 오른쪽 '모션' 탭의 카메라 칸에 값을 넣으면 그 시각에 키, 커브는 그래프에서. motions.json에는 나가지 않는다");
         LeftPanel.Children.Add(addCameraButton);
 
         Button addPresetButton = SmallButton("프리셋에서 추가", (_, _) => Guard("프리셋에서 추가", () => AddPreset()));
@@ -1836,7 +1813,6 @@ public partial class MainWindow : Window
             Children = { _presetCombo, addPresetButton },
         });
 
-        BuildClipLeft();
         BuildSetLeft();
     }
 
@@ -1851,7 +1827,6 @@ public partial class MainWindow : Window
             new TabItem { Header = "채널 박스", Content = BuildChannelBoxTab(), FontSize = 12 },
             new TabItem { Header = "씬", Content = BuildSceneTab(), FontSize = 12 },
             new TabItem { Header = "모션", Content = BuildMotionTab(), FontSize = 12 },
-            new TabItem { Header = "클립", Content = BuildClipTab(), FontSize = 12 },
             new TabItem { Header = "연출", Content = BuildEmojiTab(), FontSize = 12 },
         };
         _inspectorTabs.SelectionChanged += (_, _) =>
@@ -2031,7 +2006,7 @@ public partial class MainWindow : Window
             {
                 _session.Editor.RenameMotion(m.Name, text);
 
-                // 클립 안에서 블록의 모션 이름을 바꾼 것이면 목록에서 고르지 않는다 — 고르면 클립이 풀린다(블록의 참조는 편집기가 따라 바꿨다).
+                // 연출 안에서 구간의 모션 이름을 바꾼 것이면 목록에서 고르지 않는다 — 고르면 연출이 풀린다(연출의 참조는 편집기가 따라 바꿨다).
                 if (!EditingInPlace)
                 {
                     _motionList.SelectedItem = text;
@@ -2218,12 +2193,6 @@ public partial class MainWindow : Window
         "  Ctrl+B / Ctrl+Shift+B  버퍼 커브 찍기·바꾸기\n\n" +
         "도프 시트\n" +
         "  블록 드래그  시간 이동      Alt+드래그  복제      범위 띠 양끝  시간 스케일      더블클릭  키      노드 행 클릭  접기\n\n" +
-        "타임라인 (연출 클립 — 왼쪽 '클립'에서 고른다)\n" +
-        "  LMB  블록 선택(아래 그래프가 그 모션을 묶는다 — 클립 안에서 바로 고친다) · 빈 곳/눈금자 스크럽\n" +
-        "  블록 드래그(LMB·MMB)  이동(가로 시각 · 세로 트랙)      더블클릭  그 모션만 열기(클립을 떠난다)\n" +
-        "  우클릭  모션 놓기 · 상태 놓기(보이기·자리·층·오프셋) · 카메라 트랙 · 상대값/절대값 · 배역 끄기 · 새 모션으로 굽기 · 트랙 추가/삭제      Ctrl+D  이어서 한 번 더      Del  삭제\n" +
-        "  줄 머리 🔊  그 배역 끄기/켜기(미리보기에서만 빠진다)      M  고른 블록 하나만 끄기/켜기(파일에 남는다)\n" +
-        "  블록을 고르고 그 블록 안의 시각이면 뷰포트 끌기·채널 박스·S가 그 블록의 모션에 키를 놓는다      아래 경계를 끌면 타임라인 높이\n\n" +
         "타임 슬라이더\n" +
         "  클릭·드래그  스크럽      Shift+드래그  프레임 범위 선택      범위 안 MMB  범위의 키 이동      범위 밖 MMB  포즈 들고 스크럽(S로 키)\n" +
         "  우클릭  복사·붙여넣기·삭제·스냅 · 재생 범위 · 재생 모드 메뉴\n\n" +
@@ -2266,7 +2235,6 @@ public partial class MainWindow : Window
     private void OnDocumentReplaced()
     {
         _session.Editor.Changed += (_, _) => OnEditorChanged();
-        _viewport.ClearClipMutes();
         BindMotion(null);
         RefreshAll();
         RefreshAssets();
@@ -2275,7 +2243,6 @@ public partial class MainWindow : Window
     private void OnEditorChanged()
     {
         RefreshMotionList();
-        RefreshClips();
         RefreshEmojis();
         RefreshMotionInspector();
         RefreshKeyInspector();
@@ -2769,7 +2736,7 @@ public partial class MainWindow : Window
         };
         Item("캐릭터 리그 만들기" + where, () => CreateObject(SceneObject.DefaultRig, target), new KeyGesture(Key.N, KeyModifiers.Control | KeyModifiers.Shift), enabled: target is not SkeletonNode);
 
-        // 세트를 장면에 놓는다 — 캐릭터에 붙이지 않고 그 층에 제 자리로(화면 전환·소개 같은 연출이 설 오브젝트, 클립의 출연자).
+        // 세트를 장면에 놓는다 — 캐릭터에 붙이지 않고 그 층에 제 자리로(화면 전환·소개 같은 연출이 설 오브젝트).
         if (_session.Editor.Document.Rigs.Count > 0 && target is not SkeletonNode)
         {
             var place = new MenuItem { Header = "세트 놓기" + where, FontSize = 11 };
@@ -3114,7 +3081,6 @@ public partial class MainWindow : Window
     private void RefreshAll()
     {
         RefreshMotionList();
-        RefreshClips();
         RefreshEmojis();
         RefreshChannels();
         RefreshMotionInspector();
@@ -3129,7 +3095,7 @@ public partial class MainWindow : Window
 
         try
         {
-            // 클립 안에서 블록의 모션을 고치는 중이면 그래프의 모션은 "고른 모션"이 아니다 — 목록에서 골라 주지 않는다(고르면 클립이 풀린다).
+            // 연출 안에서 구간의 모션을 고치는 중이면 그래프의 모션은 "고른 모션"이 아니다 — 목록에서 골라 주지 않는다(고르면 연출이 풀린다).
             string? selected = SelectedMotion ?? (EditingInPlace ? null : _graph.MotionName);
             // rigKind로 묶어 보인다(모션의 주인은 rigKind) — 같은 리그끼리 이름순.
             // 세트를 열었으면 그 세트의 애니메이션만 — 다른 리그의 모션은 이 세트가 연기할 수 없다.
@@ -3176,8 +3142,7 @@ public partial class MainWindow : Window
 
         if (SelectedMotion is not null)
         {
-            DeselectClip(); // 시간의 주인은 모션 · 클립 · 이모지 중 하나다
-            DeselectEmoji();
+            DeselectEmoji(); // 시간의 주인은 모션 · 이모지 중 하나다
         }
 
         BindMotion(SelectedMotion);
@@ -3473,7 +3438,7 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>키 없는 채널에 지금 값을 지금 시각의 키로 — 채널이 생긴다. 뷰포트의 길(클립·이모지 안이면 그 문맥의 시각과 시작값)로 놓는다.</summary>
+    /// <summary>키 없는 채널에 지금 값을 지금 시각의 키로 — 채널이 생긴다. 뷰포트의 길(이모지 안이면 그 문맥의 시각과 시작값)로 놓는다.</summary>
     private void KeyUnkeyed(string node, MotionChannelKind kind)
     {
         _viewport.SelectedNode = node;
@@ -3789,10 +3754,9 @@ public partial class MainWindow : Window
     private void RefreshProblems()
     {
         IReadOnlyList<MotionProblem> problems = _session.Problems;
-        IReadOnlyList<ClipProblem> clipProblems = ClipValidator.Validate(_session.Editor.Document, _session.RigNodeIds);
         ProblemsPanel.Children.Clear();
         IReadOnlyList<EmojiProblem> emojiProblems = EmojiValidator.Validate(_session.Editor.Document, _session.RigNodeIds);
-        ProblemsPanel.IsVisible = problems.Count + clipProblems.Count + emojiProblems.Count > 0;
+        ProblemsPanel.IsVisible = problems.Count + emojiProblems.Count > 0;
 
         foreach (MotionProblem problem in problems)
         {
@@ -3821,11 +3785,6 @@ public partial class MainWindow : Window
             }
 
             ProblemsPanel.Children.Add(row);
-        }
-
-        foreach (ClipProblem problem in clipProblems)
-        {
-            ProblemsPanel.Children.Add(ClipProblemRow(problem));
         }
 
         foreach (EmojiProblem problem in emojiProblems)

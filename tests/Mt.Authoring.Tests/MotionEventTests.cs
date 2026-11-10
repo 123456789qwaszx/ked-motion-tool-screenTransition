@@ -91,46 +91,14 @@ public class MotionEventTests
     }
 
     [Fact]
-    public void 클립에서는_블록의_시각과_바퀴마다_울리고_끈_것은_안_울리며_굽기와_따로_떼기에_따라간다()
+    public void 구간은_열린_앞과_닫힌_뒤라_같은_이벤트가_두_번_잡히지_않는다()
     {
         MotionEditor editor = NewEditor();
-        editor.AddSceneObject(null, "s2", "character");
         editor.AddMotionEvent("nod", 0.3f, "emoji", "땀");
-        editor.AddMotionEvent("bow", 0.4f, "sfx", "whoosh");
-        editor.AddClip("clip");
-        editor.AddClipRole("clip", "a", "character", "s1");
-        editor.AddClipRole("clip", "b", "character", "s2");
-        editor.AddClipTrack("clip", "a");
-        editor.AddClipTrack("clip", "b");
-        editor.AddClipBlock("clip", 0, "nod", 1f);
-        editor.SetClipBlockRepeat("clip", 0, 0, 2); // 1.3 · 1.9
-        editor.AddClipBlock("clip", 1, "bow", 0f);  // 0.4
-        ClipAsset clip = editor.Document.FindClip("clip")!;
+        MotionAsset nod = editor.Document.Find("nod")!;
 
-        var all = ClipPreview.EventsBetween(editor.Document, clip, -1, 99);
-        Assert.Equal(new[] { ("s2", "sfx"), ("s1", "emoji"), ("s1", "emoji") }, all.Select(e => (e.ObjectId!, e.Name)));
-        Assert.Equal(new[] { 0.4, 1.3, 1.9 }, all.Select(e => Math.Round(e.Time, 3)));
-
-        // 구간은 (after, until] — 같은 이벤트가 두 번 잡히지 않는다.
-        Assert.Single(ClipPreview.EventsBetween(editor.Document, clip, 1.0, 1.3));
-        Assert.Empty(ClipPreview.EventsBetween(editor.Document, clip, 1.3, 1.8));
-        Assert.Single(ClipPreview.EventsBetween(editor.Document.Find("nod")!, 0.0, 0.3));
-
-        // 끈 배역·끈 블록은 안 울린다.
-        Assert.Single(ClipPreview.EventsBetween(editor.Document, clip, -1, 99, track => track.Role == "a"));
-        editor.SetClipBlockMuted("clip", 1, 0, true);
-        Assert.Equal(2, ClipPreview.EventsBetween(editor.Document, clip, -1, 99).Count);
-        editor.Undo();
-
-        // 굽기: 그 출연자의 이벤트가 클립 시각으로 옮겨 온다.
-        RectNodeTree template = ScenePreview.Build(RigFile, editor.Document.ActiveSceneAsset!);
-        MotionAsset baked = ClipBake.Bake(editor, template, "clip", "s1", "baked");
-        Assert.Equal(new[] { 1.3, 1.9 }, baked.Events.Select(e => Math.Round(e.T, 3)));
-        Assert.All(baked.Events, e => Assert.Equal(("emoji", "땀"), (e.Name, e.Value)));
-        Assert.DoesNotContain(MotionValidator.ValidateMotion(baked, RigFile.NodeIds), p => p.Blocking);
-
-        // 따로 떼면 이벤트도 복제된다.
-        editor.MakeClipBlockUnique("clip", 0, 0, "nod_solo");
-        Assert.Equal("땀", Assert.Single(editor.Document.Find("nod_solo")!.Events).Value);
+        Assert.Single(MotionEvents.Between(nod, 0.0, 0.3));
+        Assert.Empty(MotionEvents.Between(nod, 0.3, 0.6));
+        Assert.Empty(MotionEvents.Between(nod, -1, 0.2));
     }
 }

@@ -52,21 +52,6 @@ public sealed class MotionDocument
     }
 
     /// <summary>
-    /// 연출 클립들(<c>PLAN-clip.md</c>) — 씬 위의 시간표. <c>motions.json</c>에는 안 나간다.
-    /// 저작본에는 <see cref="ClipsOrNull"/>로 실린다: 클립이 없는 문서는 전과 같은 글자다.
-    /// </summary>
-    [System.Text.Json.Serialization.JsonIgnore]
-    public List<ClipAsset> Clips { get; set; } = new();
-
-    /// <summary>저작본의 <c>clips</c> 자리 — 비면 쓰지 않는다. 코드는 <see cref="Clips"/>를 쓴다.</summary>
-    [System.Text.Json.Serialization.JsonPropertyName("clips")]
-    public List<ClipAsset>? ClipsOrNull
-    {
-        get => Clips.Count == 0 ? null : Clips;
-        set => Clips = value ?? new List<ClipAsset>();
-    }
-
-    /// <summary>
     /// 스킨들(<c>PLAN-parts.md</c> P1) — 리그의 조각마다 붙일 그림의 묶음. 미리보기 전용.
     /// 저작본에는 <see cref="SkinsOrNull"/>로 실린다: 스킨이 없는 문서는 전과 같은 글자다.
     /// </summary>
@@ -117,9 +102,6 @@ public sealed class MotionDocument
 
     public RigAsset? FindRig(string? kind)
         => kind is null ? null : Rigs.FirstOrDefault(r => string.Equals(r.Kind, kind, StringComparison.Ordinal));
-
-    public ClipAsset? FindClip(string? name)
-        => name is null ? null : Clips.FirstOrDefault(c => string.Equals(c.Name, name, StringComparison.Ordinal));
 
     public MotionAsset? Find(string name)
         => Motions.FirstOrDefault(m => string.Equals(m.Name, name, StringComparison.Ordinal));
@@ -186,7 +168,7 @@ public sealed class MotionAsset
     }
 
     /// <summary>
-    /// 재생 블록(<c>PLAN-set.md</c> S10) — "품은 세트의 애니메이션을 언제 튼다". 세트의 애니메이션이 제 키와 함께 든다(세트 안의 작은 클립).
+    /// 재생 블록(<c>PLAN-set.md</c> S10) — "품은 세트의 애니메이션을 언제 튼다". 세트의 애니메이션이 제 키와 함께 든다.
     /// 시작 시각 오름차순. 저작본에는 <see cref="PlaysOrNull"/>로 실린다(없으면 안 적는다).
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
@@ -222,7 +204,7 @@ public sealed class MotionPlayAsset
     /// <summary>시작 시각(초, 이 애니메이션 기준).</summary>
     public float At { get; set; }
 
-    /// <summary>되풀이 횟수(1 이상) — 같은 블록을 끝에 이어 그만큼 놓은 것(클립의 반복과 같은 뜻).</summary>
+    /// <summary>되풀이 횟수(1 이상) — 같은 블록을 끝에 이어 그만큼 놓은 것.</summary>
     public int Repeat { get; set; } = 1;
 }
 

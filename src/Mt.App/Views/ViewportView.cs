@@ -58,9 +58,6 @@ public sealed class ViewportView : Control
 
     private MotionEditor? _editor;
     private string? _motionName;
-    private string? _clipName;
-    private ClipStage? _clipStage;
-    private string? _lastClipName; // 모션을 열었다 돌아와도 같은 클립이면 끈 배역이 남는다
     private RigSchemaFile? _rig;
     private DepthTuningFile? _depth;
     private FocusTuningFile? _focus;
@@ -238,12 +235,12 @@ public sealed class ViewportView : Control
 
     // ── 씬·오브젝트 ───────────────────────────────────────────────────
 
-    /// <summary>뷰포트가 보여 주는 씬 — 문서의 활성 씬. 클립을 보는 중이면 그 클립의 시작 씬.</summary>
+    /// <summary>뷰포트가 보여 주는 씬 — 문서의 활성 씬.</summary>
     public SceneAsset? Scene => _editor is null
         ? null
         : SetScene() is { } set ? set
         : CueScene() is { } cue ? cue
-        : ShownClip is { } clip ? ClipPreview.SceneOf(_editor.Document, clip) ?? _editor.Document.ActiveSceneAsset : _editor.Document.ActiveSceneAsset;
+        : _editor.Document.ActiveSceneAsset;
 
     // ── 화면에 서는 연출을 본다 (PLAN-set.md S5) ──────────────────────
 
@@ -299,7 +296,7 @@ public sealed class ViewportView : Control
     /// 배치 모드인가(스파인의 Setup) — 세트를 열었고 고른 애니메이션이 없다. 뷰포트의 끌기가 오브젝트의 **가만히 선 자세**를 바꾼다.
     /// 그 세트의 모션을 고르면 애니메이션 모드다(끌기 = 키).
     /// </summary>
-    public bool IsLayoutMode => _setView is not null && Motion is null && ShownClip is null && ShownEmoji is null;
+    public bool IsLayoutMode => _setView is not null && Motion is null && ShownEmoji is null;
 
     /// <summary>
     /// 연 세트(rigKind) — 뷰포트와 하이어아키가 **그 세트만** 보인다: 문서의 씬 대신 그 세트 하나가 무대 가운데에 선 보기 전용 씬.
@@ -436,42 +433,8 @@ public sealed class ViewportView : Control
 
     public SceneObject? SelectedObject => _selectedObjectId is null ? null : Scene?.Find(_selectedObjectId);
 
-    /// <summary>
-    /// 포즈를 잡는 오브젝트의 노드 키 접두사("c1/"). 보통은 선택 오브젝트이고, 클립 안에서 블록을 고치는 중이면 그 블록의 배역을 맡은 오브젝트다
-    /// (뷰포트에서 다른 오브젝트를 눌러도 키는 그 블록의 캐릭터에 놓인다). 오브젝트가 없으면 빈 문자열.
-    /// </summary>
-    private string Prefix => ContextActor?.Prefix ?? SelectedObject?.Prefix ?? "";
-
-    // ── 클립 안에서 블록의 모션을 고친다(PLAN-clip.md K4b 2단계) ─────────
-
-    private (int Track, int Index)? _contextBlock;
-
-    /// <summary>
-    /// 클립을 보는 중에 포즈를 잡을 블록(타임라인에서 고른 모션 블록). 끌기·채널 박스·S가 그 블록의 모션에 키를 놓는다 —
-    /// 시각은 클립 시각 − 블록의 시작, 재생 기준은 블록의 것, 시작값은 "이 블록이 얹히기 전의 상태"다. null이면 클립 층에서는 포즈를 잡지 않는다.
-    /// </summary>
-    public (int Track, int Index)? ClipBlockContext
-    {
-        get => _contextBlock;
-        set
-        {
-            if (_contextBlock == value)
-            {
-                return;
-            }
-
-            DiscardPending(); // 다른 블록의 키 없는 포즈를 들고 넘어가지 않는다
-            _contextBlock = value;
-
-            if (ContextActor is { } actor)
-            {
-                SelectedObjectId = actor.Id;
-            }
-
-            PendingChanged?.Invoke(this, EventArgs.Empty);
-            InvalidateVisual();
-        }
-    }
+    /// <summary>포즈를 잡는 오브젝트(선택 오브젝트)의 노드 키 접두사("c1/"). 오브젝트가 없으면 빈 문자열.</summary>
+    private string Prefix => SelectedObject?.Prefix ?? "";
 
     private EmojiPhase? _emojiPhase;
 
@@ -523,7 +486,7 @@ public sealed class ViewportView : Control
         => _editor is not null && _emojiPhase is { } phase && ShownEmoji is { } emoji ? EmojiPreview.PhaseWindow(_editor.Document, emoji, phase, _clock.Time).Offset : 0;
 
     /// <summary>
-    /// 클립·이모지 안에서 고치는 모션의 키가 **시계의** 어디에 놓였는가 — 타임 슬라이더가 틱으로 보인다. 되풀이되는 것(머묾 · 반복하는 블록)은 바퀴마다 다시 나온다.
+    /// 이모지 안에서 고치는 모션의 키가 **시계의** 어디에 놓였는가 — 타임 슬라이더가 틱으로 보인다. 되풀이되는 것(머묾)은 바퀴마다 다시 나온다.
     /// 고치는 것이 없으면 빈 목록.
     /// </summary>
     public IReadOnlyList<double> ContextKeyTimes()
@@ -538,16 +501,6 @@ public sealed class ViewportView : Control
         if (_emojiPhase is { } phase && ShownEmoji is { } emoji)
         {
             times.AddRange(PhaseKeyTimes(emoji, phase));
-        }
-        else if (ShownClip is not null && AnyContextEntry is { } entry && _editor.Document.Find(entry.Block.Motion) is { } blockMotion)
-        {
-            List<float> keys = KeyTimes.All(blockMotion);
-
-            for (int cycle = 0; cycle < entry.Block.Cycles; cycle++)
-            {
-                double from = entry.Block.At + cycle * (double)blockMotion.Duration;
-                times.AddRange(keys.Select(k => from + k));
-            }
         }
 
         return times;
@@ -597,129 +550,15 @@ public sealed class ViewportView : Control
             ? new[] { EmojiPhase.Enter, EmojiPhase.Hold, EmojiPhase.Exit }.SelectMany(p => PhaseKeyTimes(emoji, p).Select(t => (p, t))).ToList()
             : Array.Empty<(EmojiPhase, double)>();
 
-    /// <summary>문맥의 블록 — 클립을 보는 중이고, 그 자리에 캐릭터 모션 블록이 있고, 꺼지지 않았을 때만.</summary>
-    private (ClipTrack Track, ClipBlock Block)? ContextEntry => AnyContextEntry is { } entry && !entry.Track.IsCamera ? entry : null;
+    /// <summary>포즈를 키로 바꿀 모션 — 묶인 모션, 또는 이모지 안에서 고치는 구간의 모션.</summary>
+    public MotionAsset? EditMotion => Motion ?? EmojiEdit?.Motion;
 
-    /// <summary>
-    /// 문맥이 카메라 모션 블록일 때 — 그 블록과 모션. 지금 시각이 블록 안일 때만(캐릭터와 같은 까닭: 밖에서는 그 모션이 보이지 않는다).
-    /// 캐릭터의 포즈는 안 잡히고, 카메라 값 칸(<see cref="SetCameraValue"/>)만 그 블록의 모션에 키를 놓는다.
-    /// </summary>
-    private (ClipBlock Block, MotionAsset Motion)? CameraContext
-    {
-        get
-        {
-            if (_editor is null || AnyContextEntry is not { } entry || !entry.Track.IsCamera
-                || _editor.Document.Find(entry.Block.Motion) is not { } motion || !CameraRig.IsCamera(motion))
-            {
-                return null;
-            }
+    /// <summary>키를 놓는 시각(모션 기준) — 이모지 안에서는 시계에서 구간의 시작을 뺀다.</summary>
+    private double EditTime => EmojiEdit is { } emojiEdit ? _clock.Time - emojiEdit.Offset : _clock.Time;
 
-            return CycleOf(entry.Block, motion).InRange ? (entry.Block, motion) : null;
-        }
-    }
-
-    /// <summary>
-    /// 지금 시각이 그 블록의 몇 번째 바퀴인가(반복하는 블록) — 바퀴 번호, 그 바퀴 안의 시각(모션 기준), 블록 안인가.
-    /// 바퀴의 끝과 다음 바퀴의 처음이 만나는 자리는 앞 바퀴의 끝으로 본다(마지막 키를 고치는 자리다).
-    /// </summary>
-    private (int Cycle, double Local, bool InRange) CycleOf(ClipBlock block, MotionAsset motion)
-    {
-        double total = _clock.Time - block.At;
-        double duration = motion.Duration;
-
-        if (duration <= 1e-9)
-        {
-            return (0, total, Math.Abs(total) <= 1e-6);
-        }
-
-        int cycle = Math.Clamp((int)Math.Ceiling(total / duration - 1e-9) - 1, 0, block.Cycles - 1);
-        return (cycle, total - cycle * duration, total >= -1e-6 && total <= duration * block.Cycles + 1e-6);
-    }
-
-    /// <summary>
-    /// 클립 시각과 그 블록의 모션 시각의 차 — 블록의 시작 + 지나온 바퀴들. 문맥이 없으면 0.
-    /// 셸이 그래프·도프 시트의 현재 시각을 이만큼 어긋나게 맞춘다.
-    /// </summary>
-    public double ClipBlockTimeOffset
-        => _editor is not null && AnyContextEntry is { } entry && _editor.Document.Find(entry.Block.Motion) is { } motion
-            ? entry.Block.At + CycleOf(entry.Block, motion).Cycle * (double)motion.Duration
-            : 0;
-
-    /// <summary>그 시각의 클립 카메라 — 카메라 블록(상태)까지 반영한 값에 카메라 모션을 얹은 것. <paramref name="except"/>는 빼고.</summary>
-    private CameraSettings ClipCameraAt(ClipAsset clip, double seconds, ClipBlock? except)
-    {
-        CameraSettings stage = _clipStage?.CameraAt(seconds) ?? Scene?.Camera ?? new CameraSettings();
-        return ClipPreview.CameraAt(_editor!.Document, clip, stage, seconds, IsClipTrackMuted, except, ContextCycle) ?? stage;
-    }
-
-    private (ClipTrack Track, ClipBlock Block)? AnyContextEntry
-    {
-        get
-        {
-            if (_motionName is not null || ShownClip is not { } clip || _contextBlock is not { } at
-                || at.Track < 0 || at.Track >= clip.Tracks.Count || at.Index < 0 || at.Index >= clip.Tracks[at.Track].Blocks.Count)
-            {
-                return null;
-            }
-
-            ClipTrack track = clip.Tracks[at.Track];
-            ClipBlock block = track.Blocks[at.Index];
-            return block.IsMotion && !block.IsMuted && !IsClipTrackMuted(track) ? (track, block) : null;
-        }
-    }
-
-    private SceneObject? ContextActor
-        => _editor is not null && ShownClip is { } clip && ContextEntry is { } entry ? ClipPreview.ObjectOf(_editor.Document, clip, entry.Track) : null;
-
-    /// <summary>
-    /// 포즈를 키로 바꿀 모션 — 묶인 모션, 또는 클립 안에서 고치는 블록의 모션. 블록은 **지금 시각이 그 블록 안일 때만** 고친다:
-    /// 블록 밖에서는 그 모션이 보이지 않아, 잡은 포즈가 어디로 가는지 알 수 없다.
-    /// </summary>
-    public MotionAsset? EditMotion
-    {
-        get
-        {
-            if (Motion is { } bound)
-            {
-                return bound;
-            }
-
-            if (ShownEmoji is not null)
-            {
-                return EmojiEdit?.Motion;
-            }
-
-            if (_editor is null || ContextEntry is not { } entry || ContextActor is null || _editor.Document.Find(entry.Block.Motion) is not { } motion)
-            {
-                return null;
-            }
-
-            return CycleOf(entry.Block, motion).InRange ? motion : null;
-        }
-    }
-
-    /// <summary>키를 놓는 시각(모션 기준) — 클립 안에서는 시계에서 블록의 시작을 뺀다.</summary>
-    private double EditTime => EmojiEdit is { } emojiEdit ? _clock.Time - emojiEdit.Offset : ContextEntry is null ? _clock.Time : _clock.Time - ClipBlockTimeOffset;
-
-    /// <summary>문맥 블록의 지금 바퀴 — 시작값은 이 바퀴부터 뺀 상태다(앞 바퀴가 남긴 것은 시작값의 일부).</summary>
-    private int ContextCycle
-        => _editor is not null && AnyContextEntry is { } entry && _editor.Document.Find(entry.Block.Motion) is { } motion ? CycleOf(entry.Block, motion).Cycle : 0;
-
-    /// <summary>키 값을 읽는 기준 — 클립 안에서는 블록의 재생 기준(모션의 렌즈가 아니다).</summary>
-    private MotionChannelMode EditModeOf(MotionAsset motion) => ContextEntry?.Block.Mode ?? motion.PreviewMode;
-
-    /// <summary>
-    /// 키 값의 시작값 — 보통은 씬으로 세운 트리. 클립 안에서는 지금 시각의 클립 포즈에서 **이 블록만 뺀** 것이다
-    /// (앞 블록이 남긴 값·상태 블록이 옮긴 자리 위에 이 블록이 얹힌다 — 미리보기와 같은 함수라 놓은 키가 보이는 자리에 그대로 선다).
-    /// </summary>
+    /// <summary>키 값의 시작값 — 보통은 씬으로 세운 트리.</summary>
     private RectNodeState StartStateOf(string key)
     {
-        if (_editor is not null && _template is not null && ShownClip is { } clip && ContextEntry is { } entry)
-        {
-            RectNodeTree start = ClipPreview.Pose(_clipStage?.TreeAt(_clock.Time) ?? _template, _editor.Document, clip, _clock.Time, IsClipTrackMuted, _clipStage?.CameraAt(_clock.Time), entry.Block, null, ContextCycle);
-            return start.GetState(key);
-        }
-
         // 이모지 안에서는 그 구간이 얹히기 전의 자세(자리 · 앞 구간이 남긴 것).
         if (_editor is not null && _template is not null && _emojiPhase is { } phase && ShownEmoji is { } emoji && EmojiActor is { } actor)
         {
@@ -1065,7 +904,7 @@ public sealed class ViewportView : Control
             {
                 if (channel.Get(axis) is not null)
                 {
-                    values.Add((axis, PoseEdit.KeyValueFor(channel.Kind, EditModeOf(motion), PoseEdit.Component(channel.Kind, start, axis), PoseEdit.Component(channel.Kind, posed, axis))));
+                    values.Add((axis, PoseEdit.KeyValueFor(channel.Kind, motion.PreviewMode, PoseEdit.Component(channel.Kind, start, axis), PoseEdit.Component(channel.Kind, posed, axis))));
                 }
             }
 
@@ -1125,7 +964,7 @@ public sealed class ViewportView : Control
             return;
         }
 
-        MotionChannelMode mode = EditModeOf(motion);
+        MotionChannelMode mode = motion.PreviewMode;
         RectNodeState start = StartStateOf(key);
         RectNodeState posed = pose.GetState(key);
         var values = new List<(Axis, float)>();
@@ -1298,7 +1137,7 @@ public sealed class ViewportView : Control
 
     private string? _emojiName;
 
-    /// <summary>보고 있는 이모지 정의의 이름(<see cref="BindEmoji"/>). 모션이나 클립을 묶으면 비워진다 — 시간의 주인은 셋 중 하나다.</summary>
+    /// <summary>보고 있는 이모지 정의의 이름(<see cref="BindEmoji"/>). 모션을 묶으면 비워진다 — 시간의 주인은 둘 중 하나다.</summary>
     public string? EmojiName => _emojiName;
 
     public EmojiAsset? ShownEmoji => _editor is not null && _emojiName is not null ? _editor.Document.FindEmoji(_emojiName) : null;
@@ -1339,51 +1178,6 @@ public sealed class ViewportView : Control
         InvalidateVisual();
     }
 
-    /// <summary>보고 있는 연출 클립의 이름(<see cref="BindClip"/>). 모션을 묶으면 비워진다 — 시간의 주인은 둘 중 하나다.</summary>
-    public string? ClipName => _clipName;
-
-    private readonly HashSet<string> _mutedClipRoles = new(StringComparer.Ordinal);
-
-    /// <summary>배역 끄기가 바뀌었다 — 타임라인이 다시 그린다.</summary>
-    public event EventHandler? ClipMuteChanged;
-
-    /// <summary>
-    /// 끈 배역인가 — 그 배역의 블록은 미리보기에서 빠진다(마야의 뮤트). 보기 상태라 문서·되돌리기·산출물에 없고,
-    /// 다른 클립을 묶으면 비워진다.
-    /// </summary>
-    public bool IsClipRoleMuted(string role) => _mutedClipRoles.Contains(role);
-
-    public bool IsClipTrackMuted(ClipTrack track) => track is not null && _mutedClipRoles.Contains(track.Role);
-
-    public void SetClipRoleMuted(string role, bool muted)
-    {
-        if (muted ? _mutedClipRoles.Add(role) : _mutedClipRoles.Remove(role))
-        {
-            RebuildTemplate(); // 끈 배역의 상태 블록은 무대에서도 빠진다
-            ClipMuteChanged?.Invoke(this, EventArgs.Empty);
-            InvalidateVisual();
-        }
-    }
-
-    /// <summary>끈 배역을 다 켠다 — 문서를 갈아 끼웠을 때.</summary>
-    public void ClearClipMutes()
-    {
-        _lastClipName = null;
-
-        if (_mutedClipRoles.Count > 0)
-        {
-            _mutedClipRoles.Clear();
-            ClipMuteChanged?.Invoke(this, EventArgs.Empty);
-            InvalidateVisual();
-        }
-    }
-
-    /// <summary>클립을 보는 중일 때 그 시각의 오브젝트 불투명도(보이기 블록) — 클립이 아니면 씬의 보이기 그대로.</summary>
-    public float OpacityOf(string objectId)
-        => ShownClip is not null && _clipStage is { } stage
-            ? stage.OpacityOf(objectId, _clock.Time)
-            : Scene?.Find(objectId) is { Visible: true } ? 1f : 0f;
-
     /// <summary>카메라 모션을 보는 중일 때 지금 시각의 카메라 값(zoom·pan). 카메라 모션이 아니면 null.</summary>
     public CameraSettings? CameraValue()
     {
@@ -1392,8 +1186,7 @@ public sealed class ViewportView : Control
             return CameraRig.Pose(scene.Camera, motion, _clock.Time, motion.PreviewMode, _flags.IsMuted);
         }
 
-        // 클립 안에서 카메라 모션 블록을 고쳤으면 — 그 시각의 클립 카메라(보이는 그 값).
-        return ShownClip is { } clip && CameraContext is not null ? ClipCameraAt(clip, _clock.Time, null) : null;
+        return null;
     }
 
     /// <summary>
@@ -1402,17 +1195,6 @@ public sealed class ViewportView : Control
     /// </summary>
     public void SetCameraValue(string node, Axis axis, float value)
     {
-        // 클립 안: 고른 카메라 모션 블록에 키를 놓는다 — 시각은 시계 − 블록의 시작, 재생 기준은 블록의 것,
-        // 시작값은 그 시각의 클립 카메라에서 이 블록만 뺀 값(카메라 블록이 보낸 값·앞 카메라 모션이 남긴 값 위에 이 블록이 얹힌다).
-        if (_editor is not null && ShownClip is { } clip && CameraContext is { } context)
-        {
-            CameraSettings before = ClipCameraAt(clip, _clock.Time, context.Block);
-            float from = node == CameraRig.ZoomNode ? before.Zoom : axis == Axis.X ? before.PanX : before.PanY;
-            float at = (float)Math.Max(0, SnapTime(_clock.Time - ClipBlockTimeOffset));
-            _editor.KeyComponents(context.Motion.Name, node, MotionChannelKind.Position, at, new[] { (axis, CameraRig.KeyValueFor(context.Block.Mode, from, value)) }, DefaultTangent);
-            return;
-        }
-
         if (_editor is null || Motion is not { } motion || !CameraRig.IsCamera(motion) || Scene is not { } scene)
         {
             return;
@@ -1422,11 +1204,6 @@ public sealed class ViewportView : Control
         float time = (float)Math.Max(0, SnapTime(_clock.Time));
         _editor.KeyComponents(motion.Name, node, MotionChannelKind.Position, time, new[] { (axis, CameraRig.KeyValueFor(motion.PreviewMode, start, value)) }, DefaultTangent);
     }
-
-    /// <summary>씬으로 세운 시작 상태의 트리(읽기 전용으로 쓴다) — 굽기가 표본을 뜨는 바탕.</summary>
-    public RectNodeTree? TemplateTree => _template;
-
-    public ClipAsset? ShownClip => _editor is not null && _clipName is not null ? _editor.Document.FindClip(_clipName) : null;
 
     public bool HasRig => _template is not null;
 
@@ -1453,9 +1230,7 @@ public sealed class ViewportView : Control
 
         _editor = editor;
         _motionName = motionName;
-        _clipName = null;
         _emojiName = null;
-        _contextBlock = null;
 
         if (_editor is not null)
         {
@@ -1470,30 +1245,6 @@ public sealed class ViewportView : Control
         PlayStateChanged?.Invoke(this, EventArgs.Empty);
         TimeChanged?.Invoke(this, EventArgs.Empty);
         PendingChanged?.Invoke(this, EventArgs.Empty);
-        InvalidateVisual();
-    }
-
-    /// <summary>
-    /// 연출 클립을 본다(<c>PLAN-clip.md</c> K3) — 시계의 길이는 클립 길이, 포즈는 <see cref="ClipPreview.Pose"/>(출연자 전부).
-    /// 모션은 묶이지 않는다. 포즈는 <see cref="ClipBlockContext"/>로 고른 블록 안에서만 잡는다 — 그 밖에서는 매니퓰레이터·축을 그리지 않고 끌기도 받지 않는다.
-    /// </summary>
-    public void BindClip(MotionEditor? editor, string? clipName)
-    {
-        bool same = ReferenceEquals(_editor, editor) && _lastClipName == clipName;
-        Bind(editor, null);
-        _clipName = clipName;
-
-        if (!same && _mutedClipRoles.Count > 0)
-        {
-            _mutedClipRoles.Clear();
-            ClipMuteChanged?.Invoke(this, EventArgs.Empty);
-        }
-
-        _lastClipName = clipName ?? _lastClipName;
-        SyncDuration();
-        PickSelectedObject();
-        RebuildTemplate();
-        TimeChanged?.Invoke(this, EventArgs.Empty);
         InvalidateVisual();
     }
 
@@ -1561,7 +1312,7 @@ public sealed class ViewportView : Control
 
     // ── 이벤트 키로 뜨는 이모지 (PLAN-parts.md §10) ───────────────────
 
-    /// <summary>처음부터 그 시각까지 울린 이벤트 키(연기하는 오브젝트와 함께) — 클립이면 블록들의 것, 모션 하나면 고른 오브젝트가 연기하는 것.</summary>
+    /// <summary>처음부터 그 시각까지 울린 이벤트 키(연기하는 오브젝트와 함께) — 고른 오브젝트가 연기하는 모션의 것.</summary>
     private List<(double Time, string? ObjectId, string Name, string? Value)> FiredUntil(double seconds)
     {
         if (_editor is null || ShownEmoji is not null)
@@ -1569,27 +1320,20 @@ public sealed class ViewportView : Control
             return new();
         }
 
-        if (ShownClip is { } clip)
-        {
-            return ClipPreview.EventsBetween(_editor.Document, clip, double.NegativeInfinity, seconds, IsClipTrackMuted);
-        }
-
         return Motion is { Events.Count: > 0 } motion && SelectedObject is { } o && CanWear(o)
-            ? ClipPreview.EventsBetween(motion, double.NegativeInfinity, seconds).Select(e => (Time: (double)e.T, ObjectId: (string?)o.Id, e.Name, e.Value)).ToList()
+            ? MotionEvents.Between(motion, double.NegativeInfinity, seconds).Select(e => (Time: (double)e.T, ObjectId: (string?)o.Id, e.Name, e.Value)).ToList()
             : new();
     }
 
-    private SceneAsset? SceneAtTime(double seconds) => ShownClip is not null && _clipStage is { } stage ? stage.SceneAt(seconds) : Scene;
-
     /// <summary>그 시각에 이벤트 키(<c>emoji</c>)로 떠서 돌고 있는 이모지들 — 캐릭터에 붙은 이모지 리그가 정의의 수명을 돈다.</summary>
     public IReadOnlyList<EmojiPlay> EmojiPlaysAt(double seconds)
-        => _editor is not null && SceneAtTime(seconds) is { } scene && FiredUntil(seconds) is { Count: > 0 } fired
+        => _editor is not null && Scene is { } scene && FiredUntil(seconds) is { Count: > 0 } fired
             ? EmojiEvents.Resolve(_editor.Document, scene, fired, seconds)
             : Array.Empty<EmojiPlay>();
 
-    /// <summary>붙는 자리(로케이터)가 푼 점 — 가만히 선 무대(클립이면 그 시각의 무대)에서 잰다. 못 풀면 null(오프셋만).</summary>
+    /// <summary>붙는 자리(로케이터)가 푼 점 — 가만히 선 무대에서 잰다. 못 풀면 null(오프셋만).</summary>
     private Vec2? EmojiOrigin(EmojiAsset emoji, SceneObject actor, double seconds)
-        => (ShownClip is not null ? _clipStage?.TreeAt(seconds) ?? _template : _template) is { } rest && SceneAtTime(seconds) is { } scene
+        => _template is { } rest && Scene is { } scene
             ? EmojiPreview.LocatorPoint(rest, scene, emoji, actor, _focus)
             : null;
 
@@ -1608,7 +1352,7 @@ public sealed class ViewportView : Control
 
     /// <summary>이벤트가 부리는 이모지 오브젝트인데 지금은 안 떠 있다 — 안 그린다.</summary>
     public bool IsDormantEmoji(string objectId)
-        => _editor is not null && SceneAtTime(_clock.Time) is { } scene && FiredUntil(double.PositiveInfinity) is { Count: > 0 } all
+        => _editor is not null && Scene is { } scene && FiredUntil(double.PositiveInfinity) is { Count: > 0 } all
             && EmojiEvents.Targets(_editor.Document, scene, all).Contains(objectId) && EmojiPlayOn(objectId) is null;
 
     /// <summary>그 오브젝트가 지금 입은 것 — 스킨, 그림 넘기기의 시각(뜬 뒤 몇 초), 반전 판인가(그림을 뒤집지 않고 그린다).</summary>
@@ -1835,11 +1579,6 @@ public sealed class ViewportView : Control
             _clock.SetDuration(motion.Duration);
             RangeChanged?.Invoke(this, EventArgs.Empty);
         }
-        else if (_editor is not null && ShownClip is { } clip)
-        {
-            _clock.SetDuration(ClipTiming.DurationOf(_editor.Document, clip));
-            RangeChanged?.Invoke(this, EventArgs.Empty);
-        }
         else if (_editor is not null && ShownEmoji is { } emoji)
         {
             _clock.SetDuration(EmojiPreview.PhasesOf(_editor.Document, emoji).Total);
@@ -1850,7 +1589,6 @@ public sealed class ViewportView : Control
     private void RebuildTemplate()
     {
         _template = null;
-        _clipStage = null;
         SceneAsset? scene = Scene;
 
         if (_rig is null || scene is null)
@@ -1859,13 +1597,6 @@ public sealed class ViewportView : Control
         }
 
         _template = ScenePreview.Build(_rig, scene, AspectOf, null, _depth, _focus, _stage);
-
-        // 클립을 보는 중이면 상태 블록의 단계도 같이 세운다 — 문서·자산·끈 배역이 바뀔 때만 다시 세우고 프레임마다는 섞기만 한다.
-        if (_editor is not null && ShownClip is { } clip)
-        {
-            RigSchemaFile rig = _rig;
-            _clipStage = ClipStage.Build(_editor.Document, clip, s => ScenePreview.Build(rig, s, AspectOf, null, _depth, _focus, _stage), IsClipTrackMuted);
-        }
     }
 
     // ── 시계 ──────────────────────────────────────────────────────────
@@ -1986,12 +1717,6 @@ public sealed class ViewportView : Control
             return null;
         }
 
-        if (_editor is not null && ShownClip is { } clip)
-        {
-            // 무대(상태 블록)가 먼저 서고 모션이 그 위에 얹힌다.
-            return ClipPreview.Pose(_clipStage?.TreeAt(seconds) ?? _template, _editor.Document, clip, seconds, IsClipTrackMuted, _clipStage?.CameraAt(seconds), null, alphas);
-        }
-
         // 이모지 정의 — 수명 한 번(등장 → 머묾 → 퇴장)을 그 리그의 오브젝트에 얹는다.
         if (_editor is not null && ShownEmoji is { } emoji)
         {
@@ -2016,22 +1741,14 @@ public sealed class ViewportView : Control
     /// <summary>이벤트가 울린 뒤 화면에 남아 있는 시간(초) — 미리보기에서 "여기서 울린다"를 본다.</summary>
     public const double EventFlash = 0.4;
 
-    /// <summary>
-    /// 방금(<see cref="EventFlash"/> 안에) 울린 이벤트 키들 — "이름 값" 또는 클립이면 "오브젝트: 이름 값". 스크럽해도 그 자리의 것이 보인다.
-    /// </summary>
+    /// <summary>방금(<see cref="EventFlash"/> 안에) 울린 이벤트 키들("이름 값"). 스크럽해도 그 자리의 것이 보인다.</summary>
     public IReadOnlyList<string> RecentEvents()
     {
         double now = _clock.Time;
         static string Text(string name, string? value) => string.IsNullOrEmpty(value) ? name : $"{name} {value}";
 
-        if (_editor is not null && ShownClip is { } clip)
-        {
-            return ClipPreview.EventsBetween(_editor.Document, clip, now - EventFlash, now, IsClipTrackMuted)
-                .Select(e => e.ObjectId is null ? Text(e.Name, e.Value) : $"{e.ObjectId}: {Text(e.Name, e.Value)}").ToList();
-        }
-
         return Motion is { Events.Count: > 0 } bound
-            ? ClipPreview.EventsBetween(bound, now - EventFlash, now).Select(e => Text(e.Name, e.Value)).ToList()
+            ? MotionEvents.Between(bound, now - EventFlash, now).Select(e => Text(e.Name, e.Value)).ToList()
             : Array.Empty<string>();
     }
 
@@ -2081,7 +1798,7 @@ public sealed class ViewportView : Control
 
     /// <summary>그 노드가 불투명도를 받을 수 있나 — 덤프에 CanvasGroup이 있는 노드만.</summary>
     public bool CanTakeAlpha(string? node)
-        => node is not null && _rig is not null && (ContextActor ?? SelectedObject) is { } o
+        => node is not null && _rig is not null && SelectedObject is { } o
            && _rig.AlphaNodeIds.TryGetValue(o.Rig, out ICollection<string>? nodes) && nodes.Contains(node);
 
     /// <summary>
@@ -2098,10 +1815,7 @@ public sealed class ViewportView : Control
         return CurrentPose(alphas) is null ? null : alphas.TryGetValue(Prefix + node, out float alpha) ? alpha : 1f;
     }
 
-    /// <summary>
-    /// 불투명도를 지금 시각에 키한다(값 칸) — 알파 채널의 키 하나, 되돌리기 한 칸. 없던 채널이면 생긴다.
-    /// 클립 안에서는 블록의 규칙을 따른다: 시각 = 시계 − 블록의 시작, 재생 기준 = 블록의 것, 시작값 = 이 블록만 뺀 그 시각의 불투명도.
-    /// </summary>
+    /// <summary>불투명도를 지금 시각에 키한다(값 칸) — 알파 채널의 키 하나, 되돌리기 한 칸. 없던 채널이면 생긴다.</summary>
     public void SetAlphaValue(string node, float value)
     {
         if (_editor is null || !CanTakeAlpha(node) || EditMotion is not { } motion || CameraRig.IsCamera(motion) || _template is null)
@@ -2111,20 +1825,14 @@ public sealed class ViewportView : Control
 
         float start = 1f;
 
-        if (ShownClip is { } clip && ContextEntry is { } entry)
-        {
-            var before = new Dictionary<string, float>(StringComparer.Ordinal);
-            ClipPreview.Pose(_clipStage?.TreeAt(_clock.Time) ?? _template, _editor.Document, clip, _clock.Time, IsClipTrackMuted, null, entry.Block, before, ContextCycle);
-            start = before.TryGetValue(Prefix + node, out float alpha) ? alpha : 1f;
-        }
-        else if (_emojiPhase is { } phase && ShownEmoji is { } emoji && EmojiActor is { } actor)
+        if (_emojiPhase is { } phase && ShownEmoji is { } emoji && EmojiActor is { } actor)
         {
             var before = new Dictionary<string, float>(StringComparer.Ordinal);
             EmojiPreview.PoseBefore(_template, _editor.Document, emoji, actor, phase, before);
             start = before.TryGetValue(Prefix + node, out float alpha) ? alpha : 1f;
         }
 
-        float key = PoseEdit.KeyValueFor(MotionChannelKind.Alpha, EditModeOf(motion), start, Math.Clamp(value, 0f, 1f));
+        float key = PoseEdit.KeyValueFor(MotionChannelKind.Alpha, motion.PreviewMode, start, Math.Clamp(value, 0f, 1f));
         _editor.KeyComponents(motion.Name, node, MotionChannelKind.Alpha, (float)Math.Max(0, SnapTime(EditTime)), new[] { (Axis.X, Math.Clamp(key, 0f, 1f)) }, DefaultTangent);
     }
 
@@ -2240,27 +1948,6 @@ public sealed class ViewportView : Control
             return;
         }
 
-        if (ShownClip is { } shown)
-        {
-            // 고른 블록 안이면 그 캐릭터에 손잡이가 선다 — 클립 안에서 바로 포즈를 잡는다.
-            if (EditMotion is { } editing && ContextEntry is { } entry)
-            {
-                DrawAxes(context, pose);
-                DrawGizmo(context, pose);
-                DrawLabel(context, $"클립 {shown.Name} › {editing.Name} @ {entry.Block.At:0.###}s · {MotionModeLabel.Of(entry.Block.Mode)} — 이 블록의 모션에 키가 놓인다", new Point(stage.X + 8, stage.Y + 6));
-                return;
-            }
-
-            if (CameraContext is { } cameraEdit)
-            {
-                DrawLabel(context, $"클립 {shown.Name} › 카메라 모션 {cameraEdit.Motion.Name} @ {cameraEdit.Block.At:0.###}s · {MotionModeLabel.Of(cameraEdit.Block.Mode)} — '모션' 탭의 카메라 칸이 이 블록에 키를 놓는다", new Point(stage.X + 8, stage.Y + 6));
-                return;
-            }
-
-            DrawLabel(context, $"클립 {shown.Name} · {_clock.Duration:0.###}s · 출연 {shown.Roles.Count}", new Point(stage.X + 8, stage.Y + 6));
-            return;
-        }
-
         // 배치 모드 — 키를 놓는 손잡이가 아니라 고른 오브젝트의 사각형과 원점.
         if (IsLayoutMode)
         {
@@ -2345,27 +2032,6 @@ public sealed class ViewportView : Control
 
         if (scene is null)
         {
-            return;
-        }
-
-        // 클립의 상태 블록이 있으면 그 시각의 씬(층·그리는 순서)과 불투명도(보이기 블록의 페이드)로 그린다.
-        if (ShownClip is not null && _clipStage is { } stage)
-        {
-            foreach (SceneObject o in stage.SceneAt(_clock.Time).DrawOrder())
-            {
-                float opacity = stage.OpacityOf(o.Id, _clock.Time);
-
-                if (opacity <= 0.001f || IsDormantEmoji(o.Id))
-                {
-                    continue;
-                }
-
-                using (context.PushOpacity(opacity))
-                {
-                    DrawObject(context, pose, o, selected: o.Id == _selectedObjectId);
-                }
-            }
-
             return;
         }
 
@@ -2714,9 +2380,8 @@ public sealed class ViewportView : Control
             return;
         }
 
-        // 클립 층에서는 고른 블록 안에서만 포즈를 잡는다(EditMotion). 카메라 모션에는 캐릭터의 포즈를 키하지 않는다.
-        bool canPose = ShownEmoji is not null ? EmojiEdit is not null
-            : ShownClip is null ? !CameraRig.IsCamera(Motion) : EditMotion is not null && ContextEntry is not null;
+        // 카메라 모션에는 캐릭터의 포즈를 키하지 않는다.
+        bool canPose = ShownEmoji is not null ? EmojiEdit is not null : !CameraRig.IsCamera(Motion);
 
         if (canPose && TryStartManipulation(position))
         {
@@ -2749,7 +2414,7 @@ public sealed class ViewportView : Control
 
         foreach (SceneObject o in scene.DrawOrder().Reverse())
         {
-            if (OpacityOf(o.Id) <= 0.001f)
+            if (!o.Visible)
             {
                 continue;
             }

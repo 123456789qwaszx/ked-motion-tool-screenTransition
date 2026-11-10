@@ -16,10 +16,7 @@ public class CameraMotionTests
     private static RectNodeTree BuildTree(SceneAsset scene)
         => ScenePreview.Build(RigFile, scene, null, null, BuiltinTuning.Depth, BuiltinTuning.Focus, BuiltinTuning.StageRig);
 
-    /// <summary>
-    /// push(1초 commit): zoom 0 → 4, pan x 0 → 100. shake(0.5초 restore): pan y 0 → 20 → 0. nod(캐릭터, 0.6초).
-    /// clip: 배역 a(s1) 트랙 0, 카메라 트랙 1.
-    /// </summary>
+    /// <summary>push(1초 commit): zoom 0 → 4, pan x 0 → 100. shake(0.5초 restore): pan y 0 → 20 → 0. nod(캐릭터, 0.6초).</summary>
     private static MotionEditor NewEditor()
     {
         var editor = new MotionEditor(new MotionDocument());
@@ -37,17 +34,10 @@ public class CameraMotionTests
         editor.AddMotion("nod", "character", 0.6f);
         editor.AddChannel("nod", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position);
         editor.SetKeys("nod", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.3f, -18f), Fixtures.Key(0.6f, 0f) });
-
-        editor.AddClip("clip");
-        editor.AddClipRole("clip", "a", "character", "s1");
-        editor.AddClipTrack("clip", "a");
-        editor.AddClipTrack("clip", ClipTrack.CameraRole);
         return editor;
     }
 
     private static KeyAsset Linear(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Linear };
-
-    private static ClipAsset Clip(MotionEditor editor) => editor.Document.FindClip("clip")!;
 
     private static void Near(float expected, float actual, float tolerance = 1e-3f) => Assert.InRange(actual, expected - tolerance, expected + tolerance);
 
@@ -100,98 +90,5 @@ public class CameraMotionTests
         Assert.True(MotionExport.TryExport(editor.Document, RigFile.NodeIds, out string again, out _));
         Assert.Equal(json, again);
         Assert.Contains(MotionValidator.Validate(editor.Document, CameraRig.WithCamera(RigFile.NodeIds)), p => p.Blocking && p.MotionName == "push");
-    }
-
-    [Fact]
-    public void 클립의_카메라_트랙에서_카메라_모션이_무대를_움직인다()
-    {
-        MotionEditor editor = NewEditor();
-        editor.AddClipBlock("clip", 1, "push", 0.5f); // absolute(모션의 렌즈)
-        editor.AddClipBlock("clip", 0, "nod", 0f);
-        ClipAsset clip = Clip(editor);
-        ClipStage stage = ClipStage.Build(editor.Document, clip, BuildTree)!;
-
-        RectNodeTree PoseAt(double t) => ClipPreview.Pose(stage.TreeAt(t), editor.Document, clip, t, null, stage.CameraAt(t));
-
-        string panKey = StageNodes.KeyOf(StageNodes.PanRoot);
-        string zoomKey = StageNodes.KeyOf(StageNodes.ZoomRoot);
-
-        Near(0f, PoseAt(0.3).GetState(panKey).AnchoredPosition.X);  // 아직 시작 전
-        Near(-18f, PoseAt(0.3).GetState("s1/CharacterPortrait_Track_Move_Y").AnchoredPosition.Y); // 캐릭터는 제 블록대로
-        Near(50f, PoseAt(1.0).GetState(panKey).AnchoredPosition.X);
-        Near(ShotIntentMath.EvaluateCameraScale(2f), PoseAt(1.0).GetState(zoomKey).LocalScale.X);
-
-        // 끝난 뒤의 무대 = 카메라를 그 값으로 둔 씬(층 패럴랙스까지).
-        SceneAsset expectedScene = ClipPreview.SceneOf(editor.Document, clip)!.Clone();
-        expectedScene.Camera.Zoom = 4f;
-        expectedScene.Camera.PanX = 100f;
-        RectNodeTree expected = BuildTree(expectedScene);
-        RectNodeTree after = PoseAt(5.0);
-
-        foreach (string key in expected.Keys)
-        {
-            RectNodeState e = expected.GetState(key);
-            RectNodeState a = after.GetState(key);
-            Assert.True(
-                Math.Abs(e.AnchoredPosition.X - a.AnchoredPosition.X) < 1e-3f && Math.Abs(e.AnchoredPosition.Y - a.AnchoredPosition.Y) < 1e-3f && Math.Abs(e.LocalScale.X - a.LocalScale.X) < 1e-5f,
-                $"노드 {key}가 다르다");
-        }
-
-        Assert.Equal(1.5f, ClipTiming.DurationOf(editor.Document, clip), 4);
-        Assert.Empty(ClipValidator.ValidateClip(editor.Document, clip, RigFile.NodeIds));
-    }
-
-    [Fact]
-    public void 카메라_모션은_카메라_블록이_둔_값에서_시작하고_앞_블록이_남긴_값을_잇는다()
-    {
-        MotionEditor editor = NewEditor();
-        editor.AddClipStateBlock("clip", 1, new ClipBlock { Kind = ClipBlockKind.Camera, At = 0f, Duration = 1f, PanY = 40f });
-        editor.AddClipBlock("clip", 1, "shake", 0.25f, MotionChannelMode.Relative); // 0.25 ~ 0.75: 가던 값 위에 흔들림
-        editor.AddClipBlock("clip", 1, "push", 1f, MotionChannelMode.Relative);     // 1 ~ 2: zoom +4, pan x +100
-        editor.AddClipBlock("clip", 1, "push", 2f, MotionChannelMode.Relative);     // 2 ~ 3: 이어서 한 번 더
-        ClipAsset clip = Clip(editor);
-        ClipStage stage = ClipStage.Build(editor.Document, clip, BuildTree)!;
-
-        CameraSettings At(double t) => ClipPreview.CameraAt(editor.Document, clip, stage.CameraAt(t), t)!;
-
-        Near(20f, stage.CameraAt(0.5).PanY);   // 카메라 블록의 절반
-        Near(40f, At(0.5).PanY);               // + shake의 꼭대기 20
-        Near(30f, At(0.75).PanY);              // shake가 끝난 자리(restore) — 블록이 간 값만
-        Near(8f, At(9.0).Zoom);                // push 두 번
-        Near(200f, At(9.0).PanX);
-        Near(40f, At(9.0).PanY);
-        Assert.Null(ClipPreview.CameraAt(editor.Document, clip, stage.CameraAt(0.1), 0.1)); // 시작한 카메라 모션이 없다
-
-        // 카메라 트랙을 끄면 모션도 블록도 빠진다.
-        Assert.Null(ClipPreview.CameraAt(editor.Document, clip, null, 9.0, track => track.IsCamera));
-    }
-
-    [Fact]
-    public void 카메라_모션은_카메라_트랙에만_캐릭터_모션은_배역_트랙에만_놓인다()
-    {
-        MotionEditor editor = NewEditor();
-        long revision = editor.Revision;
-        Assert.Throws<InvalidOperationException>(() => editor.AddClipBlock("clip", 0, "push", 0f));
-        Assert.Throws<InvalidOperationException>(() => editor.AddClipBlock("clip", 1, "nod", 0f));
-        Assert.Equal(revision, editor.Revision);
-
-        editor.AddClipBlock("clip", 1, "push", 0f);
-        editor.AddClipBlock("clip", 0, "nod", 0f);
-        Assert.Throws<InvalidOperationException>(() => editor.MoveClipBlock("clip", 1, 0, 0f, toTrack: 0));
-        Assert.Throws<InvalidOperationException>(() => editor.MoveClipBlock("clip", 0, 0, 0f, toTrack: 1));
-        Assert.Throws<InvalidOperationException>(() => editor.SetClipBlockMotion("clip", 1, 0, "nod"));
-        editor.SetClipBlockMotion("clip", 1, 0, "shake");
-        Assert.Equal("shake", Clip(editor).Tracks[1].Blocks[0].Motion);
-
-        // 같은 카메라 노드를 같은 때에 쓰는 두 모션은 겹칠 수 없다(다른 노드면 된다 — shake는 pan y, push는 zoom·pan x... 가 아니라 pan 노드를 같이 쓴다).
-        editor.AddClipBlock("clip", 1, "push", 0.25f);
-        ClipProblem overlap = Assert.Single(ClipValidator.ValidateClip(editor.Document, Clip(editor), RigFile.NodeIds), p => p.Blocking);
-        Assert.Contains("카메라의 Camera_Pan", overlap.Message, StringComparison.Ordinal);
-        Assert.Equal(2, ClipValidator.OverlappingBlocks(editor.Document, Clip(editor)).Count);
-
-        // 손으로 쓴 파일: 카메라 트랙의 캐릭터 모션.
-        Clip(editor).Tracks[1].Blocks.Clear();
-        Clip(editor).Tracks[1].Blocks.Add(new ClipBlock { At = 0f, Motion = "nod" });
-        Assert.Contains(ClipValidator.ValidateClip(editor.Document, Clip(editor), RigFile.NodeIds), p => p.Blocking && p.Message.Contains("카메라 모션만", StringComparison.Ordinal));
     }
 }

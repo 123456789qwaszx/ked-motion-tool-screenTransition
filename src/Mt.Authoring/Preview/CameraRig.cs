@@ -13,7 +13,6 @@ namespace Mt.Authoring.Preview;
 /// (relative = 지금 값 + 키, absolute = 키 그대로, restore/commit 끝 규칙).
 ///
 /// 런타임의 모션 규약(<c>motions/2</c>)은 리그 노드만 안다 — 카메라 모션은 <c>motions.json</c>에 **나가지 않는다**(<see cref="Validation.MotionExport"/>).
-/// 클립 산출물 초안(K6)이 실을 자리다.
 /// </summary>
 public static class CameraRig
 {

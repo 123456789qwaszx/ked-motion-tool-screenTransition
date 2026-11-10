@@ -14,7 +14,7 @@ using Mt.Authoring.Validation;
 namespace Mt.App;
 
 // 이모지 정의의 셸(PLAN-parts.md §8) — 오른쪽 "이모지" 탭. 목록에서 고르면 그 이모지가 시간의 주인이 된다:
-// 뷰포트·타임 슬라이더가 수명 한 번(등장 → 머묾 → 퇴장)을 재생하고, 모션·클립 선택은 풀린다. 값은 아래 칸에서 고친다(각각 되돌리기 한 칸).
+// 뷰포트·타임 슬라이더가 수명 한 번(등장 → 머묾 → 퇴장)을 재생하고, 모션 선택은 풀린다. 값은 아래 칸에서 고친다(각각 되돌리기 한 칸).
 public partial class MainWindow
 {
     private const string NoneChoice = "(없음)";
@@ -56,7 +56,7 @@ public partial class MainWindow
     {
         var panel = new StackPanel { Spacing = 4, Margin = new Avalonia.Thickness(0, 6, 0, 0) };
         _emojiList.SelectionChanged += (_, _) => OnEmojiSelected();
-        ToolTip.SetTip(_emojiList, "연출 — \"이 세트를, 이 스킨으로, 등장·머묾·퇴장은 이 애니메이션으로, 여기에 세운다\"에 붙인 이름(이모지 · 화면 전환 · 소개…). 대본이 이 이름으로 부른다. 고르면 뷰포트가 수명 한 번을 재생한다(모션·클립 선택은 풀린다)");
+        ToolTip.SetTip(_emojiList, "연출 — \"이 세트를, 이 스킨으로, 등장·머묾·퇴장은 이 애니메이션으로, 여기에 세운다\"에 붙인 이름(이모지 · 화면 전환 · 소개…). 대본이 이 이름으로 부른다. 고르면 뷰포트가 수명 한 번을 재생한다(모션 선택은 풀린다)");
         panel.Children.Add(_emojiList);
 
         Button add = SmallButton("연출 추가", (_, _) => Guard("연출 추가", () => AddEmoji()));
@@ -233,8 +233,20 @@ public partial class MainWindow
 
     // ── 이모지 안에서 구간의 모션을 고친다 (PLAN-parts.md §15) ─────────
 
-    /// <summary>클립이나 이모지를 보면서 그 안의 모션을 고치는 중인가 — 그래프의 모션은 "고른 모션"이 아니다(목록에서 골라 주면 문맥이 풀린다).</summary>
-    private bool EditingInPlace => SelectedClip is not null || SelectedEmoji is not null;
+    /// <summary>이모지를 보면서 그 안의 모션을 고치는 중인가 — 그래프의 모션은 "고른 모션"이 아니다(목록에서 골라 주면 문맥이 풀린다).</summary>
+    private bool EditingInPlace => SelectedEmoji is not null;
+
+    /// <summary>가운데 아래 탭 — 그래프 · 도프 시트.</summary>
+    private readonly TabControl _editorTabs = new() { Padding = new Avalonia.Thickness(0) };
+
+    /// <summary>테스트 손잡이 — 가운데 아래 탭 번호.</summary>
+    internal int EditorTab => _editorTabs.SelectedIndex;
+
+    /// <summary>
+    /// 이모지 안에서 구간의 모션을 고치는 중일 때 그 구간의 시작 시각 — 그래프·도프 시트의 시각(모션 기준, 0부터)과 뷰포트 시계(수명의 시각)의 차.
+    /// 그 밖에는 0.
+    /// </summary>
+    private double _contextOffset;
 
     private EmojiPhase? _emojiPhase;
     private readonly Dictionary<EmojiPhase, ToggleButton> _emojiPhaseButtons = new();
@@ -263,7 +275,7 @@ public partial class MainWindow
             buttons.Children.Add(button);
         }
 
-        ToolTip.SetTip(_emojiPhaseUnique, "이 구간의 모션을 복제해 이 이모지만 쓰게 한다 — 다른 이모지·클립은 원래 모션을 그대로 쓴다(되돌리기 한 번)");
+        ToolTip.SetTip(_emojiPhaseUnique, "이 구간의 모션을 복제해 이 이모지만 쓰게 한다 — 다른 이모지는 원래 모션을 그대로 쓴다(되돌리기 한 번)");
         _emojiPhaseUnique.Click += (_, _) => Guard("이 이모지만의 모션으로", () => MakeEmojiPhaseUnique());
         return new StackPanel { Spacing = 3, Children = { buttons, _emojiPhaseNote, _emojiPhaseUnique } };
     }
@@ -289,7 +301,7 @@ public partial class MainWindow
 
     /// <summary>
     /// 이모지 안에서 고치기 — 고른 구간의 모션을 그래프·도프 시트에 묶고 뷰포트에 그 구간을 알린다. 이모지는 고른 채로 남고 뷰포트는 수명 전체를 보인다.
-    /// 클립 안에서 고치기(<see cref="SyncBlockContext"/>)와 같은 꼴: 그래프의 시각은 모션 기준이고 시계와는 구간의 시작만큼 어긋난다.
+    /// 그래프의 시각은 모션 기준이고 시계와는 구간의 시작만큼 어긋난다.
     /// </summary>
     private void SyncEmojiContext()
     {
@@ -297,13 +309,13 @@ public partial class MainWindow
         {
             _viewport.EmojiPhaseContext = null;
             RefreshEmojiPhaseRow();
-            return; // 모션·클립 층 — 그래프는 그쪽의 것이다
+            return; // 모션 층 — 그래프는 그쪽의 것이다
         }
 
         MotionDocument document = _session.Editor.Document;
         string? motion = _emojiPhase is { } phase && EmojiPreview.MotionNameOf(emoji, phase) is { } name && document.Find(name) is not null ? name : null;
         _viewport.EmojiPhaseContext = motion is null ? null : _emojiPhase;
-        _blockOffset = motion is null ? 0 : _viewport.EmojiPhaseTimeOffset;
+        _contextOffset = motion is null ? 0 : _viewport.EmojiPhaseTimeOffset;
 
         if (_graph.MotionName != motion)
         {
@@ -318,8 +330,8 @@ public partial class MainWindow
 
         SyncTime(() =>
         {
-            _graph.CurrentTime = _viewport.Time - _blockOffset;
-            _dope.CurrentTime = _viewport.Time - _blockOffset;
+            _graph.CurrentTime = _viewport.Time - _contextOffset;
+            _dope.CurrentTime = _viewport.Time - _contextOffset;
         });
         _timeSlider.InvalidateVisual(); // 고치는 모션의 키 틱
         RefreshEmojiPhaseRow();
@@ -347,9 +359,8 @@ public partial class MainWindow
 
         // 함께 쓰는 모션 — 고치면 다 바뀐다. 누가 쓰는지 보이고, 떼어 낼 수 있다.
         List<string> others = document.Emojis.Where(e => e.Name != emoji!.Name && (e.Enter == motion || e.Hold == motion || e.Exit == motion)).Select(e => e.Name).ToList();
-        int clips = ClipTiming.UsesOf(document, motion);
-        bool shared = others.Count > 0 || clips > 0;
-        string who = string.Join(" · ", others.Take(4)) + (others.Count > 4 ? $" 외 {others.Count - 4}" : "") + (clips > 0 ? $"{(others.Count > 0 ? " · " : "")}클립 {clips}곳" : "");
+        bool shared = others.Count > 0;
+        string who = string.Join(" · ", others.Take(4)) + (others.Count > 4 ? $" 외 {others.Count - 4}" : "");
         _emojiPhaseNote.Text = shared
             ? $"모션 {motion} — 함께 쓴다: {who}. 여기서 고치면 다 바뀐다."
             : $"모션 {motion} — 이 이모지만 쓴다.";
@@ -398,8 +409,7 @@ public partial class MainWindow
 
         if (SelectedEmoji is not null)
         {
-            // 시간의 주인은 하나 — 모션과 클립을 푼다. 모션 선택을 풀면 그 알림이 다시 묶는다(BindMotion → 이모지).
-            DeselectClip();
+            // 시간의 주인은 하나 — 모션을 푼다. 모션 선택을 풀면 그 알림이 다시 묶는다(BindMotion → 이모지).
 
             if (SelectedMotion is not null)
             {
@@ -415,7 +425,7 @@ public partial class MainWindow
         RefreshEmojiInspector();
     }
 
-    /// <summary>모션이나 클립을 골랐다 — 이모지 선택을 푼다(다시 묶는 일은 고른 쪽이 한다).</summary>
+    /// <summary>모션을 골랐다 — 이모지 선택을 푼다(다시 묶는 일은 고른 쪽이 한다).</summary>
     private void DeselectEmoji()
     {
         if (SelectedEmoji is null)
@@ -446,7 +456,7 @@ public partial class MainWindow
             string? selected = SelectedEmoji ?? _viewport.EmojiName;
             List<string> names = _session.Editor.Document.Emojis.Select(e => e.Name).OrderBy(n => n, StringComparer.Ordinal).ToList();
             _emojiList.ItemsSource = names;
-            _emojiList.SelectedIndex = selected is null || SelectedMotion is not null || SelectedClip is not null ? -1 : names.IndexOf(selected);
+            _emojiList.SelectedIndex = selected is null || SelectedMotion is not null ? -1 : names.IndexOf(selected);
         }
         finally
         {
@@ -454,7 +464,7 @@ public partial class MainWindow
         }
 
         // 고른 이모지가 사라졌으면(삭제·되돌리기) 뷰포트를 풀어 준다.
-        if (_viewport.EmojiName != (SelectedMotion is null && SelectedClip is null ? SelectedEmoji : null))
+        if (_viewport.EmojiName != (SelectedMotion is null ? SelectedEmoji : null))
         {
             BindMotion(SelectedMotion);
         }

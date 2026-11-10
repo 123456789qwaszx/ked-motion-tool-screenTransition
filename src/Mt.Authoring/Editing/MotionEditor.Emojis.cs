@@ -74,7 +74,7 @@ public sealed partial class MotionEditor
     }
 
     /// <summary>
-    /// 이 이모지만의 모션으로 — 그 구간의 모션을 새 이름으로 복제해 이 이모지가 그것을 쓰게 한다(한 칸). 다른 이모지·클립은 원래 것을 그대로 쓴다.
+    /// 이 이모지만의 모션으로 — 그 구간의 모션을 새 이름으로 복제해 이 이모지가 그것을 쓰게 한다(한 칸). 다른 이모지는 원래 것을 그대로 쓴다.
     /// </summary>
     public string MakeEmojiPhaseUnique(string emojiName, Preview.EmojiPhase phase, string newName)
     {
