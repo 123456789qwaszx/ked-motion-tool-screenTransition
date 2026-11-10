@@ -216,8 +216,7 @@ public static class EmojisJson
 
         foreach (EmojiAsset e in document.Emojis.OrderBy(e => e.Name, StringComparer.Ordinal))
         {
-            // 품은 세트의 그림까지 — 펼친 리그의 이름(인스턴스.조각)으로.
-            var entry = new JsonObject { ["name"] = e.Name, ["rig"] = e.Rig, ["parts"] = PartsOf(Rig.RigAssets.EffectiveSkin(document, e.Rig, e.Skin)) };
+            var entry = new JsonObject { ["name"] = e.Name, ["rig"] = e.Rig, ["parts"] = PartsOf(document.FindSkin(e.Skin) is { } skin && skin.Rig == e.Rig ? skin : null) };
 
             // 반전 판 — 캐릭터가 좌우 반전일 때 이 그림을, 뒤집지 않고.
             if (document.FindSkin(e.SkinFlipped) is { } flipped)

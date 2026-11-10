@@ -2,382 +2,6 @@
   "schema": "motion-authoring/2",
   "motions": [
     {
-      "name": "seed_in",
-      "rig": "seed",
-      "duration": 0.6,
-      "end": "commit",
-      "previewMode": "relative",
-      "channels": [
-        {
-          "node": "orb",
-          "kind": "scale",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0.3,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.4,
-                "v": 1.1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.6,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          },
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0.3,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.4,
-                "v": 1.1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.6,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "orb_swirl",
-          "kind": "scale",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0.3,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.6,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          },
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0.3,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.6,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "orb_swirl",
-          "kind": "euler",
-          "z": {
-            "keys": [
-              {
-                "t": 0,
-                "v": -160,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.6,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "seed_spin",
-      "rig": "seed",
-      "duration": 1.5,
-      "end": "commit",
-      "previewMode": "relative",
-      "channels": [
-        {
-          "node": "orb_swirl",
-          "kind": "euler",
-          "z": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": -240,
-                "outTangent": -240,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 1.5,
-                "v": -360,
-                "inTangent": -240,
-                "outTangent": -240,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "orb",
-          "kind": "scale",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.75,
-                "v": 1.05,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1.5,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          },
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.75,
-                "v": 1.05,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1.5,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "crystal_in",
-      "rig": "crystal",
-      "duration": 0.6,
-      "end": "commit",
-      "previewMode": "relative",
-      "channels": [
-        {
-          "node": "crystals",
-          "kind": "position",
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": -260,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.45,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.6,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "crystals_light",
-          "kind": "position",
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": -260,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.45,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.6,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "crystals_light",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.3,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.6,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "crystal_glint",
-      "rig": "crystal",
-      "duration": 1.5,
-      "end": "restore",
-      "previewMode": "relative",
-      "channels": [
-        {
-          "node": "crystals_light",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.75,
-                "v": 0.45,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1.5,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
       "name": "heredity_in",
       "rig": "heredity",
       "duration": 1.5,
@@ -733,7 +357,47 @@
           }
         },
         {
-          "node": "crystal",
+          "node": "crystals",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -260,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.65,
+                "v": -260,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.1,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "crystals",
           "kind": "alpha",
           "x": {
             "keys": [
@@ -773,7 +437,335 @@
           }
         },
         {
-          "node": "seed",
+          "node": "crystals_light",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -260,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.65,
+                "v": -260,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.1,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "crystals_light",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.95,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.25,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "orb",
+          "kind": "scale",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.3,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.8,
+                "v": 0.3,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1.2,
+                "v": 1.1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1.4000001,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.3,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.8,
+                "v": 0.3,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1.2,
+                "v": 1.1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1.4000001,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "orb_swirl",
+          "kind": "scale",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.3,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.8,
+                "v": 0.3,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.4000001,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.3,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.8,
+                "v": 0.3,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.4000001,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "orb_swirl",
+          "kind": "euler",
+          "z": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -160,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.8,
+                "v": -160,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.4000001,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "orb",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.8,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.90000004,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "orb_swirl",
           "kind": "alpha",
           "x": {
             "keys": [
@@ -1058,20 +1050,6 @@
           "t": 0.25,
           "name": "covered"
         }
-      ],
-      "plays": [
-        {
-          "node": "crystal",
-          "motion": "crystal_in",
-          "at": 0.65,
-          "repeat": 1
-        },
-        {
-          "node": "seed",
-          "motion": "seed_in",
-          "at": 0.8,
-          "repeat": 1
-        }
       ]
     },
     {
@@ -1081,6 +1059,170 @@
       "end": "restore",
       "previewMode": "relative",
       "channels": [
+        {
+          "node": "orb_swirl",
+          "kind": "euler",
+          "z": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": -240,
+                "outTangent": -240,
+                "tangent": "linear",
+                "broken": false
+              },
+              {
+                "t": 3,
+                "v": -720,
+                "inTangent": -240,
+                "outTangent": -240,
+                "tangent": "linear",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "orb",
+          "kind": "scale",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.75,
+                "v": 1.05,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 2.25,
+                "v": 1.05,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 3,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.75,
+                "v": 1.05,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 2.25,
+                "v": 1.05,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 3,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "crystals_light",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.75,
+                "v": 0.45,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 2.25,
+                "v": 0.45,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 3,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        },
         {
           "node": "leaf_1",
           "kind": "position",
@@ -1305,20 +1447,6 @@
             ]
           }
         }
-      ],
-      "plays": [
-        {
-          "node": "seed",
-          "motion": "seed_spin",
-          "at": 0,
-          "repeat": 2
-        },
-        {
-          "node": "crystal",
-          "motion": "crystal_glint",
-          "at": 0,
-          "repeat": 2
-        }
       ]
     },
     {
@@ -1425,7 +1553,7 @@
           }
         },
         {
-          "node": "seed",
+          "node": "orb",
           "kind": "alpha",
           "x": {
             "keys": [
@@ -1457,7 +1585,7 @@
           }
         },
         {
-          "node": "seed",
+          "node": "orb",
           "kind": "scale",
           "x": {
             "keys": [
@@ -1517,7 +1645,139 @@
           }
         },
         {
-          "node": "crystal",
+          "node": "orb_swirl",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.3,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "orb_swirl",
+          "kind": "scale",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.3,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.3,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "crystals",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.05,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.35,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "crystals_light",
           "kind": "alpha",
           "x": {
             "keys": [
@@ -1822,29 +2082,17 @@
       "rig": "heredity",
       "parts": {
         "canopy": "art/09_canopy.png",
+        "crystals": "art/05_crystals.png",
+        "crystals_light": "art/06_crystals_light.png",
         "island": "art/07_island.png",
         "islets": "art/08_islets.png",
         "leaf_1": "art/10_leaf_1.png",
         "leaf_2": "art/11_leaf_2.png",
         "leaf_3": "art/12_leaf_3.png",
         "moon": "art/01_moon.png",
-        "spiral": "art/02_spiral.png"
-      }
-    },
-    {
-      "name": "seed",
-      "rig": "seed",
-      "parts": {
         "orb": "art/03_orb.png",
-        "orb_swirl": "art/04_orb_swirl.png"
-      }
-    },
-    {
-      "name": "crystal",
-      "rig": "crystal",
-      "parts": {
-        "crystals": "art/05_crystals.png",
-        "crystals_light": "art/06_crystals_light.png"
+        "orb_swirl": "art/04_orb_swirl.png",
+        "spiral": "art/02_spiral.png"
       }
     }
   ],
@@ -1864,68 +2112,6 @@
     }
   ],
   "rigs": [
-    {
-      "kind": "seed",
-      "nodes": [
-        {
-          "id": "orb",
-          "parent": "",
-          "x": 0,
-          "y": 0,
-          "width": 282,
-          "height": 286,
-          "rotation": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "image": true,
-          "alpha": true
-        },
-        {
-          "id": "orb_swirl",
-          "parent": "",
-          "x": -27.5,
-          "y": 42.5,
-          "width": 139,
-          "height": 113,
-          "rotation": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "image": true,
-          "alpha": true
-        }
-      ]
-    },
-    {
-      "kind": "crystal",
-      "nodes": [
-        {
-          "id": "crystals",
-          "parent": "",
-          "x": 0,
-          "y": 0,
-          "width": 580,
-          "height": 569,
-          "rotation": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "image": true,
-          "alpha": true
-        },
-        {
-          "id": "crystals_light",
-          "parent": "",
-          "x": -27,
-          "y": 13,
-          "width": 426,
-          "height": 443,
-          "rotation": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "image": true,
-          "alpha": true
-        }
-      ]
-    },
     {
       "kind": "heredity",
       "nodes": [
@@ -1970,31 +2156,55 @@
           "alpha": true
         },
         {
-          "id": "seed",
+          "id": "orb",
           "parent": "",
           "x": -43,
           "y": 101,
-          "width": 0,
-          "height": 0,
+          "width": 282,
+          "height": 286,
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "set": "seed",
-          "image": false,
+          "image": true,
           "alpha": true
         },
         {
-          "id": "crystal",
+          "id": "orb_swirl",
           "parent": "",
-          "x": 510,
-          "y": -74.5,
-          "width": 0,
-          "height": 0,
+          "x": -70.5,
+          "y": 143.5,
+          "width": 139,
+          "height": 113,
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "set": "crystal",
-          "image": false,
+          "image": true,
+          "alpha": true
+        },
+        {
+          "id": "crystals",
+          "parent": "",
+          "x": 510,
+          "y": -74.5,
+          "width": 580,
+          "height": 569,
+          "rotation": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "image": true,
+          "alpha": true
+        },
+        {
+          "id": "crystals_light",
+          "parent": "",
+          "x": 483,
+          "y": -61.5,
+          "width": 426,
+          "height": 443,
+          "rotation": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "image": true,
           "alpha": true
         },
         {

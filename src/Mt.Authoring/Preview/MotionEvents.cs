@@ -12,6 +12,6 @@ public static class MotionEvents
     public static List<MotionEventAsset> Between(MotionAsset motion, double after, double until)
     {
         ArgumentNullException.ThrowIfNull(motion);
-        return (motion.Flattened ?? motion).Events.Where(e => e.T > after + Epsilon && e.T <= until + Epsilon).ToList(); // 품은 애니메이션의 이벤트까지
+        return motion.Events.Where(e => e.T > after + Epsilon && e.T <= until + Epsilon).ToList();
     }
 }

@@ -2,253 +2,6 @@
   "schema": "motion-authoring/2",
   "motions": [
     {
-      "name": "orb_pop",
-      "rig": "orb",
-      "duration": 0.5,
-      "end": "commit",
-      "previewMode": "relative",
-      "channels": [
-        {
-          "node": "orb",
-          "kind": "scale",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0.2,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.32,
-                "v": 1.15,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.5,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          },
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0.2,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.32,
-                "v": 1.15,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.5,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "orb_bob",
-      "rig": "orb",
-      "duration": 2,
-      "end": "restore",
-      "previewMode": "relative",
-      "channels": [
-        {
-          "node": "orb",
-          "kind": "position",
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 22,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 2,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "orb",
-          "kind": "scale",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 1.06,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 2,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          },
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 1.06,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 2,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "orb_fade",
-      "rig": "orb",
-      "duration": 0.3,
-      "end": "commit",
-      "previewMode": "relative",
-      "channels": [
-        {
-          "node": "orb",
-          "kind": "scale",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.3,
-                "v": 0.5,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          },
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.3,
-                "v": 0.5,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "orb",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.3,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
       "name": "lapis_in",
       "rig": "lapis",
       "duration": 1.4,
@@ -689,6 +442,98 @@
         },
         {
           "node": "orb",
+          "kind": "scale",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.2,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.85,
+                "v": 0.2,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1.1700001,
+                "v": 1.15,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1.35,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.4,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.2,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.85,
+                "v": 0.2,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1.1700001,
+                "v": 1.15,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1.35,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.4,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "orb",
           "kind": "alpha",
           "x": {
             "keys": [
@@ -732,14 +577,6 @@
         {
           "t": 0.25,
           "name": "covered"
-        }
-      ],
-      "plays": [
-        {
-          "node": "orb",
-          "motion": "orb_pop",
-          "at": 0.85,
-          "repeat": 1
         }
       ]
     },
@@ -845,14 +682,98 @@
               }
             ]
           }
-        }
-      ],
-      "plays": [
+        },
         {
           "node": "orb",
-          "motion": "orb_bob",
-          "at": 0,
-          "repeat": 1
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1,
+                "v": 22,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 2,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "orb",
+          "kind": "scale",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1,
+                "v": 1.06,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 2,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1,
+                "v": 1.06,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 2,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
         }
       ]
     },
@@ -863,6 +784,98 @@
       "end": "commit",
       "previewMode": "relative",
       "channels": [
+        {
+          "node": "orb",
+          "kind": "scale",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.3,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.3,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "orb",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.3,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
         {
           "node": "stars",
           "kind": "alpha",
@@ -1271,14 +1284,6 @@
             ]
           }
         }
-      ],
-      "plays": [
-        {
-          "node": "orb",
-          "motion": "orb_fade",
-          "at": 0,
-          "repeat": 1
-        }
       ]
     }
   ],
@@ -1314,6 +1319,7 @@
       "parts": {
         "fish_school": "art/08_fish_school.png",
         "light_band": "art/01_light_band.png",
+        "orb": "art/11_orb.png",
         "pillars_far": "art/02_pillars_far.png",
         "pillars_mid": "art/04_pillars_mid.png",
         "ray": "art/09_ray.png",
@@ -1322,13 +1328,6 @@
         "stars": "art/10_stars.png",
         "trunk_left": "art/06_trunk_left.png",
         "trunk_right": "art/07_trunk_right.png"
-      }
-    },
-    {
-      "name": "orb",
-      "rig": "orb",
-      "parts": {
-        "orb": "art/11_orb.png"
       }
     }
   ],
@@ -1348,24 +1347,6 @@
     }
   ],
   "rigs": [
-    {
-      "kind": "orb",
-      "nodes": [
-        {
-          "id": "orb",
-          "parent": "",
-          "x": 0,
-          "y": 0,
-          "width": 199,
-          "height": 217,
-          "rotation": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "image": true,
-          "alpha": true
-        }
-      ]
-    },
     {
       "kind": "lapis",
       "nodes": [
@@ -1518,13 +1499,12 @@
           "parent": "",
           "x": -610.5,
           "y": 31.5,
-          "width": 0,
-          "height": 0,
+          "width": 199,
+          "height": 217,
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "set": "orb",
-          "image": false,
+          "image": true,
           "alpha": true
         }
       ]

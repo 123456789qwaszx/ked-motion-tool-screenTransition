@@ -1,0 +1,93 @@
+using Mt.Authoring.Model;
+
+namespace Mt.Authoring.Editing;
+
+// 세트의 이름을 바꾼다.
+public sealed partial class MotionEditor
+{
+    /// <summary>
+    /// 세트의 이름을 바꾼다 — 그 이름을 가리키던 것이 같은 칸에서 따라온다: 그 세트의 애니메이션·스킨·연출, 씬의 오브젝트.
+    /// **세트의 이름을 딴 이름들도 따라온다**: 애니메이션 <c>옛이름_x</c> → <c>새이름_x</c>, 스킨 <c>옛이름</c> — 새 이름이 비어 있을 때만.
+    /// </summary>
+    public void RenameRig(string kind, string newKind)
+    {
+        RigAsset rig = RequireRig(kind);
+
+        if (string.Equals(kind, newKind?.Trim(), StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        string name = RequireNewRigKind(newKind);
+
+        Batch(MotionChangeKind.Document, () =>
+        {
+            RenameRigCore(rig, kind, name);
+
+            foreach (MotionAsset motion in Document.Motions.Where(m => m.Rig == name && m.Name.StartsWith(kind + "_", StringComparison.Ordinal)).ToList())
+            {
+                string renamed = name + motion.Name[kind.Length..];
+
+                if (Document.Find(renamed) is null)
+                {
+                    RenameMotion(motion.Name, renamed);
+                }
+            }
+
+            if (Document.FindSkin(kind) is { } skin && skin.Rig == name && Document.FindSkin(name) is null)
+            {
+                RenameSkin(kind, name);
+            }
+        });
+    }
+
+    private void RenameRigCore(RigAsset rig, string kind, string name)
+    {
+        Mutate(MotionChangeKind.Document, () =>
+        {
+            rig.Kind = name;
+
+            foreach (MotionAsset motion in Document.Motions.Where(m => m.Rig == kind))
+            {
+                motion.Rig = name;
+            }
+
+            foreach (SkinAsset skin in Document.Skins.Where(s => s.Rig == kind))
+            {
+                skin.Rig = name;
+            }
+
+            foreach (EmojiAsset emoji in Document.Emojis.Where(e => e.Rig == kind))
+            {
+                emoji.Rig = name;
+            }
+
+            foreach (SceneObject o in Document.Scenes.SelectMany(s => s.Objects).Where(o => o.Rig == kind))
+            {
+                o.Rig = name;
+            }
+        });
+    }
+
+    private string RequireNewRigKind(string? kind)
+    {
+        string name = (kind ?? "").Trim();
+
+        if (!RigKindRule.IsMatch(name))
+        {
+            throw new InvalidOperationException($"세트 이름은 영문자로 시작하는 영문·숫자·_ 다 ('{kind}')");
+        }
+
+        if (ReservedRigKinds.Contains(name))
+        {
+            throw new InvalidOperationException($"'{name}'는 툴에서 정의하지 않는 리그다.");
+        }
+
+        if (Document.FindRig(name) is not null)
+        {
+            throw new InvalidOperationException($"세트 '{name}'가 이미 있다.");
+        }
+
+        return name;
+    }
+}

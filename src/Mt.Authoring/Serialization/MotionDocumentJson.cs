@@ -95,7 +95,6 @@ public static class MotionDocumentJson
             }
         }
 
-        Preview.MotionFlatten.Refresh(document); // 재생 블록이 있는 애니메이션을 펼쳐 굽는다(저작본에는 안 적힌다)
         return document;
     }
 

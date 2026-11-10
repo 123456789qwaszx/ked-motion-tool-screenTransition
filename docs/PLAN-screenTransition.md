@@ -152,8 +152,8 @@
 | 걸음 | 상태 | 적어 둘 것 |
 |---|---|---|
 | 1. 클립 | **끝**(2026-11-10) | `ClipAsset` · `ClipPreview` · `ClipStage` · `ClipBake` · `ClipValidator` · `MotionEditor.Clips` · `MainWindow.Clips` · `ClipTimelineView`, CLI의 `bake` · `pose --clip`, 오른쪽 "클립" 탭(연출 탭이 3번이 됐다), 설정의 `TimelineHeight`, `docs/PLAN-clip.md`, 예시 `emoji_demo` 클립. 이벤트 키 구간 계산은 `MotionEvents.Between`으로 남겼다. 뷰포트의 "문맥"은 이제 연출(이모지)의 구간 하나뿐이다(`_contextOffset`). `extend`의 `a528d7c`는 이 세션에서 볼 수 없어(저장소 권한) 본으로 삼지 못하고 직접 걷었다 |
-| 2. 예시를 한 덩어리로 · 조립 | 다음 | |
-| 3. 캐릭터에 붙는 연출 | | |
+| 2. 예시를 한 덩어리로 · 조립 | **끝**(2026-11-10) | 예시 다섯을 조립 없이 다시 지었다(빌더의 `At` — 작은 움직임을 그 시각에 놓기 · `Loop` — 한 바퀴를 이어 놓기). 캡처로 전과 같은 모습인지 견줬다. 걷은 것: `RigNodeAsset.Set` · `SetSkin`과 펼치기(`Expand` · 경로 이름 `a.b`), 재생 블록(`MotionPlayAsset` · `MotionFlatten` · `MainWindow.Plays` · 타임 슬라이더의 막대), 새 세트로 빼기(`ExtractRigNodes`), 안쪽 세트 열기/돌아가기 · 여기서 안쪽 고치기, 다른 문서에서 세트 들이기(`ImportSets`), `RigAssets.EffectiveSkin`. **세트 이름 바꾸기(`RenameRig`)는 남겼다**(`MotionEditor.RenameRig.cs`). 저작본의 `plays` · `set` · `setSkin` 자리는 이제 읽지 않는다(옛 문서의 것은 버려진다) |
+| 3. 캐릭터에 붙는 연출 | 다음 | |
 | 4. 씬 · 카메라 · 깊이 · 캐릭터 리그 | | |
 | 5. 코어 사본 줄이기 | | |
 

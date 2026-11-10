@@ -109,12 +109,10 @@ public partial class MainWindow
                 return;
             }
 
-            foreach (string node in OwnParts(parts))
+            foreach (string node in parts)
             {
                 _skinParts.Children.Add(SkinPartRow(skin, node, _skinSetupBoxes));
             }
-
-            _skinParts.Children.AddRange(NestedPartNotes(parts));
         }
         finally
         {
@@ -283,21 +281,4 @@ public partial class MainWindow
             _session.Editor.RemoveSkin(skin);
         }
     }
-
-    /// <summary>그 세트의 제 조각 — 품은 세트의 조각(경로 이름 <c>인스턴스.이름</c>)은 뺀다. 그 그림은 품은 세트의 스킨에 있다.</summary>
-    private static IEnumerable<string> OwnParts(IReadOnlyList<string> parts)
-        => parts.Where(p => !p.Contains(Mt.Authoring.Model.RigAssetCodec.PathSeparator, StringComparison.Ordinal));
-
-    /// <summary>품은 세트의 조각을 알리는 줄 — 인스턴스마다 한 줄("그림 없음"으로 보이지 않게, 어디서 고치는지와 함께).</summary>
-    private static IEnumerable<Control> NestedPartNotes(IReadOnlyList<string> parts)
-        => parts.Where(p => p.Contains(Mt.Authoring.Model.RigAssetCodec.PathSeparator, StringComparison.Ordinal))
-            .GroupBy(p => p.Split(Mt.Authoring.Model.RigAssetCodec.PathSeparator)[0])
-            .Select(g => (Control)new TextBlock
-            {
-                Text = $"{g.Key} — 품은 세트의 조각 {g.Count()}개. 그림은 그 세트를 열어 그 스킨에서 고친다",
-                FontSize = 10,
-                Opacity = 0.6,
-                TextWrapping = Avalonia.Media.TextWrapping.Wrap,
-                Margin = new Avalonia.Thickness(0, 2, 0, 0),
-            });
 }

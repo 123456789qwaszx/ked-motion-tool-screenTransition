@@ -222,7 +222,6 @@ public partial class MainWindow : Window
         _graph.Clipboard = _clipboard;
         _dope.Clipboard = _clipboard;
         _timeSlider.Viewport = _viewport;
-        _timeSlider.Rejected += message => _session.SetStatus(message);
         _timeSlider.Selection = _selection;
         _timeSlider.Clipboard = _clipboard;
         _rangeSlider.Viewport = _viewport;
@@ -1998,7 +1997,6 @@ public partial class MainWindow : Window
         panel.Children.Add(BuildCameraPanel());
         panel.Children.Add(BuildAlphaPanel());
         panel.Children.Add(BuildEventPanel());
-        panel.Children.Add(BuildPlayPanel());
 
         OnCommit(_motionName, text => WithMotion(m =>
         {
@@ -2566,12 +2564,6 @@ public partial class MainWindow : Window
                 string mark = _viewport.SetView is null ? "" : _viewport.SoloSetNode == node.id ? "   ◉ 이것만" : _viewport.IsSetNodeHidden(node.id) ? "   (숨김)" : "";
                 TreeViewItem nodeItem = Folder(node.id + mark, $"node:{o.Id}/{node.id}");
                 nodeItem.Opacity = shown ? 1 : 0.45;
-
-                // 품은 세트 안쪽의 것 — 참조다: 여기서는 못 고치고 그 세트를 열어 고친다.
-                if (_viewport.SetView is not null && node.id.Contains(RigAssetCodec.PathSeparator, StringComparison.Ordinal))
-                {
-                    nodeItem.Opacity *= 0.7;
-                }
                 nodeItem.Tag = new HierarchyNode(o.Id, node.id);
                 nodeItem.FontWeight = FontWeight.Normal;
                 nodeItem.Foreground = forbidden ? ForbiddenNodeBrush : PlacementNodes.IsPlacementAxis(node.id) ? PlacementNodeBrush : ActingNodeBrush;
@@ -3727,7 +3719,6 @@ public partial class MainWindow : Window
             _refreshDepth--;
             RefreshCameraPanel();
             RefreshEventPanel();
-            RefreshPlayPanel();
         }
     }
 

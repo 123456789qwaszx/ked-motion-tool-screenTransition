@@ -2,305 +2,6 @@
   "schema": "motion-authoring/2",
   "motions": [
     {
-      "name": "sun_rise",
-      "rig": "sun",
-      "duration": 0.8,
-      "end": "commit",
-      "previewMode": "relative",
-      "channels": [
-        {
-          "node": "disc",
-          "kind": "position",
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": -300,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.7,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.8,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "glow",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.1,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.8,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "glow",
-          "kind": "scale",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0.5,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.1,
-                "v": 0.5,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.8,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          },
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0.5,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.1,
-                "v": 0.5,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.8,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "sun_pulse",
-      "rig": "sun",
-      "duration": 1.5,
-      "end": "restore",
-      "previewMode": "relative",
-      "channels": [
-        {
-          "node": "glow",
-          "kind": "scale",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.75,
-                "v": 1.08,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1.5,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          },
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.75,
-                "v": 1.08,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1.5,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "sun_set",
-      "rig": "sun",
-      "duration": 0.5,
-      "end": "commit",
-      "previewMode": "relative",
-      "channels": [
-        {
-          "node": "disc",
-          "kind": "position",
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.5,
-                "v": -300,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "disc",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.3,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.5,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "glow",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.4,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.5,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
       "name": "pillar_in",
       "rig": "pillar",
       "duration": 1.5,
@@ -661,6 +362,46 @@
         },
         {
           "node": "sun",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": -300,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.6,
+                "v": -300,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.3,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "sun",
           "kind": "alpha",
           "x": {
             "keys": [
@@ -682,6 +423,122 @@
               },
               {
                 "t": 0.70000005,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "sun_glow",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.7,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.4,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "sun_glow",
+          "kind": "scale",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.7,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.4,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.7,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.4,
                 "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
@@ -1033,14 +890,6 @@
           "t": 0.25,
           "name": "covered"
         }
-      ],
-      "plays": [
-        {
-          "node": "sun",
-          "motion": "sun_rise",
-          "at": 0.6,
-          "repeat": 1
-        }
       ]
     },
     {
@@ -1381,14 +1230,98 @@
               }
             ]
           }
-        }
-      ],
-      "plays": [
+        },
         {
-          "node": "sun",
-          "motion": "sun_pulse",
-          "at": 0,
-          "repeat": 2
+          "node": "sun_glow",
+          "kind": "scale",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.75,
+                "v": 1.08,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 2.25,
+                "v": 1.08,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 3,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 0.75,
+                "v": 1.08,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 2.25,
+                "v": 1.08,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 3,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              }
+            ]
+          }
         }
       ]
     },
@@ -1478,6 +1411,110 @@
               },
               {
                 "t": 0.2,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "sun",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": -300,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1,
+                "v": -300,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "sun",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.3,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "sun_glow",
+          "kind": "alpha",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 0.4,
                 "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
@@ -1847,14 +1884,6 @@
             ]
           }
         }
-      ],
-      "plays": [
-        {
-          "node": "sun",
-          "motion": "sun_set",
-          "at": 0,
-          "repeat": 1
-        }
       ]
     }
   ],
@@ -1885,14 +1914,6 @@
   "activeScene": "scene",
   "skins": [
     {
-      "name": "sun",
-      "rig": "sun",
-      "parts": {
-        "disc": "art/05_sun.png",
-        "glow": "art/04_sun_glow.png"
-      }
-    },
-    {
       "name": "pillar",
       "rig": "pillar",
       "parts": {
@@ -1905,7 +1926,9 @@
         "petal_1": "art/10_petal_1.png",
         "petal_2": "art/11_petal_2.png",
         "petal_3": "art/12_petal_3.png",
-        "pillar": "art/09_pillar.png"
+        "pillar": "art/09_pillar.png",
+        "sun": "art/05_sun.png",
+        "sun_glow": "art/04_sun_glow.png"
       }
     }
   ],
@@ -1925,37 +1948,6 @@
     }
   ],
   "rigs": [
-    {
-      "kind": "sun",
-      "nodes": [
-        {
-          "id": "glow",
-          "parent": "",
-          "x": 32.5,
-          "y": -46.5,
-          "width": 999,
-          "height": 1027,
-          "rotation": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "image": true,
-          "alpha": true
-        },
-        {
-          "id": "disc",
-          "parent": "",
-          "x": 0,
-          "y": 0,
-          "width": 198,
-          "height": 198,
-          "rotation": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "image": true,
-          "alpha": true
-        }
-      ]
-    },
     {
       "kind": "pillar",
       "nodes": [
@@ -2013,17 +2005,29 @@
           "alpha": true
         },
         {
+          "id": "sun_glow",
+          "parent": "",
+          "x": 635.5,
+          "y": -199.5,
+          "width": 999,
+          "height": 1027,
+          "rotation": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "image": true,
+          "alpha": true
+        },
+        {
           "id": "sun",
           "parent": "",
           "x": 603,
           "y": -153,
-          "width": 0,
-          "height": 0,
+          "width": 198,
+          "height": 198,
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "set": "sun",
-          "image": false,
+          "image": true,
           "alpha": true
         },
         {

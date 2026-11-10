@@ -68,37 +68,7 @@ public class EmojiExampleTests
 
         // 층 표: 바탕색 + 층 열 장이 오브젝트 열하나로 — 뒤에서 앞으로.
         RigAsset set = document.FindRig(TransitionExamples.Station)!;
-        // 미생물 셋은 조립으로 옮겨져 품은 세트 microbes 하나로 선다.
-        Assert.Equal(new[] { "Backdrop", "arches", "floor", "pillars_left", "pillars_right", "train", "sign", "light", "microbes" }, set.Nodes.Select(n => n.Id));
-        Assert.Equal(new[] { "microbe_sun", "microbe_leaf", "microbe_cell" }, document.FindRig("microbes")!.Nodes.Select(n => n.Id));
-        Assert.Equal(new[] { "microbes_hold", "microbes_in", "microbes_out" }, document.Motions.Where(m => m.Rig == "microbes").Select(m => m.Name).OrderBy(n => n, StringComparer.Ordinal));
-        Assert.All(new[] { "station_in", "station_hold", "station_out" }, m => Assert.Equal("microbes", Assert.Single(document.Find(m)!.Plays).Node));
-
-        // 옮기기 전의 한 덩어리와 재생이 같다 — 수명 내내 미생물의 자리와 기울기가 그대로다.
-        {
-            MotionDocument whole = TransitionExamples.BuildStation(Path.Combine(directory, "art", "layers.tsv"), assemble: false).Document;
-            RigSchemaFile wholeRig = RigAssets.Compose(Dump, whole);
-            var stage = new SceneAsset { Name = "s", Objects = { new SceneObject { Id = "t", Rig = TransitionExamples.Station } } };
-            RectNodeTree wholeTemplate = ScenePreview.Build(wholeRig, stage);
-            RectNodeTree partsTemplate = ScenePreview.Build(rig, stage);
-
-            foreach (double t in new[] { 0.0, 0.5, 0.85, 1.0, 1.2, 1.7, 2.1, 2.5, 3.0 })
-            {
-                RectNodeTree a = EmojiPreview.Pose(wholeTemplate, whole, whole.FindEmoji(TransitionExamples.Station)!, stage.Objects[0], t);
-                RectNodeTree b = EmojiPreview.Pose(partsTemplate, document, document.FindEmoji(TransitionExamples.Station)!, stage.Objects[0], t);
-
-                foreach (string microbe in new[] { "microbe_sun", "microbe_leaf", "microbe_cell" })
-                {
-                    foreach (Vec3 probe in new[] { Vec3.Zero, new Vec3(100f, 0f, 0f) })
-                    {
-                        Vec3 was = a.TransformPoint("t/" + microbe, probe);
-                        Vec3 now = b.TransformPoint("t/microbes." + microbe, probe);
-                        Assert.True(Math.Abs(was.X - now.X) < 1.5f && Math.Abs(was.Y - now.Y) < 1.5f, $"{microbe} @ {t}: {was.X},{was.Y} → {now.X},{now.Y}");
-                    }
-                }
-            }
-        }
-
+        Assert.Equal(new[] { "Backdrop", "arches", "floor", "pillars_left", "pillars_right", "train", "sign", "light", "microbe_sun", "microbe_leaf", "microbe_cell" }, set.Nodes.Select(n => n.Id));
         Assert.Equal(("#10262B", 1920f, 1080f), (set.Find("Backdrop")!.Color, set.Find("Backdrop")!.Width, set.Find("Backdrop")!.Height));
         RigNodeAsset sign = set.Find("sign")!; // 표: 왼쪽 556 · 위 56 · 889×249 → 가운데 기준 (40.5, 359.5)
         Assert.Equal((40.5f, 359.5f, 889f, 249f), (sign.X, sign.Y, sign.Width, sign.Height));
@@ -144,12 +114,8 @@ public class EmojiExampleTests
         MotionDocument document = editor.Document;
         RigSchemaFile rig = RigAssets.Compose(Dump, document);
 
-        // 조립: pillar = 바탕색 + 층 열 + 해 세트(인스턴스) / 해 세트 = 빛 + 해. 해의 키는 pillar에 없고 재생 블록만 있다.
-        Assert.Equal(12, document.FindRig(TransitionExamples.Pillar)!.Nodes.Count);
-        Assert.Equal(new[] { "glow", "disc" }, document.FindRig(TransitionExamples.Sun)!.Nodes.Where(n => n.Image).Select(n => n.Id));
-        Assert.Equal(new[] { ("sun_rise", 0.6f, 1) }, document.Find("pillar_in")!.Plays.Select(p => (p.Motion, p.At, p.Repeat)));
-        Assert.Equal(new[] { ("sun_pulse", 0f, 2) }, document.Find("pillar_hold")!.Plays.Select(p => (p.Motion, p.At, p.Repeat)));
-        Assert.DoesNotContain(document.Find("pillar_in")!.Channels, c => c.Node.StartsWith("sun.", StringComparison.Ordinal));
+        // 바탕색 + 층 열둘.
+        Assert.Equal(13, document.FindRig(TransitionExamples.Pillar)!.Nodes.Count);
         string Problems<T>(IEnumerable<T> problems, Func<T, string> text) => string.Join("\n", problems.Select(text));
         Assert.True(!MotionValidator.Validate(document, rig.NodeIds, null, rig.AlphaNodeIds).Any(), Problems(MotionValidator.Validate(document, rig.NodeIds, null, rig.AlphaNodeIds), p => $"{p.MotionName}: {p.Message}"));
         Assert.True(!EmojiValidator.Validate(document, rig.NodeIds).Any(), Problems(EmojiValidator.Validate(document, rig.NodeIds), p => $"{p.EmojiName}: {p.Message}"));
@@ -178,7 +144,7 @@ public class EmojiExampleTests
         Assert.True(Offset("hill", 0.7) < -300f);
         Assert.Equal(0f, Offset("hill", 1.5), 1);
 
-        // 해: 제 차례(0.6초) 전에는 인스턴스가 숨어 있고, 재생 블록이 "뜬다"를 틀어 떠오르고(0.6 + 0.7초에 제자리), 퇴장에서 진다.
+        // 해: 제 차례(0.6초) 전에는 숨어 있고, 떠올라 1.3초에 제자리에 서고, 퇴장에서 진다.
         float SunAlpha(double t)
         {
             var alphas = new Dictionary<string, float>(StringComparer.Ordinal);
@@ -188,16 +154,16 @@ public class EmojiExampleTests
 
         Assert.Equal(0f, SunAlpha(0.3), 2);
         Assert.Equal(1f, SunAlpha(1.0), 2);
-        Assert.True(Offset("sun.disc", 0.9) < -100f);
-        Assert.Equal(0f, Offset("sun.disc", 1.4), 1);
-        Assert.True(Offset("sun.disc", 1.5 + 1.5 + 0.4) < -200f);
+        Assert.True(Offset("sun", 0.9) < -100f);
+        Assert.Equal(0f, Offset("sun", 1.4), 1);
+        Assert.True(Offset("sun", 1.5 + 1.5 + 0.4) < -200f);
     }
 
     [Theory]
-    [InlineData("lapis", "orb")]
-    [InlineData("heredity", "seed,crystal")]
-    [InlineData("mercury", "star")]
-    public void 조립으로_지은_세_장면은_검증을_지나고_저장된_파일과_같다(string name, string nested)
+    [InlineData("lapis", "orb", 0.85)]
+    [InlineData("heredity", "orb,orb_swirl,crystals", 0.65)]
+    [InlineData("mercury", "star", 0.7)]
+    public void 나머지_세_장면은_검증을_지나고_저장된_파일과_같다(string name, string late, double turn)
     {
         string directory = Path.Combine(Path.GetDirectoryName(ExampleDirectory())!, "transitions", name);
         string layers = Path.Combine(directory, "art", "layers.tsv");
@@ -225,25 +191,19 @@ public class EmojiExampleTests
         Assert.Equal(json, File.ReadAllText(path));
         Assert.All(document.Skins.SelectMany(s => s.AllImages()).Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
 
-        // 조립: 뺀 세트마다 인스턴스가 서고, 등장이 그 세트의 애니메이션을 재생 블록으로 틀며, 제 차례 전에는 인스턴스가 숨어 있다.
+        // 늦게 나오는 층은 제 차례 전에 숨어 있고("제 차례 전까지 숨기기"), 등장이 끝나면 다 보인다.
         EmojiAsset cue = document.FindEmoji(name)!;
         var scene = new SceneAsset { Name = "s", Objects = { new SceneObject { Id = "t", Rig = name } } };
         RectNodeTree template = ScenePreview.Build(rig, scene);
 
-        foreach (string set in nested.Split(','))
+        foreach (string node in late.Split(','))
         {
-            Assert.Equal(set, document.FindRig(name)!.Find(set)!.Set);
-            MotionPlayAsset play = Assert.Single(document.Find(name + "_in")!.Plays, p => p.Node == set);
-            Assert.Equal(set, document.Find(play.Motion)!.Rig);
             var early = new Dictionary<string, float>(StringComparer.Ordinal);
-            EmojiPreview.Pose(template, document, cue, scene.Objects[0], play.At - 0.1, early);
-            Assert.Equal(0f, early["t/" + set], 2);
-            var late = new Dictionary<string, float>(StringComparer.Ordinal);
-            EmojiPreview.Pose(template, document, cue, scene.Objects[0], document.Find(name + "_in")!.Duration, late);
-            Assert.Equal(1f, late.TryGetValue("t/" + set, out float shown) ? shown : 1f, 2);
+            EmojiPreview.Pose(template, document, cue, scene.Objects[0], turn - 0.1, early);
+            Assert.Equal(0f, early["t/" + node], 2);
+            var shown = new Dictionary<string, float>(StringComparer.Ordinal);
+            EmojiPreview.Pose(template, document, cue, scene.Objects[0], document.Find(name + "_in")!.Duration, shown);
+            Assert.Equal(1f, shown.TryGetValue("t/" + node, out float alpha) ? alpha : 1f, 2);
         }
-
-        // 산출물은 한 덩어리로 나간다.
-        Assert.DoesNotContain("plays", MotionsJson.Write(MotionExport.ToClips(document)), StringComparison.Ordinal);
     }
 }

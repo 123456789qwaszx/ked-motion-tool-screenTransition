@@ -19,7 +19,7 @@ public sealed partial class MotionEditor
     /// 그 오브젝트가 무대의 <paramref name="side"/> 밖에서 제자리로 **들어오게**(또는 <paramref name="leaving"/>이면 제자리에서 밖으로 **나가게**) 자리 커브를 놓는다 —
     /// <paramref name="start"/>초부터 <paramref name="seconds"/>초 동안, 그 앞뒤로는 가만히. 그 축의 자리 커브를 갈아 치운다(한 칸). 옮기는 거리를 돌려준다.
     /// 거리는 가만히 선 자세의 사각형이 무대 밖으로 다 나가는 만큼이다(돌았거나 커진 오브젝트는 넉넉히 — 감싸는 원으로 친다).
-    /// 부모들이 돌거나 커지지 않았다고 본다(자리는 부모 안의 값이다) — 품은 세트 안쪽의 것은 그 세트를 열어 놓는다.
+    /// 부모들이 돌거나 커지지 않았다고 본다(자리는 부모 안의 값이다).
     /// </summary>
     public float SlideFromOutside(string motionName, string node, StageSide side, float start, float seconds, Vec2 stageSize, bool leaving = false)
     {

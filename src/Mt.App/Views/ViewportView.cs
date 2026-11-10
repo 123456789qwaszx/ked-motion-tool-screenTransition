@@ -314,7 +314,6 @@ public sealed class ViewportView : Control
 
             DiscardPending();
             _setView = value;
-            _entered = null;
             _setScene = null;
             _hiddenSetNodes.Clear();
             _soloSetNode = null;
@@ -377,8 +376,7 @@ public sealed class ViewportView : Control
 
         bool underSolo = _soloSetNode is null;
 
-        // 품은 세트 안쪽의 것은 그것을 품은 오브젝트를 따른다(안쪽은 여기서 따로 숨기지 않는다).
-        for (RigNodeAsset? at = rig.Find(RigAssetCodec.OwnerOf(node)); at is not null; at = at.Parent.Length > 0 ? rig.Find(at.Parent) : null)
+        for (RigNodeAsset? at = rig.Find(node); at is not null; at = at.Parent.Length > 0 ? rig.Find(at.Parent) : null)
         {
             if (_hiddenSetNodes.Contains(at.Id))
             {
@@ -1119,20 +1117,6 @@ public sealed class ViewportView : Control
 
     public MotionAsset? Motion => _editor is not null && _motionName is not null ? _editor.Document.Find(_motionName) : null;
 
-    /// <summary>묶인 애니메이션의 재생 블록이 차지하는 구간들(시작 · 끝 · "인스턴스 ▸ 애니메이션") — 타임 슬라이더가 막대로 그린다.</summary>
-    public IReadOnlyList<(double Start, double End, string Label)> PlaySpans()
-    {
-        if (_editor is null || Motion is not { Plays.Count: > 0 } motion)
-        {
-            return Array.Empty<(double, double, string)>();
-        }
-
-        return motion.Plays
-            .Select(p => (Start: (double)p.At, End: Math.Min(motion.Duration, p.At + (_editor.Document.Find(p.Motion)?.Duration ?? 0f) * Math.Max(1, p.Repeat)), Label: $"{p.Node} ▸ {p.Motion}{(p.Repeat > 1 ? $" ×{p.Repeat}" : "")}"))
-            .Select(span => ((double)span.Start, (double)span.End, span.Label))
-            .ToList();
-    }
-
     // ── 이모지 정의의 미리보기(PLAN-parts.md §8) ─────────────────────────
 
     private string? _emojiName;
@@ -1387,33 +1371,7 @@ public sealed class ViewportView : Control
             upright = true;
         }
 
-        return EffectiveSkinOf(o.Rig, name) is { } skin ? new Worn(skin, seconds, upright) : null;
-    }
-
-    // 실제로 입는 스킨(제 스킨 + 품은 세트들의 스킨) — 그릴 때마다 여러 번 찾으니 문서가 바뀔 때까지 들고 있는다.
-    private readonly Dictionary<(string Rig, string? Skin), SkinAsset?> _effectiveSkins = new();
-    private long _effectiveSkinsAt = -1;
-
-    private SkinAsset? EffectiveSkinOf(string rig, string? name)
-    {
-        if (_editor is null)
-        {
-            return null;
-        }
-
-        if (_effectiveSkinsAt != _editor.Revision)
-        {
-            _effectiveSkins.Clear();
-            _effectiveSkinsAt = _editor.Revision;
-        }
-
-        if (!_effectiveSkins.TryGetValue((rig, name), out SkinAsset? skin))
-        {
-            skin = RigAssets.EffectiveSkin(_editor.Document, rig, name);
-            _effectiveSkins[(rig, name)] = skin;
-        }
-
-        return skin;
+        return _editor?.Document.FindSkin(name) is { } skin && skin.Rig == o.Rig ? new Worn(skin, seconds, upright) : null;
     }
 
     /// <summary>그 오브젝트가 좌우로 뒤집혀 서 있는가(부모 캐릭터의 배율 x가 음수 등) — 조각 사각형의 손잡이 방향으로 본다.</summary>
@@ -1952,9 +1910,7 @@ public sealed class ViewportView : Control
         if (IsLayoutMode)
         {
             DrawLayout(context, pose);
-            DrawLabel(context, EnteredInstance is { } inside
-                ? $"세트 {_setView} › {inside.Replace(".", " › ", StringComparison.Ordinal)} 안쪽을 고치는 중 — 끌기: 자리 · Shift: 배율 · Ctrl: 회전 (품은 세트 {ResolveSetNode(inside)?.Node.Set}가 바뀐다 — 품은 곳 모두에). Esc · 빈 곳 더블클릭: 나간다"
-                : $"세트 {_setView} · 배치 — 끌기: 자리 · Shift+끌기: 배율 · Ctrl+끌기: 회전 · 품은 세트 더블클릭: 안쪽 고치기 (가만히 선 자세다. 애니메이션을 고르면 끌기가 키가 된다)", new Point(stage.X + 8, stage.Y + 6));
+            DrawLabel(context, $"세트 {_setView} · 배치 — 끌기: 자리 · Shift+끌기: 배율 · Ctrl+끌기: 회전 (가만히 선 자세다. 애니메이션을 고르면 끌기가 키가 된다)", new Point(stage.X + 8, stage.Y + 6));
             return;
         }
 
@@ -2339,25 +2295,6 @@ public sealed class ViewportView : Control
         // 배치 모드 — 오브젝트를 집어 가만히 선 자세를 잡는다(키가 아니다).
         if (IsLayoutMode)
         {
-            // 더블클릭 — 품은 세트면 그 안쪽으로 들어가고, 빈 곳이면 한 단 나온다.
-            if (e.ClickCount == 2 && _editor?.Document.FindRig(_setView) is { } openRig && SelectedObject is { } setObject && CurrentPose() is { } layoutPose)
-            {
-                string? hit = LayoutNodeAt(layoutPose, setObject, openRig, position);
-
-                if (hit is not null && EnterInstance(hit))
-                {
-                    e.Handled = true;
-                    return;
-                }
-
-                if (hit is null && _entered is { } inside)
-                {
-                    LeaveInstance(inside);
-                    e.Handled = true;
-                    return;
-                }
-            }
-
             if (TryStartLayoutDrag(position, e.KeyModifiers))
             {
                 e.Pointer.Capture(this);
@@ -2741,93 +2678,12 @@ public sealed class ViewportView : Control
 
     // ── 배치 모드 (PLAN-set.md S2) — 세트의 오브젝트를 끌어 가만히 선 자세(자리 · 배율 · 회전)를 잡는다 ──
 
-    /// <param name="Node">연 세트에서 본 경로 이름(안쪽이면 <c>인스턴스.이름</c>).</param>
-    /// <param name="Kind">실제로 바뀌는 세트 — 안쪽을 고치는 중이면 품은 세트.</param>
-    /// <param name="NodeId">그 세트 안에서의 이름.</param>
-    private sealed record LayoutDrag(string Node, string Kind, string NodeId, PlaceMode Mode, Vec2 StartRoot, Vec2 CenterRoot, RigNodeAsset Start)
+    private sealed record LayoutDrag(string Node, PlaceMode Mode, Vec2 StartRoot, Vec2 CenterRoot, RigNodeAsset Start)
     {
         public RigNodeAsset Now { get; set; } = Start;
     }
 
     private LayoutDrag? _layout;
-
-    // ── 안쪽 고치기 — 바깥(연 세트)을 보는 채로, 품은 세트의 오브젝트를 끌어 그 세트의 가만히 선 자세를 고친다 ──
-
-    private string? _entered;
-
-    /// <summary>안쪽을 고치는 중인 인스턴스의 경로(<c>sun</c>, 되풀이해서 <c>a.b</c>) — 없으면 연 세트의 것을 고친다.</summary>
-    public string? EnteredInstance => _entered;
-
-    public event EventHandler? EnteredInstanceChanged;
-
-    /// <summary>그 인스턴스의 안쪽으로 들어간다(null = 나온다). 배치 모드에서만, 세트를 품은 오브젝트만. 들어갔으면 true.</summary>
-    public bool EnterInstance(string? path)
-    {
-        if (path is not null && (!IsLayoutMode || ResolveSetNode(path) is not { Node.Set.Length: > 0 }))
-        {
-            return false;
-        }
-
-        if (_entered == path)
-        {
-            return path is not null;
-        }
-
-        string? left = _entered;
-        _entered = path;
-        SelectedNode = path ?? left; // 나오면 그 인스턴스가 골라진 채다
-        EnteredInstanceChanged?.Invoke(this, EventArgs.Empty);
-        InvalidateVisual();
-        return path is not null;
-    }
-
-    /// <summary>한 단 나온다 — <c>a.b</c>에서는 <c>a</c>의 안쪽으로, <c>a</c>에서는 바깥으로.</summary>
-    private void LeaveInstance(string inside)
-    {
-        int cut = inside.LastIndexOf(RigAssetCodec.PathSeparator);
-        EnterInstance(cut < 0 ? null : inside[..cut]);
-
-        if (cut >= 0)
-        {
-            SelectedNode = inside;
-        }
-    }
-
-    /// <summary>연 세트에서 본 경로 이름이 가리키는 (세트, 오브젝트) — 품은 세트를 따라 들어간다.</summary>
-    public (RigAsset Rig, RigNodeAsset Node)? ResolveSetNode(string path)
-    {
-        RigAsset? rig = _editor?.Document.FindRig(_setView);
-        string[] parts = path.Split(RigAssetCodec.PathSeparator);
-
-        for (int i = 0; i < parts.Length && rig is not null; i++)
-        {
-            if (rig.Find(parts[i]) is not { } node)
-            {
-                return null;
-            }
-
-            if (i == parts.Length - 1)
-            {
-                return (rig, node);
-            }
-
-            rig = _editor?.Document.FindRig(node.Set);
-        }
-
-        return null;
-    }
-
-    /// <summary>펼친 이름을 지금 집을 수 있는 이름으로 — 바깥에서는 맨 앞(품은 오브젝트), 안쪽을 고치는 중이면 그 인스턴스 바로 밑의 것. 못 집으면 null.</summary>
-    private string? PickableOf(string nodeId)
-    {
-        if (_entered is not { } inside)
-        {
-            return RigAssetCodec.OwnerOf(nodeId);
-        }
-
-        string prefix = inside + RigAssetCodec.PathSeparator;
-        return nodeId.StartsWith(prefix, StringComparison.Ordinal) ? prefix + RigAssetCodec.OwnerOf(nodeId[prefix.Length..]) : null;
-    }
 
     /// <summary>배치 모드에서 오브젝트를 집었다 — 하이어아키·칸이 그것을 따라 고른다.</summary>
     public event EventHandler<string>? LayoutNodePicked;
@@ -2839,16 +2695,15 @@ public sealed class ViewportView : Control
     {
         var at = new Pixel(position.X, position.Y);
 
-        // 펼친 리그의 순서로(위에 그려진 것 먼저) — 품은 세트 안쪽의 것을 누르면 그것을 품은 오브젝트가 집힌다(안쪽은 그 세트를 열어 고친다).
+        // 세운 리그의 순서로(위에 그려진 것 먼저).
         if (_rig is not null && _rig.TryGetRig(o.Rig, out RigSchemaRigDto dto))
         {
             foreach (RigSchemaNodeDto node in Enumerable.Reverse(dto.nodes))
             {
                 string key = o.KeyOf(node.id);
-                string? owner = PickableOf(node.id);
 
                 if (node.id == RigSchemaLoader.RootKey || !pose.Contains(key) || node.sizeDelta is null || node.sizeDelta.x <= 0f || node.sizeDelta.y <= 0f
-                    || owner is null || ResolveSetNode(owner) is null || !IsSetNodeShown(node.id))
+                    || rig.Find(node.id) is null || !IsSetNodeShown(node.id))
                 {
                     continue;
                 }
@@ -2858,12 +2713,12 @@ public sealed class ViewportView : Control
 
                 if (GraphHitTest.Contains(polygon, at))
                 {
-                    return owner;
+                    return node.id;
                 }
             }
         }
 
-        if (SelectedNode is { } selected && selected != _entered && ResolveSetNode(selected) is not null && PickableOf(selected) == selected && pose.Contains(o.KeyOf(selected))
+        if (SelectedNode is { } selected && rig.Find(selected) is not null && pose.Contains(o.KeyOf(selected))
             && Distance(position, ToControl(pose.TransformPoint(o.KeyOf(selected), Vec3.Zero).XY)) <= GizmoHit + 6)
         {
             return selected;
@@ -2876,17 +2731,15 @@ public sealed class ViewportView : Control
     private bool TryStartLayoutDrag(Point position, KeyModifiers modifiers)
     {
         if (_editor?.Document.FindRig(_setView) is not { } rig || SelectedObject is not { } o || CurrentPose() is not { } pose
-            || LayoutNodeAt(pose, o, rig, position) is not { } id || ResolveSetNode(id) is not { } found)
+            || LayoutNodeAt(pose, o, rig, position) is not { } id || rig.Find(id) is not { } node)
         {
             return false;
         }
 
-        RigNodeAsset node = found.Node;
-
         SelectedNode = id;
         LayoutNodePicked?.Invoke(this, id);
         PlaceMode mode = modifiers.HasFlag(KeyModifiers.Shift) ? PlaceMode.Scale : modifiers.HasFlag(KeyModifiers.Control) ? PlaceMode.Rotate : PlaceMode.Move;
-        _layout = new LayoutDrag(id, found.Rig.Kind, node.Id, mode, ToRoot(position), pose.TransformPoint(o.KeyOf(id), Vec3.Zero).XY, CopyOf(node));
+        _layout = new LayoutDrag(id, mode, ToRoot(position), pose.TransformPoint(o.KeyOf(id), Vec3.Zero).XY, CopyOf(node));
         InvalidateVisual();
         return true;
     }
@@ -2908,12 +2761,7 @@ public sealed class ViewportView : Control
             case PlaceMode.Move:
             {
                 // 루트 공간의 이동을 부모의 좌표로 — 자리는 부모 안에서의 값이다(부모가 돌았거나 커졌어도 끈 만큼 간다).
-                // 안쪽의 것이면 부모도 경로 이름이다 — 맨 위의 것의 부모는 그것을 품은 인스턴스.
-                int cut = drag.Node.LastIndexOf(RigAssetCodec.PathSeparator);
-                string within = cut < 0 ? "" : drag.Node[..cut];
-                string parentKey = string.IsNullOrEmpty(drag.Start.Parent)
-                    ? (within.Length == 0 ? ScenePreview.RootKeyOf(o) : o.KeyOf(within))
-                    : o.KeyOf(within.Length == 0 ? drag.Start.Parent : within + RigAssetCodec.PathSeparator + drag.Start.Parent);
+                string parentKey = string.IsNullOrEmpty(drag.Start.Parent) ? ScenePreview.RootKeyOf(o) : o.KeyOf(drag.Start.Parent);
 
                 if (_template.Contains(parentKey))
                 {
@@ -2980,7 +2828,7 @@ public sealed class ViewportView : Control
         {
             if (_setView is not null)
             {
-                _editor?.UpdateRigNode(drag.Kind, drag.NodeId, drag.Now); // 안쪽을 고치는 중이면 품은 세트가 바뀐다
+                _editor?.UpdateRigNode(_setView, drag.Node, drag.Now);
             }
         }
         finally
@@ -3313,12 +3161,6 @@ public sealed class ViewportView : Control
                 SetKey();
                 break;
             case Key.Escape:
-                if (_entered is { } inside)
-                {
-                    LeaveInstance(inside); // 안쪽 고치기에서 한 단 나온다
-                    break;
-                }
-
                 DiscardPending();
                 break;
             default:

@@ -60,12 +60,6 @@ public sealed partial class MotionEditor
 
             skin.Name = trimmed;
             RetargetEmojiSkins(name, trimmed);
-
-            // 이 스킨을 입힌 인스턴스(품은 세트의 스킨)도 따라온다.
-            foreach (RigNodeAsset node in Document.Rigs.SelectMany(r => r.Nodes).Where(n => n.SetSkin == name))
-            {
-                node.SetSkin = trimmed;
-            }
         });
     }
 

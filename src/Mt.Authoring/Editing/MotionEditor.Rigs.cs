@@ -44,76 +44,8 @@ public sealed partial class MotionEditor
     public void RemoveRig(string kind)
     {
         RigAsset rig = RequireRig(kind);
-
-        // 다른 세트가 품고 있으면 못 지운다 — 참조가 허공을 가리키게 두지 않는다.
-        if (Document.Rigs.FirstOrDefault(r => r.Nodes.Any(n => n.Set == kind)) is { } holder)
-        {
-            throw new InvalidOperationException($"세트 '{kind}'를 '{holder.Kind}'가 품고 있다 — 먼저 거기서 뺀다.");
-        }
-
         Mutate(MotionChangeKind.Document, () => Document.Rigs.Remove(rig));
     }
-
-    /// <summary>
-    /// 다른 세트를 품는다(<c>PLAN-set.md</c> S9) — 그 세트의 인스턴스 오브젝트를 더한다(참조: 그 세트를 고치면 여기도 바뀐다).
-    /// 자기 자신이나, 자기를 (몇 다리 건너서라도) 품고 있는 세트는 못 품는다 — 끝없이 돈다.
-    /// </summary>
-    public RigNodeAsset AddRigInstance(string kind, string id, string setKind, string? parent = null)
-    {
-        ArgumentNullException.ThrowIfNull(setKind);
-        RequireRig(kind);
-
-        if (Document.FindRig(setKind) is null)
-        {
-            throw new KeyNotFoundException($"세트 '{setKind}'가 문서에 없다.");
-        }
-
-        if (Holds(setKind, kind, new HashSet<string>(StringComparer.Ordinal)))
-        {
-            throw new InvalidOperationException($"세트 '{setKind}'는 '{kind}'를 품고 있다(또는 자기 자신이다) — 서로 품으면 끝없이 돈다.");
-        }
-
-        RigNodeAsset node = null!;
-        Batch(MotionChangeKind.Document, () =>
-        {
-            node = AddRigNode(kind, id, parent);
-            Mutate(MotionChangeKind.Document, () =>
-            {
-                node.Set = setKind;
-                node.Alpha = true; // 품은 것을 통째로 흐리게 할 수 있게
-            });
-        });
-        return node;
-    }
-
-    /// <summary>인스턴스가 품은 세트에 입힐 스킨을 고른다. null이면 그 세트의 첫 스킨.</summary>
-    public void SetRigInstanceSkin(string kind, string id, string? skin)
-    {
-        RigAsset rig = RequireRig(kind);
-        RigNodeAsset node = rig.Nodes[RequireNodeIndex(rig, id)];
-
-        if (string.IsNullOrEmpty(node.Set))
-        {
-            throw new InvalidOperationException($"'{id}'는 세트를 품은 오브젝트가 아니다.");
-        }
-
-        string? name = string.IsNullOrWhiteSpace(skin) ? null : skin.Trim();
-
-        if (name is not null && Document.FindSkin(name)?.Rig != node.Set)
-        {
-            throw new InvalidOperationException($"스킨 '{name}'은 세트 '{node.Set}'의 것이 아니다.");
-        }
-
-        if (node.SetSkin != name)
-        {
-            Mutate(MotionChangeKind.Document, () => node.SetSkin = name);
-        }
-    }
-
-    /// <summary><paramref name="kind"/>가 <paramref name="target"/>이거나 그것을 (몇 다리 건너) 품고 있는가.</summary>
-    private bool Holds(string kind, string target, HashSet<string> seen)
-        => kind == target
-           || (seen.Add(kind) && Document.FindRig(kind) is { } rig && rig.Nodes.Any(n => n.Set is { Length: > 0 } inner && Holds(inner, target, seen)));
 
     /// <summary>
     /// 조각(그림 노드)의 수와 크기를 바꾼다 — 조각을 1번부터 다시 세운다. 다른 노드는 그대로다. 줄이면 없어진 조각을 쓰던 채널·스킨 칸은 남고 검증이 알린다.
@@ -213,22 +145,6 @@ public sealed partial class MotionEditor
             foreach (ChannelAsset channel in Document.Motions.Where(m => m.Rig == kind).SelectMany(m => m.Channels).Where(c => c.Node == id))
             {
                 channel.Node = name;
-            }
-
-            // 세트를 품은 오브젝트(인스턴스)면 — 그 안쪽을 짚던 경로 채널(이름.안쪽)과 그것을 트는 재생 블록도 따라온다.
-            string prefix = id + RigAssetCodec.PathSeparator;
-
-            foreach (MotionAsset motion in Document.Motions.Where(m => m.Rig == kind))
-            {
-                foreach (ChannelAsset channel in motion.Channels.Where(c => c.Node.StartsWith(prefix, StringComparison.Ordinal)))
-                {
-                    channel.Node = name + channel.Node[id.Length..];
-                }
-
-                foreach (MotionPlayAsset play in motion.Plays.Where(p => p.Node == id))
-                {
-                    play.Node = name;
-                }
             }
 
             foreach (SkinAsset skin in Document.Skins.Where(s => s.Rig == kind))

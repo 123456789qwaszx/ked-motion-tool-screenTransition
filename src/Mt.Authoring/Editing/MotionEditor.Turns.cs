@@ -12,7 +12,7 @@ public sealed partial class MotionEditor
 
     /// <summary>
     /// 그 오브젝트가 **움직이기 시작할 때까지** 숨긴다 — 그 애니메이션의 불투명도 커브를 "0 … (제 차례) 0 → 1 … 1"로 놓는다(있던 불투명도 커브는 갈아 치운다).
-    /// 제 차례 = 그 오브젝트의 다른 커브들이 처음으로 값이 바뀌기 시작하는 시각 — 품은 세트(인스턴스)면 그 재생 블록이 시작하는 시각도 친다.
+    /// 제 차례 = 그 오브젝트의 다른 커브들이 처음으로 값이 바뀌기 시작하는 시각.
     /// 처음부터 움직이거나 움직임이 없으면 할 일이 없다(false).
     /// </summary>
     public bool HideUntilTurn(string motionName, string node)
@@ -71,7 +71,7 @@ public sealed partial class MotionEditor
         int count = 0;
         Batch(MotionChangeKind.Keys, () =>
         {
-            foreach (string node in motion.Channels.Where(c => c.Kind != MotionChannelKind.Alpha).Select(c => c.Node).Concat(motion.Plays.Select(p => p.Node)).Distinct().ToList())
+            foreach (string node in motion.Channels.Where(c => c.Kind != MotionChannelKind.Alpha).Select(c => c.Node).Distinct().ToList())
             {
                 // 불투명도를 받을 수 있는 오브젝트만(툴이 정의한 세트면 그 표시를 본다 — 덤프의 리그는 검증이 가린다).
                 if (Document.FindRig(motion.Rig)?.Find(node) is { Alpha: false })
@@ -112,8 +112,7 @@ public sealed partial class MotionEditor
     /// <summary>그 오브젝트의 커브들이 처음으로 값이 바뀌기 시작하는 시각 — 움직임이 없으면 null.</summary>
     private static float? FirstChange(MotionAsset motion, string node)
     {
-        // 품은 세트의 재생 블록 — 블록이 시작하는 때가 그 인스턴스의 차례다.
-        float? first = motion.Plays.Where(p => p.Node == node).Select(p => (float?)p.At).Min();
+        float? first = null;
 
         foreach (List<KeyAsset> keys in MovingCurves(motion, node))
         {
@@ -133,9 +132,7 @@ public sealed partial class MotionEditor
     /// <summary>그 오브젝트의 커브들이 마지막으로 값이 바뀌기를 마치는 시각 — 움직임이 없으면 null.</summary>
     private float? LastChange(MotionAsset motion, string node)
     {
-        // 품은 세트의 재생 블록 — 마지막 블록이 끝나는 때까지가 그 인스턴스의 차례다.
-        float? last = motion.Plays.Where(p => p.Node == node)
-            .Select(p => (float?)Math.Min(motion.Duration, p.At + (Document.Find(p.Motion)?.Duration ?? 0f) * Math.Max(1, p.Repeat))).Max();
+        float? last = null;
 
         foreach (List<KeyAsset> keys in MovingCurves(motion, node))
         {

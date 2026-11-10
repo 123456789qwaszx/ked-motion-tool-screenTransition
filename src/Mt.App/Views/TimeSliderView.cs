@@ -40,8 +40,6 @@ public sealed class TimeSliderView : Control
     private static readonly Pen MajorTickPen = new(new SolidColorBrush(Color.FromRgb(0x6E, 0x6E, 0x6E)), 1);
     private static readonly IBrush LabelBrush = new SolidColorBrush(Color.FromRgb(0xB4, 0xB4, 0xB4));
     private static readonly IBrush KeyTickBrush = new SolidColorBrush(Color.FromRgb(0xD3, 0x3C, 0x3C));
-    private static readonly IBrush PlaySpanDragBrush = new SolidColorBrush(Color.FromRgb(0xE2, 0xC4, 0xFF));
-    private static readonly IBrush PlaySpanBrush = new SolidColorBrush(Color.FromArgb(200, 0xB0, 0x7C, 0xE8));
     private static readonly IBrush EnterTickBrush = new SolidColorBrush(Color.FromRgb(0x4C, 0xC2, 0x6B));
     private static readonly IBrush HoldTickBrush = new SolidColorBrush(Color.FromRgb(0xE0, 0xB0, 0x30));
     private static readonly IBrush ExitTickBrush = new SolidColorBrush(Color.FromRgb(0x4A, 0x9E, 0xE8));
@@ -61,58 +59,7 @@ public sealed class TimeSliderView : Control
     private string? _motionName;
     private KeySelection _selection = new();
 
-    private enum Drag { None, Scrub, SelectRange, HoldScrub, MoveRange, ScaleStart, ScaleEnd, MovePlay }
-
-    /// <summary>끌고 있는 재생 블록의 번호(<see cref="Drag.MovePlay"/>).</summary>
-    private int _playDragIndex = -1;
-
-    /// <summary>편집이 막혔다(겹침·길이 초과 등) — 창이 상태 줄에 적는다.</summary>
-    public event Action<string>? Rejected;
-
-    /// <summary>재생 블록 막대들의 자리(블록 번호 순) — 인스턴스마다 한 층. 끄는 중인 블록은 옮겨 본 자리에 선다.</summary>
-    internal IReadOnlyList<Rect> PlayBarRects()
-    {
-        var rects = new List<Rect>();
-
-        if (Motion is null || Viewport?.PlaySpans() is not { Count: > 0 } spans)
-        {
-            return rects;
-        }
-
-        Rect track = Track;
-        var lanes = new List<string>();
-
-        for (int i = 0; i < spans.Count; i++)
-        {
-            (double start, double end, string label) = spans[i];
-            string who = label.Split(' ')[0];
-
-            if (!lanes.Contains(who))
-            {
-                lanes.Add(who);
-            }
-
-            if (_drag == Drag.MovePlay && i == _playDragIndex)
-            {
-                double moved = PlayStartAfterDrag(start, end);
-                end += moved - start;
-                start = moved;
-            }
-
-            double x0 = XAtTime(start);
-            rects.Add(new Rect(x0, track.Bottom - 5 - lanes.IndexOf(who) * 4, Math.Max(2, XAtTime(end) - x0), 3));
-        }
-
-        return rects;
-    }
-
-    /// <summary>끌어 옮긴 블록의 시작 시각 — 프레임에 맞추고 애니메이션의 길이 안에 가둔다.</summary>
-    private double PlayStartAfterDrag(double start, double end)
-    {
-        double length = end - start;
-        double limit = Math.Max(0, (Motion?.Duration ?? 0) - length);
-        return Math.Clamp(SnapTime(start + _previewDelta), 0, limit);
-    }
+    private enum Drag { None, Scrub, SelectRange, HoldScrub, MoveRange, ScaleStart, ScaleEnd }
 
     private Drag _drag = Drag.None;
     private double _anchorTime;
@@ -448,14 +395,6 @@ public sealed class TimeSliderView : Control
             }
         }
 
-        // 재생 블록 — 품은 세트의 애니메이션이 도는 구간을 눈금 아래쪽의 막대로(인스턴스가 여럿이면 층층이). 막대를 끌면 그 블록의 시작 시각이 옮겨진다(놓을 때 한 칸).
-        IReadOnlyList<Rect> bars = PlayBarRects();
-
-        for (int i = 0; i < bars.Count; i++)
-        {
-            context.FillRectangle(_drag == Drag.MovePlay && i == _playDragIndex ? PlaySpanDragBrush : PlaySpanBrush, bars[i]);
-        }
-
         // 키 틱 — 현재 프레임 상자 위에.
         if (Motion is { } motion && KeyTicks != KeyTickMode.None)
         {
@@ -595,24 +534,6 @@ public sealed class TimeSliderView : Control
             }
         }
 
-        // 재생 블록의 막대를 집었다 — 끌어 시작 시각을 옮긴다(막대는 얇아서 위아래로 넉넉히 잡는다).
-        IReadOnlyList<Rect> bars = PlayBarRects();
-
-        for (int i = bars.Count - 1; i >= 0 && !shift; i--)
-        {
-            if (bars[i].Inflate(new Thickness(1, 3)).Contains(position))
-            {
-                _drag = Drag.MovePlay;
-                _playDragIndex = i;
-                _anchorTime = t;
-                _previewDelta = 0;
-                e.Pointer.Capture(this);
-                e.Handled = true;
-                InvalidateVisual();
-                return;
-            }
-        }
-
         if (shift)
         {
             _drag = Drag.SelectRange;
@@ -660,9 +581,6 @@ public sealed class TimeSliderView : Control
 
             case Drag.MoveRange:
                 _previewDelta = ToFrameTime(t) - _anchorTime;
-                break;
-            case Drag.MovePlay:
-                _previewDelta = t - _anchorTime;
                 break;
             case Drag.ScaleEnd:
             case Drag.ScaleStart:
@@ -726,24 +644,6 @@ public sealed class TimeSliderView : Control
 
                     break;
 
-                case Drag.MovePlay:
-                    if (_editor is not null && Motion is { } pm && _playDragIndex >= 0 && _playDragIndex < pm.Plays.Count && Viewport?.PlaySpans() is { } spans)
-                    {
-                        MotionPlayAsset play = pm.Plays[_playDragIndex];
-                        float at = (float)PlayStartAfterDrag(spans[_playDragIndex].Start, spans[_playDragIndex].End);
-
-                        try
-                        {
-                            _editor.UpdateMotionPlay(pm.Name, _playDragIndex, play.Node, play.Motion, at, play.Repeat); // 같은 값이면 무기록
-                        }
-                        catch (InvalidOperationException exception)
-                        {
-                            Rejected?.Invoke(exception.Message); // 같은 인스턴스의 다른 블록과 겹친다 — 제자리로 돌아간다
-                        }
-                    }
-
-                    break;
-
                 case Drag.ScaleStart:
                 case Drag.ScaleEnd:
                     if (SelectedRange is { } sr && _editor is not null && _motionName is not null && Motion is { } sm && Math.Abs(_previewFactor - 1) > 1e-9)
@@ -767,7 +667,6 @@ public sealed class TimeSliderView : Control
         {
             _previewDelta = 0;
             _previewFactor = 1;
-            _playDragIndex = -1;
             InvalidateVisual();
         }
 

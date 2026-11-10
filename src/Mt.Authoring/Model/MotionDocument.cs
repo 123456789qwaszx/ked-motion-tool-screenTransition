@@ -167,45 +167,8 @@ public sealed class MotionAsset
         set => Events = value ?? new List<MotionEventAsset>();
     }
 
-    /// <summary>
-    /// 재생 블록(<c>PLAN-set.md</c> S10) — "품은 세트의 애니메이션을 언제 튼다". 세트의 애니메이션이 제 키와 함께 든다.
-    /// 시작 시각 오름차순. 저작본에는 <see cref="PlaysOrNull"/>로 실린다(없으면 안 적는다).
-    /// </summary>
-    [System.Text.Json.Serialization.JsonIgnore]
-    public List<MotionPlayAsset> Plays { get; set; } = new();
-
-    [System.Text.Json.Serialization.JsonPropertyName("plays")]
-    public List<MotionPlayAsset>? PlaysOrNull
-    {
-        get => Plays.Count == 0 ? null : Plays;
-        set => Plays = value ?? new List<MotionPlayAsset>();
-    }
-
-    /// <summary>
-    /// 재생 블록을 다 펼쳐 구운 것(<see cref="Preview.MotionFlatten"/>) — 품은 세트의 애니메이션이 경로 이름의 채널(<c>차.Body</c>)로 들어와 한 덩어리가 된 모션.
-    /// 재생 블록이 없으면 null. 미리보기와 산출물은 이것을 쓴다(<see cref="MotionAssetCodec.ToClip"/>) — 저작본에는 안 적힌다. 편집기가 문서가 바뀔 때마다 다시 굽는다.
-    /// </summary>
-    [System.Text.Json.Serialization.JsonIgnore]
-    public MotionAsset? Flattened { get; set; }
-
     public ChannelAsset? FindChannel(string node, MotionChannelKind kind)
         => Channels.FirstOrDefault(c => string.Equals(c.Node, node, StringComparison.Ordinal) && c.Kind == kind);
-}
-
-/// <summary>재생 블록 하나 — 품은 세트의 인스턴스(이 세트의 오브젝트 이름) · 그 세트의 애니메이션 · 시작 시각 · 되풀이 횟수.</summary>
-public sealed class MotionPlayAsset
-{
-    /// <summary>인스턴스 오브젝트의 이름 — 다른 세트를 품은 오브젝트(<see cref="RigNodeAsset.Set"/>).</summary>
-    public string Node { get; set; } = "";
-
-    /// <summary>품은 세트의 애니메이션 이름.</summary>
-    public string Motion { get; set; } = "";
-
-    /// <summary>시작 시각(초, 이 애니메이션 기준).</summary>
-    public float At { get; set; }
-
-    /// <summary>되풀이 횟수(1 이상) — 같은 블록을 끝에 이어 그만큼 놓은 것.</summary>
-    public int Repeat { get; set; } = 1;
 }
 
 /// <summary>이벤트 키 하나 — 시각(초) · 이름(<c>[a-z0-9_]+</c>) · 딸린 값(자유 글, 없어도 된다).</summary>

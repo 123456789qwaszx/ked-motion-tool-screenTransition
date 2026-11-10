@@ -14,9 +14,6 @@ public static class MotionAssetCodec
     {
         ArgumentNullException.ThrowIfNull(asset);
 
-        // 재생 블록이 있는 애니메이션은 펼쳐 구운 것으로 나간다 — 미리보기도 산출물도 한 덩어리를 본다(PLAN-set.md §7의 A).
-        asset = asset.Flattened ?? asset;
-
         var channels = new MotionChannel[asset.Channels.Count];
 
         for (int i = 0; i < channels.Length; i++)

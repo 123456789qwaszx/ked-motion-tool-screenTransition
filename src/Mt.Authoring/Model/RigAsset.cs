@@ -50,15 +50,6 @@ public sealed class RigNodeAsset
     /// </summary>
     public string? Color { get; set; }
 
-    /// <summary>
-    /// 품은 세트(<c>PLAN-set.md</c> S9) — 있으면 이 오브젝트는 **다른 세트의 인스턴스**다: 그 세트의 오브젝트들이 이 밑에 선다(참조 — 그 세트를 고치면 여기도 바뀐다).
-    /// 이 오브젝트의 자리·배율·회전·불투명도는 품은 세트를 통째로 옮긴다. 세운 리그에서 품은 것의 이름은 <c>이 이름.그 이름</c>이다(<see cref="RigAssetCodec.PathSeparator"/>).
-    /// </summary>
-    public string? Set { get; set; }
-
-    /// <summary>품은 세트에 입힐 스킨 — null이면 그 세트의 첫 스킨.</summary>
-    public string? SetSkin { get; set; }
-
     /// <summary>그림을 그리는 노드(조각)인가 — 스킨이 여기에 그림을 준다.</summary>
     public bool Image { get; set; }
 
@@ -73,25 +64,10 @@ public static class RigAssetCodec
 {
     public const string RootId = RigSchemaLoader.RootKey;
 
-    /// <summary>품은 세트의 오브젝트를 가리키는 경로의 구분 기호 — <c>차.Body</c>. 오브젝트 이름에는 못 쓰는 글자다(이름은 영문·숫자·_).</summary>
-    public const char PathSeparator = '.';
-
-    /// <summary>품는 깊이의 상한 — 순환은 편집기가 막지만, 손으로 쓴 문서가 끝없이 돌지 않게.</summary>
-    public const int MaxNesting = 8;
-
-    /// <summary>경로의 맨 앞 — 그 세트가 직접 가진 오브젝트의 이름(품은 것 안쪽의 이름이면 그것을 품은 오브젝트).</summary>
-    public static string OwnerOf(string nodeId)
-    {
-        int at = nodeId.IndexOf(PathSeparator, StringComparison.Ordinal);
-        return at < 0 ? nodeId : nodeId[..at];
-    }
-
     /// <summary>
-    /// 코어 스키마로 — 루트를 붙이고, 노드는 가운데 앵커·가운데 피벗으로. <paramref name="resolve"/>가 있으면 **품은 세트를 펼친다**:
-    /// 인스턴스 오브젝트 밑에 그 세트의 오브젝트들이 <c>인스턴스.이름</c>으로 선다(되풀이해서 — 품은 것이 또 품었으면 <c>a.b.c</c>). 없는 세트·순환·너무 깊은 것은 건너뛴다.
-    /// 그래서 세운 리그는 늘 한 덩어리다 — 미리보기도 산출물도 펼친 것을 본다(<c>PLAN-set.md</c> §7의 A).
+    /// 코어 스키마로 — 루트를 붙이고, 노드는 가운데 앵커·가운데 피벗으로.
     /// </summary>
-    public static RigSchemaRigDto ToDto(RigAsset rig, Vec2 stageSize, Func<string, RigAsset?>? resolve = null)
+    public static RigSchemaRigDto ToDto(RigAsset rig, Vec2 stageSize)
     {
         ArgumentNullException.ThrowIfNull(rig);
         var nodes = new List<RigSchemaNodeDto>
@@ -112,21 +88,12 @@ public static class RigAssetCodec
             },
         };
 
-        Expand(nodes, rig, "", RootId, resolve, new HashSet<string>(StringComparer.Ordinal) { rig.Kind }, 0);
-
-        return new RigSchemaRigDto { rigKind = rig.Kind, sourcePrefab = "", nodes = nodes };
-    }
-
-    /// <summary>세트의 오브젝트들을 <paramref name="prefix"/>를 붙여 더한다 — 맨 위의 것은 <paramref name="under"/> 밑에. 인스턴스를 만나면 그 세트를 그 밑에 펼친다.</summary>
-    private static void Expand(List<RigSchemaNodeDto> nodes, RigAsset rig, string prefix, string under, Func<string, RigAsset?>? resolve, HashSet<string> open, int depth)
-    {
         foreach (RigNodeAsset node in rig.Nodes)
         {
-            string id = prefix + node.Id;
             nodes.Add(new RigSchemaNodeDto
             {
-                id = id,
-                parent = string.IsNullOrEmpty(node.Parent) ? under : prefix + node.Parent,
+                id = node.Id,
+                parent = string.IsNullOrEmpty(node.Parent) ? RootId : node.Parent,
                 anchoredPosition = F2(node.X, node.Y),
                 anchorMin = F2(0.5f, 0.5f),
                 anchorMax = F2(0.5f, 0.5f),
@@ -140,14 +107,9 @@ public static class RigAssetCodec
                 hasImage = node.Image,
                 fillColor = node.Color,
             });
-
-            // 품은 세트 — 이 오브젝트 밑에 펼친다. 제 조상을 다시 품는 것(순환)과 너무 깊은 것은 건너뛴다.
-            if (node.Set is { Length: > 0 } inner && resolve?.Invoke(inner) is { } child && depth < MaxNesting && open.Add(inner))
-            {
-                Expand(nodes, child, id + PathSeparator, id, resolve, open, depth + 1);
-                open.Remove(inner);
-            }
         }
+
+        return new RigSchemaRigDto { rigKind = rig.Kind, sourcePrefab = "", nodes = nodes };
     }
 
     private static Float2Dto F2(float x, float y) => new() { x = x, y = y };

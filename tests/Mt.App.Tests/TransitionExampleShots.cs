@@ -77,7 +77,7 @@ public class TransitionExampleShots
 
                 window.StageOnlyChecked = false;
 
-                // 조립 — pillar 세트를 열고 등장 애니메이션을 고른다: 타임 슬라이더에 재생 블록의 막대, "모션" 탭에 재생 블록 줄.
+                // 세트를 열고 등장 애니메이션을 고른다 — 하이어아키의 층, 그래프의 커브.
                 window.SelectSet("pillar");
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 window.SelectMotion("pillar_in");
@@ -85,13 +85,10 @@ public class TransitionExampleShots
                 window.InspectorTab = 2;
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 window.Viewport.ScrubTo(1.2);
-                Shot("pillar-assembly");
-                window.InspectorTab = 1;
-                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Shot("pillar-instance");
+                Shot("pillar-set");
                 window.SelectSet(null);
 
-                // 조립으로 지은 세 장면 — 수명을 따라.
+                // 나머지 세 장면 — 수명을 따라.
                 foreach (string name in new[] { "lapis", "heredity", "mercury" })
                 {
                     window.Session.Open(Path.Combine(root!.FullName, "examples", "transitions", name, name + ".motion-authoring.json"));
@@ -109,20 +106,6 @@ public class TransitionExampleShots
                     window.StageOnlyChecked = false;
                 }
 
-                window.Session.Open(Path.Combine(root!.FullName, "examples", "transitions", "pillar", "pillar.motion-authoring.json"));
-
-                // 세트가 세트를 품는다 — 새 세트에 pillar를 둘 넣는다(하나는 작게 돌려서). 화면에만: 저장하지 않는다.
-                window.NewSetFromForm();
-                window.SelectSetNode(null);
-                string first = window.AddSetInstanceFromMenu("pillar")!;
-                window.Session.Editor.UpdateRigNode("set", first, new Mt.Authoring.Model.RigNodeAsset { X = -480f, ScaleX = 0.45f, ScaleY = 0.45f, Alpha = true });
-                window.SelectSetNode(null);
-                string second = window.AddSetInstanceFromMenu("pillar")!;
-                window.Session.Editor.UpdateRigNode("set", second, new Mt.Authoring.Model.RigNodeAsset { X = 470f, Y = -40f, ScaleX = 0.4f, ScaleY = 0.4f, Rotation = -8f, Alpha = true });
-                window.InspectorTab = 1;
-                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                window.Viewport.ResetView();
-                Shot("nested");
                 window.Session.Open(Path.Combine(root!.FullName, "examples", "transitions", "station", "station.motion-authoring.json"));
 
                 // 세트를 연다 — 배치 모드.

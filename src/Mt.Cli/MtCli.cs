@@ -284,7 +284,7 @@ public static class MtCli
         return (problems, blocking);
     }
 
-    /// <summary>앱의 뷰포트와 같은 조립 — 깊이·focus·무대 뼈대(내장본).</summary>
+    /// <summary>앱의 뷰포트와 같이 세운다 — 깊이·focus·무대 뼈대(내장본).</summary>
     private static RectNodeTree BuildTree(RigSchemaFile rig, SceneAsset scene)
         => ScenePreview.Build(rig, scene, null, null, BuiltinTuning.Depth, BuiltinTuning.Focus, BuiltinTuning.StageRig);
 

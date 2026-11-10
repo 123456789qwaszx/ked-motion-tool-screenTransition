@@ -150,7 +150,7 @@ public sealed class DocumentSession
     private string _composedKey = "";
 
     private static string RigsKeyOf(MotionDocument document)
-        => string.Join("|", document.Rigs.Select(r => r.Kind + ":" + string.Join(",", r.Nodes.Select(n => $"{n.Id}<{n.Parent}@{n.X},{n.Y}#{n.Width}x{n.Height}r{n.Rotation}s{n.ScaleX},{n.ScaleY}c{n.Color}S{n.Set}{(n.Image ? "i" : "")}{(n.Alpha ? "a" : "")}"))));
+        => string.Join("|", document.Rigs.Select(r => r.Kind + ":" + string.Join(",", r.Nodes.Select(n => $"{n.Id}<{n.Parent}@{n.X},{n.Y}#{n.Width}x{n.Height}r{n.Rotation}s{n.ScaleX},{n.ScaleY}c{n.Color}{(n.Image ? "i" : "")}{(n.Alpha ? "a" : "")}"))));
 
     /// <summary>문서가 정의한 리그를 덤프와 같은 모양의 파일로 내보낸다 — 런타임이 그것으로 리그를 세운다.</summary>
     public bool ExportRigs(string path)
@@ -235,17 +235,6 @@ public sealed class DocumentSession
         string probe = RelativeToDocument(Path.Combine(folder, "x")).Replace('\\', '/');
         string relative = probe.Length > 1 ? probe[..^2] : "";
         return Editor.ImportLayers(kind, sheet, relative, skin, StageSize);
-    }
-
-    /// <summary>다른 저작 문서의 세트를 전부 들인다(애니메이션·스킨·연출까지) — 그림 경로는 이 문서 기준으로 바뀐다. 들인 세트의 이름들.</summary>
-    public IReadOnlyList<string> ImportSets(string documentPath)
-    {
-        ArgumentNullException.ThrowIfNull(documentPath);
-        MotionDocument source = MotionDocumentJson.Read(File.ReadAllText(documentPath));
-        string folder = Path.GetDirectoryName(Path.GetFullPath(documentPath)) ?? "";
-        IReadOnlyList<string> kinds = Editor.ImportSets(source, null, image => Path.IsPathRooted(image) ? image : RelativeToDocument(Path.Combine(folder, image)).Replace('\\', '/'));
-        SetStatus($"세트 {kinds.Count}개를 들였다 — {string.Join(", ", kinds)}");
-        return kinds;
     }
 
     public void SetSkinPart(string skin, string node, string? path)
