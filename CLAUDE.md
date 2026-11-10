@@ -1,10 +1,11 @@
 # ked-motion-tool-screenTransition
 
-**화면 전환만** 만드는 저작 도구(.NET 10 + Avalonia 12). 깊이·리그 구조·카메라를 몰라도, 층을 쌓아 화면을 덮고 걷는 전환을 편하게 만든다.
+**화면 전환만** 만드는 저작 도구(.NET 10 + Avalonia 12). 깊이·리그 구조·카메라를 몰라도, 층을 쌓아 화면(틀)을 덮고 걷는 전환을 편하게 만든다. UI 수준으로 범용적인 도구가 목표다.
 
-- 먼저 읽을 것: `docs/PLAN-screenTransition.md` — 방향 · 정해진 것 · 단계(T1~T6) · 걷어 낼 것과 남길 것. 단계가 끝날 때마다 그 문서에 결정과 상태를 적는다.
+- 먼저 읽을 것: `docs/PLAN-screenTransition.md` — 맨 위 "지금 어디인가" · 정해진 것(§2) · 단계(§7 — T1~T6, 범용화 G1~G5는 §10) · 걷어 낼 것과 남길 것. 단계가 끝날 때마다 그 문서에 결정과 상태를 적는다.
 - `main`은 출발점(`ked-motion-tool-extend`의 `a522149`) 그대로다. 일은 `dev`에서 한다.
-- 형제 저장소: `ked-motion-tool-extend`(컷 — 씬 + 카메라 + 타임라인) · `ked-motion-tool-characterRig`(캐릭터 모션 · 이모지). 여기서는 그 둘의 일을 하지 않는다.
+- 이 저장소는 **따로 뻗어 나간다**. 같은 뿌리의 `ked-motion-tool-extend`(컷) · `ked-motion-tool-characterRig`(캐릭터 모션 · 이모지)와 맞물려 있지 않다 — 그 둘의 일(카메라 · 깊이 · 캐릭터 · 씬)은 여기서 하지 않고, 컷 파일과는 키를 적는 방식만 같게 지킨다.
+- 기준 런타임은 유니티 UGUI 하나. 기능을 받는 잣대는 "UGUI에서 특수한 셰이더 없이 되는 것".
 
 ## 구조
 
@@ -12,6 +13,8 @@
 테스트: `tests/Mt.Authoring.Tests` · `tests/Mt.App.Tests`(xunit — 화면은 `HeadlessUi.Run`) · `tests/Ked.Presentation.Core.Tests`(NUnit).
 
 ## 명령
+
+클라우드 컨테이너에 SDK가 없으면: `apt-get install -y dotnet-sdk-10.0`.
 
 ```bash
 dotnet build KedMotionTool.sln -c Release
