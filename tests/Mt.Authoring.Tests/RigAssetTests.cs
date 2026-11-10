@@ -53,7 +53,7 @@ public class RigAssetTests
         editor.AddMotion("pop", RigTemplates.EmojiKind, 0.2f);
         editor.AddChannel("pop", "Emoji_Body", MotionChannelKind.Alpha);
         editor.SetKeys("pop", "Emoji_Body", MotionChannelKind.Alpha, Axis.X, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.2f, 1f) });
-        Assert.Empty(MotionValidator.Validate(editor.Document, both.NodeIds, null, both.AlphaNodeIds));
+        Assert.Empty(MotionValidator.Validate(editor.Document, both.NodeIds, both.AlphaNodeIds));
         Assert.NotEmpty(MotionValidator.Validate(editor.Document, Dump.NodeIds)); // 덤프만으로는 모르는 리그다
     }
 
@@ -336,7 +336,7 @@ public class RigAssetTests
 
         // 어느 쪽이든 규칙(처음과 끝에 키)이 그대로 선다.
         RigSchemaFile rig = RigAssets.Compose(Dump, editor.Document);
-        Assert.Empty(MotionValidator.Validate(editor.Document, rig.NodeIds, null, rig.AlphaNodeIds));
+        Assert.Empty(MotionValidator.Validate(editor.Document, rig.NodeIds, rig.AlphaNodeIds));
 
         // 채널이 없는 오브젝트·0초는 아무 일도 없다(기록 없음).
         revision = editor.Revision;
@@ -396,7 +396,7 @@ public class RigAssetTests
         Assert.Equal(revision + 1, editor.Revision);
         Assert.Null(editor.Document.Find("in")!.FindChannel("Emoji_Part2", MotionChannelKind.Alpha));
         RigSchemaFile rig = RigAssets.Compose(Dump, editor.Document);
-        Assert.Empty(MotionValidator.Validate(editor.Document, rig.NodeIds, null, rig.AlphaNodeIds));
+        Assert.Empty(MotionValidator.Validate(editor.Document, rig.NodeIds, rig.AlphaNodeIds));
     }
 
     // ── 세트 이름 바꾸기 ───────────────────────────────────────────────
@@ -476,6 +476,6 @@ public class RigAssetTests
         Assert.Throws<KeyNotFoundException>(() => editor.SlideFromOutside("town_in", "Nope", StageSide.Left, 0f, 0.5f, stage));
         Assert.Equal(revision, editor.Revision);
         RigSchemaFile rig = RigAssets.Compose(Dump, editor.Document);
-        Assert.Empty(MotionValidator.Validate(editor.Document, rig.NodeIds, null, rig.AlphaNodeIds));
+        Assert.Empty(MotionValidator.Validate(editor.Document, rig.NodeIds, rig.AlphaNodeIds));
     }
 }

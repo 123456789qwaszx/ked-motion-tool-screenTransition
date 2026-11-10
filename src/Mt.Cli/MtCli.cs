@@ -261,7 +261,7 @@ public static class MtCli
         bool blocking = false;
         IReadOnlyDictionary<string, ICollection<string>>? nodeIds = rig.NodeIds;
 
-        foreach (MotionProblem p in MotionValidator.Validate(document, nodeIds, null, rig.AlphaNodeIds))
+        foreach (MotionProblem p in MotionValidator.Validate(document, nodeIds, rig.AlphaNodeIds))
         {
             problems.Add(new JsonObject { ["kind"] = "motion", ["name"] = p.MotionName, ["message"] = p.Message, ["blocking"] = p.Blocking });
             blocking |= p.Blocking;
@@ -276,9 +276,9 @@ public static class MtCli
         return (problems, blocking);
     }
 
-    /// <summary>앱의 뷰포트와 같이 세운다 — 깊이·focus·무대 뼈대(내장본).</summary>
+    /// <summary>앱의 뷰포트와 같이 세운다 — 무대 뼈대(내장본).</summary>
     private static RectNodeTree BuildTree(RigSchemaFile rig, SceneAsset scene)
-        => ScenePreview.Build(rig, scene, null, null, BuiltinTuning.Depth, BuiltinTuning.Focus, BuiltinTuning.StageRig);
+        => ScenePreview.Build(rig, scene, null, null, BuiltinTuning.StageRig);
 
     private static void AddNodeValue(JsonObject nodes, RectNodeTree pose, Dictionary<string, float> alphas, SceneObject actor, ChannelAsset channel)
     {

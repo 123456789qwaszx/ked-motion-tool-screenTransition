@@ -50,7 +50,6 @@ public sealed class SceneObject
     public const string DefaultId = "s1";
     public const string DefaultRig = "character";
     public const string DefaultStage = "stage00";
-    public const string DefaultPlaceFocus = "bust";
 
     /// <summary>슬롯 키. <c>[a-z0-9_]+</c>. 노드 키 접두사가 된다(유니티 이름 <c>s1_노드</c>와 같은 뜻).</summary>
     public string Id { get; set; } = DefaultId;
@@ -63,15 +62,6 @@ public sealed class SceneObject
 
     /// <summary>깊이 레이어(far · back · mid · front · close). 무대 안의 그리는 순서를 정한다.</summary>
     public string Layer { get; set; } = SceneLayers.Mid;
-
-    /// <summary>
-    /// 자리(place) — 화면 지점 이름(center·left·right·top·bottom·tl·tr·bl·br). null이면 place 없음(Track_Focus 그대로).
-    /// 코어 <c>PlaceFocusStageReduction</c>이 <see cref="PlaceFocus"/> 점이 그 지점에 오도록 <c>CharSlot_Track_Focus</c>를 푼다 — 런타임 place와 같은 함수.
-    /// </summary>
-    public string? Place { get; set; }
-
-    /// <summary>place가 맞추는 focus 프리셋(bust·face·body·feet·faceAura·handLeft·handRight). null이면 bust.</summary>
-    public string? PlaceFocus { get; set; }
 
     /// <summary>오프셋(move) px, 부모 공간(가운데 원점·y 위) — <c>CharSlot_Track</c>.</summary>
     public float PositionX { get; set; }

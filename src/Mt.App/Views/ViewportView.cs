@@ -58,8 +58,6 @@ public sealed class ViewportView : Control
     private MotionEditor? _editor;
     private string? _motionName;
     private RigSchemaFile? _rig;
-    private DepthTuningFile? _depth;
-    private FocusTuningFile? _focus;
     // 무대 뼈대(PresentataionUIRoot). 리그가 있으면 내장 뼈대를 쓴다.
     private RigSchemaRigDto? _stage;
     // 씬 전체의 시작 상태(오브젝트마다 슬롯 접두사). 모션은 선택 오브젝트에만 얹는다.
@@ -1204,22 +1202,6 @@ public sealed class ViewportView : Control
         InvalidateVisual();
     }
 
-    /// <summary>presets/depth.json — 레이어를 깊이(DepthY·DepthScale)로. null이면 레이어는 그리는 순서만.</summary>
-    public void SetDepth(DepthTuningFile? depth)
-    {
-        _depth = depth;
-        RebuildTemplate();
-        InvalidateVisual();
-    }
-
-    /// <summary>presets/focus.json — focus 오프셋(base + bust)이 깊이·place 폴드에 들어간다.</summary>
-    public void SetFocus(FocusTuningFile? focus)
-    {
-        _focus = focus;
-        RebuildTemplate();
-        InvalidateVisual();
-    }
-
     /// <summary>루트 공간 → 컨트롤 좌표. 테스트가 쓴다.</summary>
     public Point ToScreen(Vec2 root) => ToControl(root);
 
@@ -1416,7 +1398,7 @@ public sealed class ViewportView : Control
             return;
         }
 
-        _template = ScenePreview.Build(_rig, scene, AspectOf, null, _depth, _focus, _stage);
+        _template = ScenePreview.Build(_rig, scene, AspectOf, null, _stage);
     }
 
     // ── 시계 ──────────────────────────────────────────────────────────

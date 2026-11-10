@@ -14,16 +14,11 @@ public static class ScenePreview
     /// 씬 전체의 시작 상태. 덤프에 없는 rigKind의 오브젝트는 건너뛴다(<paramref name="missing"/>에 남긴다).
     /// 루트 공간은 덤프가 캡처된 공간이다(스트레치 노드 크기의 기준).
     /// </summary>
-    public const string DepthYNode = SetDepthStageReduction.DepthYNodeId;
-    public const string DepthScaleNode = SetDepthStageReduction.DepthScaleNodeId;
-
-    /// <param name="depth">presets/depth.json. 있으면 레이어 라벨을 깊이(DepthY·DepthScale)로 — 런타임 size 폴드와 같은 함수(focus 보존 bust, 캐릭터별 오프셋 없이).</param>
-    /// <param name="focus">presets/focus.json. 있으면 그 표의 focus 오프셋(base)이 깊이·place 폴드에 들어간다.</param>
     /// <param name="stage">
     /// 무대 뼈대(<c>PresentataionUIRoot</c>, rigKind "stage"). 있으면 <c>stage/</c> 접두사로 먼저 서고 오브젝트는
     /// <c>Stage{NN}Depth_{Layer}_Content</c> 밑에 붙는다. 없으면 루트 직속(좌표는 같다 — 뼈대는 항등).
     /// </param>
-    public static RectNodeTree Build(RigSchemaFile rig, SceneAsset scene, Func<SceneObject, float>? aspectOf = null, List<SceneObject>? missing = null, DepthTuningFile? depth = null, FocusTuningFile? focus = null, RigSchemaRigDto? stage = null)
+    public static RectNodeTree Build(RigSchemaFile rig, SceneAsset scene, Func<SceneObject, float>? aspectOf = null, List<SceneObject>? missing = null, RigSchemaRigDto? stage = null)
     {
         ArgumentNullException.ThrowIfNull(rig);
         ArgumentNullException.ThrowIfNull(scene);
@@ -57,51 +52,11 @@ public static class ScenePreview
             state.RegisterSlot(o.Id);
             PortraitLayout.ApplySizing(state.Nodes, aspectOf?.Invoke(o) ?? PortraitLayout.PlaceholderAspect, o.Prefix);
 
-            // 순서는 런타임 대본과 같이 slot → size(깊이) → place → 오프셋(move_by·rotate_by·scale_by).
-            // place는 커맨드 순간 한 번 풀리는 것이라 그 뒤의 오프셋을 모른다 — 오프셋을 먼저 넣으면 place가 그만큼 되감아 오프셋이 안 보인다(버그였다).
-            ApplyDepth(state, o, depth, focus);
-            ApplyPlace(state, o, focus);
             ApplyPlacement(state.Nodes, o);
         }
 
         return state.Nodes;
     }
-
-    /// <summary>
-    /// 자리(place) — focus 프리셋 점이 화면 지점에 오도록 <c>CharSlot_Track_Focus</c>를 푼다. 코어 <see cref="PlaceFocusStageReduction"/> 그대로.
-    /// place가 없거나 리그에 그 축이 없으면 건너뛴다(false). 깊이 뒤에 부른다(런타임 순서: size → place; 그래야 DepthY가 게임과 같다).
-    /// </summary>
-    public static bool ApplyPlace(StageState state, SceneObject o, FocusTuningFile? focus)
-    {
-        ArgumentNullException.ThrowIfNull(state);
-        ArgumentNullException.ThrowIfNull(o);
-
-        if (string.IsNullOrEmpty(o.Place) || !IsCharacterShaped(state, o))
-        {
-            return false;
-        }
-
-        if (!PlaceFocusStageReduction.TryReduce(state, o.Id, "", o.PlaceFocus ?? SceneObject.DefaultPlaceFocus, o.Place, focus?.Body, out StageNodeClaim claim, out _))
-        {
-            return false;
-        }
-
-        state.Apply(claim);
-        return true;
-    }
-
-    /// <summary>
-    /// 깊이·자리 폴드가 설 수 있는 리그인가 — 코어의 그 폴드들은 캐릭터 리그의 축(깊이 노드와 초상까지의 사슬)을 전제하고, 없으면 던진다.
-    /// 이모지 같은 다른 리그는 깊이·자리 없이 선다(층은 그리는 순서만).
-    /// </summary>
-    private static bool IsCharacterShaped(StageState state, SceneObject o)
-        => state.Nodes.Contains(o.KeyOf(DepthYNode)) && state.Nodes.Contains(o.KeyOf(DepthScaleNode)) && state.Nodes.Contains(o.KeyOf(PortraitLayout.ImageNodeId));
-
-    /// <summary>화면 지점 이름들 — 코어 <see cref="ScreenPointRatios"/>가 아는 것.</summary>
-    public static readonly IReadOnlyList<string> ScreenPoints = new[] { "center", "left", "right", "top", "bottom", "tl", "tr", "bl", "br" };
-
-    /// <summary>focus 프리셋 이름들 — 코어 <see cref="FocusPresetName"/>이 아는 것.</summary>
-    public static readonly IReadOnlyList<string> FocusPresets = new[] { "bust", "face", "body", "feet", "faceAura", "handLeft", "handRight" };
 
     /// <summary>배치 값을 배치 축 노드에. 그 노드가 없는 리그(배경 등)면 루트 노드에 — 그래서 어느 오브젝트든 옮길 수 있다.</summary>
     public static void ApplyPlacement(RectNodeTree tree, SceneObject o)
@@ -130,30 +85,6 @@ public static class ScenePreview
             RectNodeState state = tree.GetState(scale);
             tree.SetState(scale, state.WithLocalScale(new Vec3(o.ScaleX, o.ScaleY, state.LocalScale.Z)));
         }
-    }
-
-    /// <summary>
-    /// 레이어 → 깊이(DepthY 위치·DepthScale 배율). 런타임 size 폴드와 **같은 함수**(<see cref="SetDepthStageReduction"/>, focus 보존 bust)를
-    /// 지나므로 보이는 깊이 = 정지 프레임의 깊이다. 커브가 없거나 리그에 깊이 축이 없으면 건너뛴다(false).
-    /// </summary>
-    public static bool ApplyDepth(StageState state, SceneObject o, DepthTuningFile? depth, FocusTuningFile? focus = null)
-    {
-        ArgumentNullException.ThrowIfNull(state);
-        ArgumentNullException.ThrowIfNull(o);
-
-        if (depth is null || !SceneLayers.IsKnown(o.Layer) || !IsCharacterShaped(state, o))
-        {
-            return false;
-        }
-
-        if (!SetDepthStageReduction.TryReduce(state, o.Id, "", o.Layer, "bust", depth.Level, focus?.Body, out StageNodeClaim depthY, out StageNodeClaim depthScale, out _))
-        {
-            return false;
-        }
-
-        state.Apply(depthY);
-        state.Apply(depthScale);
-        return true;
     }
 
     /// <summary>모션을 오브젝트 하나에 얹은 시각 t의 포즈. 채널의 노드가 그 리그에 없으면 그 채널은 건너뛴다.</summary>

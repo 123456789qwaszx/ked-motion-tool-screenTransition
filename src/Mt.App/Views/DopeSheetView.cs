@@ -170,25 +170,6 @@ public sealed class DopeSheetView : Control
 
     public string? MotionName => _motionName;
 
-    private ControllerRig? _controllers;
-
-    /// <summary>노드 행 라벨용 컨트롤러 표(모션의 리그) — 없으면 노드 이름.</summary>
-    public ControllerRig? Controllers
-    {
-        get => _controllers;
-        set
-        {
-            if (ReferenceEquals(_controllers, value))
-            {
-                return;
-            }
-
-            _controllers = value;
-            RebuildRows();
-            InvalidateVisual();
-        }
-    }
-
     public MotionAsset? Motion => _editor is not null && _motionName is not null ? _editor.Document.Find(_motionName) : null;
 
     public IReadOnlyList<DopeRow> Rows => _rows;
@@ -254,7 +235,7 @@ public sealed class DopeSheetView : Control
 
         if (Motion is { } motion)
         {
-            _rows.AddRange(DopeSheetRows.Build(motion, node => _collapsed.Contains(node), _controllers));
+            _rows.AddRange(DopeSheetRows.Build(motion, node => _collapsed.Contains(node)));
         }
     }
 

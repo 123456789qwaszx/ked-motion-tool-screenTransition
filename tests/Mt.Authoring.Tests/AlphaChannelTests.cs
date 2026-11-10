@@ -101,7 +101,7 @@ public class AlphaChannelTests
     public void 규칙은_성분_하나와_0에서_1과_받을_수_있는_노드를_본다()
     {
         MotionEditor editor = NewEditor();
-        Assert.Empty(MotionValidator.Validate(editor.Document, RigFile.NodeIds, null, RigFile.AlphaNodeIds));
+        Assert.Empty(MotionValidator.Validate(editor.Document, RigFile.NodeIds, RigFile.AlphaNodeIds));
         Assert.True(MotionExport.TryExport(editor.Document, RigFile.NodeIds, out _, out _, null, RigFile.AlphaNodeIds));
 
         // 코어 규칙: Y 성분은 없다 · 키 값은 0~1.
@@ -115,7 +115,7 @@ public class AlphaChannelTests
         // 툴 규칙: CanvasGroup이 없는 노드에는 못 놓는다 — 내보내기도 막는다.
         editor.AddChannel("fade", "Emoji_Anchor", MotionChannelKind.Alpha);
         editor.SetKeys("fade", "Emoji_Anchor", MotionChannelKind.Alpha, Axis.X, new[] { Linear(0f, 1f), Linear(1f, 0f) });
-        MotionProblem problem = Assert.Single(MotionValidator.Validate(editor.Document, RigFile.NodeIds, null, RigFile.AlphaNodeIds));
+        MotionProblem problem = Assert.Single(MotionValidator.Validate(editor.Document, RigFile.NodeIds, RigFile.AlphaNodeIds));
         Assert.True(problem.Blocking);
         Assert.Contains("불투명도를 받을 수 없는 노드", problem.Message, StringComparison.Ordinal);
         Assert.False(MotionExport.TryExport(editor.Document, RigFile.NodeIds, out _, out _, null, RigFile.AlphaNodeIds));

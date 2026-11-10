@@ -264,7 +264,6 @@ public partial class MainWindow
         if (_graph.MotionName != motion)
         {
             _graph.Bind(_session.Editor, motion);
-            _dope.Controllers = _session.ControllersOf(motion is null ? null : document.Find(motion)?.Rig);
             _dope.Bind(_session.Editor, motion);
             RefreshChannels();
             RefreshMotionInspector();

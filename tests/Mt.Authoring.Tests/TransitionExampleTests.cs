@@ -44,7 +44,7 @@ public class TransitionExampleTests
         Assert.Equal((40.5f, 359.5f, 889f, 249f), (sign.X, sign.Y, sign.Width, sign.Height));
 
         string Problems<T>(IEnumerable<T> problems, Func<T, string> text) => string.Join("\n", problems.Select(text));
-        Assert.True(!MotionValidator.Validate(document, rig.NodeIds, null, rig.AlphaNodeIds).Any(), Problems(MotionValidator.Validate(document, rig.NodeIds, null, rig.AlphaNodeIds), p => $"{p.MotionName}: {p.Message}"));
+        Assert.True(!MotionValidator.Validate(document, rig.NodeIds, rig.AlphaNodeIds).Any(), Problems(MotionValidator.Validate(document, rig.NodeIds, rig.AlphaNodeIds), p => $"{p.MotionName}: {p.Message}"));
         Assert.True(!EmojiValidator.Validate(document, rig.NodeIds).Any(), Problems(EmojiValidator.Validate(document, rig.NodeIds), p => $"{p.EmojiName}: {p.Message}"));
 
         string path = Path.Combine(directory, "station.motion-authoring.json");
@@ -87,7 +87,7 @@ public class TransitionExampleTests
         // 바탕색 + 층 열둘.
         Assert.Equal(13, document.FindRig(TransitionExamples.Pillar)!.Nodes.Count);
         string Problems<T>(IEnumerable<T> problems, Func<T, string> text) => string.Join("\n", problems.Select(text));
-        Assert.True(!MotionValidator.Validate(document, rig.NodeIds, null, rig.AlphaNodeIds).Any(), Problems(MotionValidator.Validate(document, rig.NodeIds, null, rig.AlphaNodeIds), p => $"{p.MotionName}: {p.Message}"));
+        Assert.True(!MotionValidator.Validate(document, rig.NodeIds, rig.AlphaNodeIds).Any(), Problems(MotionValidator.Validate(document, rig.NodeIds, rig.AlphaNodeIds), p => $"{p.MotionName}: {p.Message}"));
         Assert.True(!EmojiValidator.Validate(document, rig.NodeIds).Any(), Problems(EmojiValidator.Validate(document, rig.NodeIds), p => $"{p.EmojiName}: {p.Message}"));
 
         string path = Path.Combine(directory, "pillar.motion-authoring.json");
@@ -147,7 +147,7 @@ public class TransitionExampleTests
         RigSchemaFile rig = RigAssets.Compose(Dump, document);
 
         string Problems<T>(IEnumerable<T> problems, Func<T, string> text) => string.Join("\n", problems.Select(text));
-        Assert.True(!MotionValidator.Validate(document, rig.NodeIds, null, rig.AlphaNodeIds).Any(), Problems(MotionValidator.Validate(document, rig.NodeIds, null, rig.AlphaNodeIds), p => $"{p.MotionName}: {p.Message}"));
+        Assert.True(!MotionValidator.Validate(document, rig.NodeIds, rig.AlphaNodeIds).Any(), Problems(MotionValidator.Validate(document, rig.NodeIds, rig.AlphaNodeIds), p => $"{p.MotionName}: {p.Message}"));
         Assert.True(!EmojiValidator.Validate(document, rig.NodeIds).Any(), Problems(EmojiValidator.Validate(document, rig.NodeIds), p => $"{p.EmojiName}: {p.Message}"));
 
         string path = Path.Combine(directory, name + ".motion-authoring.json");

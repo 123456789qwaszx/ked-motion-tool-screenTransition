@@ -170,8 +170,6 @@ public sealed partial class MotionEditor
             ScaleY = source.ScaleY,
             Portrait = source.Portrait,
             Visible = source.Visible,
-            Place = source.Place,
-            PlaceFocus = source.PlaceFocus,
             Skin = source.Skin,
         };
 
@@ -276,34 +274,6 @@ public sealed partial class MotionEditor
         if (o.Stage != stage)
         {
             Mutate(MotionChangeKind.Scene, () => o.Stage = stage);
-        }
-    }
-
-    /// <summary>자리(place) — 화면 지점 × focus 프리셋. screenPoint가 null이면 place 없음. 이름은 코어 어휘여야 한다.</summary>
-    public void SetObjectPlace(string? sceneName, string id, string? screenPoint, string? focusPreset = null)
-    {
-        SceneAsset scene = RequireScene(sceneName);
-        SceneObject o = RequireObject(scene, id);
-        string? point = string.IsNullOrWhiteSpace(screenPoint) ? null : screenPoint.Trim();
-        string? focus = string.IsNullOrWhiteSpace(focusPreset) || focusPreset.Trim() == SceneObject.DefaultPlaceFocus ? null : focusPreset.Trim();
-
-        if (point is not null && !Preview.ScenePreview.ScreenPoints.Contains(point))
-        {
-            throw new InvalidOperationException($"화면 지점은 {string.Join("·", Preview.ScenePreview.ScreenPoints)} 중 하나다 ('{point}')");
-        }
-
-        if (focus is not null && !Preview.ScenePreview.FocusPresets.Contains(focus))
-        {
-            throw new InvalidOperationException($"focus 프리셋은 {string.Join("·", Preview.ScenePreview.FocusPresets)} 중 하나다 ('{focus}')");
-        }
-
-        if (o.Place != point || o.PlaceFocus != focus)
-        {
-            Mutate(MotionChangeKind.Scene, () =>
-            {
-                o.Place = point;
-                o.PlaceFocus = focus;
-            });
         }
     }
 
@@ -540,49 +510,6 @@ public sealed partial class MotionEditor
         var channel = new ChannelAsset { Node = node, Kind = kind };
         Mutate(MotionChangeKind.Structure, () => motion.Channels.Add(channel));
         return channel;
-    }
-
-    /// <summary>
-    /// 채널 일부를 새 모션으로 떼어 낸다(한 번의 되돌리기) — 자리·깊이 컨트롤러(absolute)와 연기(relative)가 한 모션에 섞였을 때
-    /// 두 클립·두 커맨드로 나누는 길(motions/2: mode는 커맨드 인자 하나). 새 모션은 길이·끝·리그가 같고 재생 기준(relative/absolute)만 준 것.
-    /// 옮길 채널이 없거나 전부면 아무것도 안 하고 null.
-    /// </summary>
-    public MotionAsset? SplitMotion(string name, string newName, Func<ChannelAsset, bool> moveToNew, MotionChannelMode newPreviewMode)
-    {
-        ArgumentNullException.ThrowIfNull(moveToNew);
-        MotionAsset motion = Require(name);
-
-        if (!MotionNames.IsValid(newName))
-        {
-            throw new InvalidOperationException(MotionNames.RuleMessage(newName));
-        }
-
-        if (Document.Find(newName) is not null)
-        {
-            throw new InvalidOperationException($"모션 '{newName}'이 이미 있다 — 이름은 하나뿐이어야 한다.");
-        }
-
-        List<ChannelAsset> moving = motion.Channels.Where(moveToNew).ToList();
-
-        if (moving.Count == 0 || moving.Count == motion.Channels.Count)
-        {
-            return null;
-        }
-
-        var created = new MotionAsset { Name = newName, Rig = motion.Rig, Duration = motion.Duration, End = motion.End, PreviewMode = newPreviewMode };
-
-        Mutate(MotionChangeKind.Structure, () =>
-        {
-            foreach (ChannelAsset channel in moving)
-            {
-                motion.Channels.Remove(channel);
-                created.Channels.Add(channel);
-            }
-
-            Document.Motions.Insert(Document.Motions.IndexOf(motion) + 1, created);
-        });
-
-        return created;
     }
 
     public void RemoveChannel(string name, string node, MotionChannelKind kind)

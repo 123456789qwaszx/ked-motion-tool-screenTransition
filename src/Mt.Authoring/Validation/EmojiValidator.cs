@@ -132,7 +132,7 @@ public static class EmojisJson
         ArgumentNullException.ThrowIfNull(document);
         var used = new HashSet<string>(document.Emojis.SelectMany(e => new[] { e.Enter, e.Hold, e.Exit }).OfType<string>(), StringComparer.Ordinal);
         var blocking = EmojiValidator.Validate(document, rigNodeIds).Where(p => p.Blocking).Select(p => p.ToString()).ToList();
-        blocking.AddRange(MotionValidator.Validate(document, rigNodeIds, null, alphaNodeIds).Where(p => p.Blocking && used.Contains(p.MotionName)).Select(p => p.ToString()));
+        blocking.AddRange(MotionValidator.Validate(document, rigNodeIds, alphaNodeIds).Where(p => p.Blocking && used.Contains(p.MotionName)).Select(p => p.ToString()));
         problems = blocking;
 
         if (blocking.Count > 0)

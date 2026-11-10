@@ -22,7 +22,7 @@ public static class MotionExport
 
         List<MotionAsset> selected = document.Motions.Where(m => filter is null || filter(m)).ToList();
         var names = new HashSet<string>(selected.Select(m => m.Name), StringComparer.Ordinal);
-        problems = MotionValidator.Validate(document, rigNodeIds, null, alphaNodeIds)
+        problems = MotionValidator.Validate(document, rigNodeIds, alphaNodeIds)
             .Where(p => p.Blocking && (string.IsNullOrEmpty(p.MotionName) || names.Contains(p.MotionName)))
             .ToList();
 
