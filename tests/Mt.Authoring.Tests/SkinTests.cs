@@ -117,7 +117,7 @@ public class SkinTests
         Assert.Equal(revision, editor.Revision);
     }
 
-    // ── 조각의 덧붙임(PLAN-parts.md §13) — 그림 넘기기 · 놓임 · 반전 판 ────
+    // ── 조각의 덧붙임(PLAN-parts.md §13) — 그림 넘기기 · 놓임 ───────────
 
     [Fact]
     public void 조각에_장을_여럿_주면_장당_시간마다_넘어가고_되풀이하거나_마지막에서_멈춘다()
@@ -176,7 +176,7 @@ public class SkinTests
     }
 
     [Fact]
-    public void 놓임과_반전_판은_이모지_산출물에_풀려_나간다()
+    public void 놓임은_연출_산출물에_풀려_나간다()
     {
         MotionEditor editor = NewEditor();
         editor.AddSkin("꽃", EmojiRigFixture.RigKind);
@@ -184,10 +184,8 @@ public class SkinTests
         editor.SetSkinPartImages("꽃", "Emoji_Part2", new[] { "art/f.png", "art/g.png" });
         editor.SetSkinPartImages("꽃", "Emoji_Part3", new[] { "art/f.png" });
         editor.SetSkinPartSetup("꽃", "Emoji_Part1", new SkinPartSetup { X = -150f, Y = 40f, Scale = 0.8f, Rotation = 15f });
-        editor.AddSkin("꽃_반전", EmojiRigFixture.RigKind);
-        editor.SetSkinPartImages("꽃_반전", "Emoji_Part1", new[] { "art/f_l.png" });
         editor.AddEmoji("flower", EmojiRigFixture.RigKind);
-        editor.UpdateEmoji("flower", new EmojiAsset { Skin = "꽃", SkinFlipped = "꽃_반전", HoldSeconds = 1f });
+        editor.UpdateEmoji("flower", new EmojiAsset { Skin = "꽃", HoldSeconds = 1f });
         Assert.DoesNotContain(Mt.Authoring.Validation.EmojiValidator.Validate(editor.Document, RigFile.NodeIds), p => p.Blocking);
 
         var emoji = System.Text.Json.Nodes.JsonNode.Parse(Mt.Authoring.Validation.EmojisJson.Write(editor.Document))!["emojis"]![0]!;
@@ -199,14 +197,5 @@ public class SkinTests
         Assert.Equal(new[] { "art/g.png" }, parts["Emoji_Part2"]!["frames"]!.AsArray().Select(f => f!.GetValue<string>()));
         Assert.Equal((0.2f, true), (parts["Emoji_Part2"]!["frameSeconds"]!.GetValue<float>(), parts["Emoji_Part2"]!["loop"]!.GetValue<bool>()));
         Assert.Equal("art/f.png", parts["Emoji_Part3"]!.GetValue<string>()); // 한 장이고 제자리면 글 하나 — 전과 같은 모양
-        Assert.Equal("art/f_l.png", emoji["partsFlipped"]!["Emoji_Part1"]!.GetValue<string>());
-
-        // 반전 판 스킨이 이름을 바꾸면 따라오고, 지워지면 반전 판만 없어진다. 없는 스킨을 가리키면 막는다.
-        editor.RenameSkin("꽃_반전", "꽃_좌");
-        Assert.Equal("꽃_좌", editor.Document.FindEmoji("flower")!.SkinFlipped);
-        editor.RemoveSkin("꽃_좌");
-        Assert.Null(editor.Document.FindEmoji("flower")!.SkinFlipped);
-        editor.UpdateEmoji("flower", new EmojiAsset { Skin = "꽃", SkinFlipped = "ghost", HoldSeconds = 1f });
-        Assert.Contains(Mt.Authoring.Validation.EmojiValidator.Validate(editor.Document, RigFile.NodeIds), p => p.Blocking && p.Message.Contains("ghost", StringComparison.Ordinal));
     }
 }

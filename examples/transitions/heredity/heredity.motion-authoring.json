@@ -2101,7 +2101,6 @@
       "name": "heredity",
       "rig": "heredity",
       "skin": "heredity",
-      "screen": true,
       "enter": "heredity_in",
       "hold": "heredity_hold",
       "exit": "heredity_out",

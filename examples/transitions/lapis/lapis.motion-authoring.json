@@ -1336,7 +1336,6 @@
       "name": "lapis",
       "rig": "lapis",
       "skin": "lapis",
-      "screen": true,
       "enter": "lapis_in",
       "hold": "lapis_hold",
       "exit": "lapis_out",

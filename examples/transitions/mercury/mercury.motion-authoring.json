@@ -1684,7 +1684,6 @@
       "name": "mercury",
       "rig": "mercury",
       "skin": "mercury",
-      "screen": true,
       "enter": "mercury_in",
       "hold": "mercury_hold",
       "exit": "mercury_out",

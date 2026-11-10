@@ -28,11 +28,6 @@ public sealed partial class MotionEditor
         {
             Document.Skins.Remove(skin);
 
-            foreach (EmojiAsset emoji in Document.Emojis.Where(e => e.SkinFlipped == name))
-            {
-                emoji.SkinFlipped = null; // 반전 판만 없어진다 — 그림(Skin)이 없어진 것은 검증이 알린다
-            }
-
             foreach (SceneObject o in Wearers(name))
             {
                 o.Skin = null;

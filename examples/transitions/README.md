@@ -10,7 +10,7 @@
   - `heredity`(달과 떠 있는 섬) — 달이 커지며 떠오르고 섬이 솟는다. 씨앗(구슬 + 소용돌이)이 돌고 수정(수정 + 빛)이 반짝인다.
   - `mercury`(행성과 고래) — 대기가 번지고 행성이 솟고 고래가 가로질러 들어온다. 별이 켜지고 깜빡이다 꺼진다.
 - 문서는 편집기 명령으로 지었다: `tests/Mt.Authoring.Tests/TransitionExamples.cs`. 고쳤으면
-  `MT_WRITE_EXAMPLES=1 dotnet test tests/Mt.Authoring.Tests --filter EmojiExampleTests`로 다시 쓴다.
+  `MT_WRITE_EXAMPLES=1 dotnet test tests/Mt.Authoring.Tests --filter TransitionExampleTests`로 다시 쓴다.
 - 그림은 `tools/make-transition-art.py`가 도형으로 그린다(다섯 장면 전부 저장소에 있다).
 - 화면을 그림으로 뽑기: `MT_RENDER_DIR=<폴더> dotnet test tests/Mt.App.Tests --filter TransitionExampleShots`.
 

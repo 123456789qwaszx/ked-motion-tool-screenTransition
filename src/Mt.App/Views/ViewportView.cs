@@ -256,7 +256,7 @@ public sealed class ViewportView : Control
     /// </summary>
     private SceneAsset? CueScene()
     {
-        if (_editor is null || _emojiName is null || _editor.Document.FindEmoji(_emojiName) is not { Screen: true } emoji || _editor.Document.ActiveSceneAsset is not { } scene
+        if (_editor is null || _emojiName is null || _editor.Document.FindEmoji(_emojiName) is not { } emoji || _editor.Document.ActiveSceneAsset is not { } scene
             || scene.Objects.Any(o => o.Rig == emoji.Rig && scene.ParentOf(o) is null))
         {
             return null;
@@ -560,7 +560,7 @@ public sealed class ViewportView : Control
         // 이모지 안에서는 그 구간이 얹히기 전의 자세(자리 · 앞 구간이 남긴 것).
         if (_editor is not null && _template is not null && _emojiPhase is { } phase && ShownEmoji is { } emoji && EmojiActor is { } actor)
         {
-            return EmojiPreview.PoseBefore(_template, _editor.Document, emoji, actor, phase, null, EmojiOrigin(emoji, actor, _clock.Time)).GetState(key);
+            return EmojiPreview.PoseBefore(_template, _editor.Document, emoji, actor, phase).GetState(key);
         }
 
         return _template!.GetState(key);
@@ -1126,9 +1126,7 @@ public sealed class ViewportView : Control
 
     public EmojiAsset? ShownEmoji => _editor is not null && _emojiName is not null ? _editor.Document.FindEmoji(_emojiName) : null;
 
-    /// <summary>
-    /// 이모지를 연기할 오브젝트 — 고른 오브젝트가 그 리그면 그것, 아니면 씬에서 그 리그의 첫 오브젝트. 없으면 null(미리볼 데가 없다).
-    /// </summary>
+    /// <summary>연출을 연기할 오브젝트 — 어디에도 안 붙은 그 세트. 없으면 null(미리볼 데가 없다).</summary>
     public SceneObject? EmojiActor
     {
         get
@@ -1138,13 +1136,7 @@ public sealed class ViewportView : Control
                 return null;
             }
 
-            // 화면에 서는 연출은 어디에도 안 붙은 그 세트가, 캐릭터에 붙는 연출은 (고른 것이 그 리그면 그것, 아니면) 그 리그의 첫 오브젝트가 연기한다.
-            if (emoji.Screen)
-            {
-                return scene.Objects.FirstOrDefault(o => o.Rig == emoji.Rig && scene.ParentOf(o) is null);
-            }
-
-            return SelectedObject is { } selected && selected.Rig == emoji.Rig ? selected : scene.Objects.FirstOrDefault(o => o.Rig == emoji.Rig);
+            return scene.Objects.FirstOrDefault(o => o.Rig == emoji.Rig && scene.ParentOf(o) is null);
         }
     }
 
@@ -1294,106 +1286,19 @@ public sealed class ViewportView : Control
         InvalidateVisual();
     }
 
-    // ── 이벤트 키로 뜨는 이모지 (PLAN-parts.md §10) ───────────────────
+    /// <summary>그 오브젝트가 지금 입은 것 — 스킨, 그림 넘기기의 시각.</summary>
+    private readonly record struct Worn(SkinAsset Skin, double Seconds);
 
-    /// <summary>처음부터 그 시각까지 울린 이벤트 키(연기하는 오브젝트와 함께) — 고른 오브젝트가 연기하는 모션의 것.</summary>
-    private List<(double Time, string? ObjectId, string Name, string? Value)> FiredUntil(double seconds)
-    {
-        if (_editor is null || ShownEmoji is not null)
-        {
-            return new();
-        }
-
-        return Motion is { Events.Count: > 0 } motion && SelectedObject is { } o && CanWear(o)
-            ? MotionEvents.Between(motion, double.NegativeInfinity, seconds).Select(e => (Time: (double)e.T, ObjectId: (string?)o.Id, e.Name, e.Value)).ToList()
-            : new();
-    }
-
-    /// <summary>그 시각에 이벤트 키(<c>emoji</c>)로 떠서 돌고 있는 이모지들 — 캐릭터에 붙은 이모지 리그가 정의의 수명을 돈다.</summary>
-    public IReadOnlyList<EmojiPlay> EmojiPlaysAt(double seconds)
-        => _editor is not null && Scene is { } scene && FiredUntil(seconds) is { Count: > 0 } fired
-            ? EmojiEvents.Resolve(_editor.Document, scene, fired, seconds)
-            : Array.Empty<EmojiPlay>();
-
-    /// <summary>붙는 자리(로케이터)가 푼 점 — 가만히 선 무대에서 잰다. 못 풀면 null(오프셋만).</summary>
-    private Vec2? EmojiOrigin(EmojiAsset emoji, SceneObject actor, double seconds)
-        => _template is { } rest && Scene is { } scene
-            ? EmojiPreview.LocatorPoint(rest, scene, emoji, actor, _focus)
-            : null;
-
-    private EmojiPlay? EmojiPlayOn(string objectId)
-    {
-        foreach (EmojiPlay play in EmojiPlaysAt(_clock.Time))
-        {
-            if (play.Target.Id == objectId)
-            {
-                return play;
-            }
-        }
-
-        return null;
-    }
-
-    /// <summary>이벤트가 부리는 이모지 오브젝트인데 지금은 안 떠 있다 — 안 그린다.</summary>
-    public bool IsDormantEmoji(string objectId)
-        => _editor is not null && Scene is { } scene && FiredUntil(double.PositiveInfinity) is { Count: > 0 } all
-            && EmojiEvents.Targets(_editor.Document, scene, all).Contains(objectId) && EmojiPlayOn(objectId) is null;
-
-    /// <summary>그 오브젝트가 지금 입은 것 — 스킨, 그림 넘기기의 시각(뜬 뒤 몇 초), 반전 판인가(그림을 뒤집지 않고 그린다).</summary>
-    private readonly record struct Worn(SkinAsset Skin, double Seconds, bool Upright);
-
-    /// <summary>
-    /// 지금 입은 스킨 — 이모지 정의를 보는 중이거나 이벤트로 떠 있으면 정의의 스킨(오브젝트가 입은 것 대신), 그 캐릭터가 좌우 반전이고 반전 판이 있으면 그 판.
-    /// 그림 넘기기의 시각은 이모지면 뜬 뒤의 시간, 아니면 시계의 시각.
-    /// </summary>
-    private Worn? WornBy(RectNodeTree? pose, SceneObject o)
+    /// <summary>지금 입은 스킨 — 연출을 보는 중이면 정의의 스킨(오브젝트가 입은 것 대신).</summary>
+    private Worn? WornBy(SceneObject o)
     {
         if (_editor is null)
         {
             return null;
         }
 
-        EmojiAsset? emoji = ShownEmoji is { } shown && EmojiActor is { } actor && actor.Id == o.Id ? shown : null;
-        double seconds = _clock.Time;
-
-        if (emoji is null && EmojiPlayOn(o.Id) is { } play)
-        {
-            emoji = play.Emoji;
-            seconds = play.Local;
-        }
-
-        bool upright = false;
-        string? name = emoji is null ? o.Skin : emoji.Skin;
-
-        if (emoji?.SkinFlipped is { } flipped && pose is not null && IsMirrored(pose, o))
-        {
-            name = flipped;
-            upright = true;
-        }
-
-        return _editor?.Document.FindSkin(name) is { } skin && skin.Rig == o.Rig ? new Worn(skin, seconds, upright) : null;
-    }
-
-    /// <summary>그 오브젝트가 좌우로 뒤집혀 서 있는가(부모 캐릭터의 배율 x가 음수 등) — 조각 사각형의 손잡이 방향으로 본다.</summary>
-    private bool IsMirrored(RectNodeTree pose, SceneObject o)
-    {
-        foreach (string node in RigParts.Of(_rig, o.Rig))
-        {
-            if (pose.Contains(o.KeyOf(node)))
-            {
-                Quad q = PortraitLayout.RectQuad(pose, o.KeyOf(node));
-                Vec2 a = q.BottomRight - q.BottomLeft;
-                Vec2 b = q.TopLeft - q.BottomLeft;
-                float cross = a.X * b.Y - a.Y * b.X;
-
-                if (MathF.Abs(cross) > 1e-6f)
-                {
-                    return cross < 0f;
-                }
-            }
-        }
-
-        return false;
+        string? name = ShownEmoji is { } shown && EmojiActor is { } actor && actor.Id == o.Id ? shown.Skin : o.Skin;
+        return _editor.Document.FindSkin(name) is { } skin && skin.Rig == o.Rig ? new Worn(skin, _clock.Time) : null;
     }
 
     private Bitmap? ImageOf(Worn worn, string node)
@@ -1401,7 +1306,7 @@ public sealed class ViewportView : Control
 
     /// <summary>테스트 손잡이 — 그 조각에 지금 그려지는 그림(문서 기준 경로). 안 그려지면 null.</summary>
     public string? PartImage(string objectId, string node)
-        => Scene?.Find(objectId) is { } o && WornBy(CurrentPose(), o) is { } worn ? worn.Skin.ImageAt(node, worn.Seconds) : null;
+        => Scene?.Find(objectId) is { } o && WornBy(o) is { } worn ? worn.Skin.ImageAt(node, worn.Seconds) : null;
 
     /// <summary>
     /// 그 오브젝트에서 그려지는 조각 노드들(그리는 순서) — 리그의 조각 가운데 입은 스킨이 그림을 준 것. 조각이 없는 리그나 스킨을 안 입었으면 빈 목록.
@@ -1413,7 +1318,7 @@ public sealed class ViewportView : Control
     }
 
     private IReadOnlyList<string> DrawnParts(RectNodeTree? pose, SceneObject o)
-        => WornBy(pose, o) is { } worn ? RigParts.Of(_rig, o.Rig).Where(worn.Skin.Parts.ContainsKey).Where(IsSetNodeShown).ToList() : Array.Empty<string>();
+        => WornBy(o) is { } worn ? RigParts.Of(_rig, o.Rig).Where(worn.Skin.Parts.ContainsKey).Where(IsSetNodeShown).ToList() : Array.Empty<string>();
 
     /// <summary>조각이 지금 그려지는 사각형(루트 공간) — 노드의 rect 안에 그림의 종횡비로 맞추고 스킨의 놓임(자리·크기·회전)을 입힌 것. 없으면 null.</summary>
     public Quad? PartQuad(string objectId, string node)
@@ -1429,7 +1334,7 @@ public sealed class ViewportView : Control
         }
 
         Quad rect = PortraitLayout.RectQuad(pose, key);
-        Worn? worn = WornBy(pose, o);
+        Worn? worn = WornBy(o);
         Bitmap? image = worn is { } w0 ? ImageOf(w0, node) : null;
 
         float w = Norm(rect.BottomRight - rect.BottomLeft);
@@ -1468,12 +1373,6 @@ public sealed class ViewportView : Control
             fitW *= setup.Scale;
             fitH *= setup.Scale;
             turn = setup.Rotation * MathF.PI / 180f;
-        }
-
-        // 반전 판은 뒤집지 않고 그린다 — 뒤집힌 축(ux)을 되돌린다.
-        if (worn is { Upright: true })
-        {
-            ux = ux * -1f;
         }
 
         if (turn != 0f)
@@ -1660,15 +1559,6 @@ public sealed class ViewportView : Control
 
     private RectNodeTree? PoseAt(double seconds, IDictionary<string, float>? alphas)
     {
-        // 캐릭터들의 포즈 위에, 이벤트 키로 뜬 이모지를 얹는다.
-        RectNodeTree? tree = BasePoseAt(seconds, alphas);
-        return tree is not null && _editor is not null && EmojiPlaysAt(seconds) is { Count: > 0 } plays
-            ? EmojiEvents.Pose(tree, _editor.Document, plays, alphas, play => EmojiOrigin(play.Emoji, play.Target, seconds))
-            : tree;
-    }
-
-    private RectNodeTree? BasePoseAt(double seconds, IDictionary<string, float>? alphas)
-    {
         MotionAsset? motion = Motion;
         if (_template is null)
         {
@@ -1678,7 +1568,7 @@ public sealed class ViewportView : Control
         // 이모지 정의 — 수명 한 번(등장 → 머묾 → 퇴장)을 그 리그의 오브젝트에 얹는다.
         if (_editor is not null && ShownEmoji is { } emoji)
         {
-            return EmojiActor is { } actor ? EmojiPreview.Pose(_template, _editor.Document, emoji, actor, seconds, alphas, EmojiOrigin(emoji, actor, seconds)) : _template.Clone();
+            return EmojiActor is { } actor ? EmojiPreview.Pose(_template, _editor.Document, emoji, actor, seconds, alphas) : _template.Clone();
         }
 
         // 카메라 모션 — 씬의 카메라 값에 모션을 얹어 무대의 카메라 노드를 다시 세운다. 캐릭터는 시작 상태로 선다.
@@ -1875,7 +1765,7 @@ public sealed class ViewportView : Control
         if (_editor is not null && ShownEmoji is { } previewed)
         {
             EmojiPhases phases = EmojiPreview.PhasesOf(_editor.Document, previewed);
-            string where = EmojiActor is { } on ? on.Id : "이 리그의 오브젝트가 씬에 없다 — 캐릭터를 우클릭해 붙는 리그를 만든다";
+            string where = EmojiActor is { } on ? on.Id : "세트가 없다";
             string phase = _clock.Time <= phases.HoldStart ? "등장" : _clock.Time <= phases.ExitStart ? "머묾" : "퇴장";
             string editing = "";
 
@@ -1896,7 +1786,7 @@ public sealed class ViewportView : Control
                 }
             }
 
-            DrawLabel(context, $"연출 {previewed.Name}{(previewed.Screen ? " · 화면" : "")} · {where} · 등장 {phases.Enter:0.##}s › 머묾 {phases.Hold:0.##}s{(phases.Staying ? "(끌 때까지 — 미리보기 길이)" : "")} › 퇴장 {phases.Exit:0.##}s · 지금 {phase}{editing}", new Point(stage.X + 8, stage.Y + 6));
+            DrawLabel(context, $"연출 {previewed.Name} · 화면 · {where} · 등장 {phases.Enter:0.##}s › 머묾 {phases.Hold:0.##}s{(phases.Staying ? "(끌 때까지 — 미리보기 길이)" : "")} › 퇴장 {phases.Exit:0.##}s · 지금 {phase}{editing}", new Point(stage.X + 8, stage.Y + 6));
             return;
         }
 
@@ -1996,7 +1886,7 @@ public sealed class ViewportView : Control
 
         foreach (SceneObject o in scene.DrawOrder())
         {
-            if (!o.Visible || o.Id == emojiActor || IsDormantEmoji(o.Id))
+            if (!o.Visible || o.Id == emojiActor)
             {
                 continue;
             }
@@ -2040,7 +1930,7 @@ public sealed class ViewportView : Control
         // 그릴 것이 하나도 없으면(스킨을 안 입었고 색도 없다) 아래의 윤곽으로 떨어진다.
         IReadOnlyDictionary<string, string> colors = RigParts.ColorsOf(_rig, o.Rig);
         IReadOnlyList<string> parts = DrawnParts(pose, o);
-        Worn? wornNow = WornBy(pose, o);
+        Worn? wornNow = WornBy(o);
 
         if (_rig is not null && _rig.TryGetRig(o.Rig, out RigSchemaRigDto drawn) && (colors.Count > 0 || (parts.Count > 0 && wornNow is not null)))
         {
@@ -2925,7 +2815,7 @@ public sealed class ViewportView : Control
     /// </summary>
     private bool TryStartPartPlacement(Point position, KeyModifiers modifiers)
     {
-        if (_editor is null || EmojiActor is not { } actor || CurrentPose() is not { } pose || WornBy(pose, actor) is not { } worn)
+        if (_editor is null || EmojiActor is not { } actor || CurrentPose() is not { } pose || WornBy(actor) is not { } worn)
         {
             return false;
         }

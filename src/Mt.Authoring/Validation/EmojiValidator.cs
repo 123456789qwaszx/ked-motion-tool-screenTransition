@@ -27,12 +27,6 @@ public static class EmojiValidator
             void Block(string message) => problems.Add(new EmojiProblem(emoji.Name, message));
             void Notice(string message) => problems.Add(new EmojiProblem(emoji.Name, message, Blocking: false));
 
-            // 붙는 자리 — 코어가 아는 기준점 이름이어야 미리보기가 푼다. 런타임이 이름을 더 알 수 있어 막지는 않는다.
-            if (emoji.Locator is not null && !Ked.Presentation.Core.FocusPresetName.TryNormalizeToken(emoji.Locator, out _))
-            {
-                Notice($"붙는 자리 '{emoji.Locator}'를 모른다 — 미리보기는 오프셋만 쓴다({string.Join("·", Preview.ScenePreview.FocusPresets)})");
-            }
-
             if (string.IsNullOrEmpty(emoji.Name) || emoji.Name.Any(char.IsWhiteSpace))
             {
                 Block("키는 빈칸 없는 글이어야 한다");
@@ -68,18 +62,6 @@ public static class EmojiValidator
             else if (skin.Parts.Count == 0)
             {
                 Notice($"스킨 '{skin.Name}'에 그림을 준 조각이 없다");
-            }
-
-            if (emoji.SkinFlipped is not null)
-            {
-                if (document.FindSkin(emoji.SkinFlipped) is not { } flipped)
-                {
-                    Block($"반전 판 스킨 '{emoji.SkinFlipped}'이 없다");
-                }
-                else if (!string.Equals(flipped.Rig, emoji.Rig, StringComparison.Ordinal))
-                {
-                    Block($"반전 판 스킨 '{flipped.Name}'은 리그 '{flipped.Rig}'의 것이다(이모지는 '{emoji.Rig}')");
-                }
             }
 
             foreach ((string label, string? name) in new[] { ("등장", emoji.Enter), ("머묾", emoji.Hold), ("퇴장", emoji.Exit) })
@@ -218,12 +200,6 @@ public static class EmojisJson
         {
             var entry = new JsonObject { ["name"] = e.Name, ["rig"] = e.Rig, ["parts"] = PartsOf(document.FindSkin(e.Skin) is { } skin && skin.Rig == e.Rig ? skin : null) };
 
-            // 반전 판 — 캐릭터가 좌우 반전일 때 이 그림을, 뒤집지 않고.
-            if (document.FindSkin(e.SkinFlipped) is { } flipped)
-            {
-                entry["partsFlipped"] = PartsOf(flipped);
-            }
-
             if (e.Enter is not null)
             {
                 entry["enter"] = e.Enter;
@@ -249,19 +225,9 @@ public static class EmojisJson
                 entry["stay"] = true;
             }
 
-            // 화면에 서는 연출 — 캐릭터에 붙지 않는다.
-            if (e.Screen)
-            {
-                entry["stand"] = "screen";
-            }
-
+            entry["stand"] = "screen"; // 화면에 선다 — 캐릭터에 붙지 않는다
             entry["anchorNode"] = e.AnchorNode;
             entry["offset"] = new JsonArray(e.OffsetX, e.OffsetY);
-
-            if (e.Locator is not null)
-            {
-                entry["locator"] = e.Locator;
-            }
 
             emojis.Add(entry);
         }

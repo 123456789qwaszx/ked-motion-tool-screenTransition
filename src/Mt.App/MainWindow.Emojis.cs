@@ -22,15 +22,12 @@ public partial class MainWindow
     private readonly ListBox _emojiList = new() { MinHeight = 60, MaxHeight = 150, FontSize = 11 }; // 정의가 많아도 칸들이 화면 밖으로 밀리지 않게
     private readonly TextBox _emojiName = new() { FontSize = 11 };
     private readonly ComboBox _emojiSkin = new() { FontSize = 11 };
-    private readonly ComboBox _emojiSkinFlipped = new() { FontSize = 11 };
-    private readonly ComboBox _emojiStand = new() { FontSize = 11, ItemsSource = new[] { "캐릭터에 붙는다", "화면에 선다" } };
     private readonly ComboBox _emojiEnter = new() { FontSize = 11 };
     private readonly ComboBox _emojiHold = new() { FontSize = 11 };
     private readonly ComboBox _emojiExit = new() { FontSize = 11 };
     private readonly TextBox _emojiHoldSeconds = new() { FontSize = 11, PlaceholderText = "끌 때까지 머문다" };
     private readonly TextBox _emojiOffsetX = new() { FontSize = 11 };
     private readonly TextBox _emojiOffsetY = new() { FontSize = 11 };
-    private readonly TextBox _emojiLocator = new() { FontSize = 11, PlaceholderText = "(붙는 노드)" };
     private readonly StackPanel _emojiFields = new() { Spacing = 4 };
 
     internal string? SelectedEmoji => _emojiList.SelectedItem as string;
@@ -60,7 +57,7 @@ public partial class MainWindow
         panel.Children.Add(_emojiList);
 
         Button add = SmallButton("연출 추가", (_, _) => Guard("연출 추가", () => AddEmoji()));
-        ToolTip.SetTip(add, "새 연출 — 세트를 열어 두었으면 그 세트의 것(화면에 서는 연출)으로, 아니면 고른 오브젝트의 리그(없으면 이모지 리그)로 캐릭터에 붙는 연출을 만든다");
+        ToolTip.SetTip(add, "새 연출 — 세트를 열어 두었으면 그 세트의 것으로, 아니면 고른 오브젝트의 리그(없으면 이모지 리그)로 만든다");
         panel.Children.Add(new StackPanel
         {
             Orientation = Orientation.Horizontal,
@@ -69,24 +66,11 @@ public partial class MainWindow
         });
 
         _emojiFields.Children.Add(Labeled("키", _emojiName));
-        _emojiFields.Children.Add(Labeled("서는 곳", _emojiStand));
-        ToolTip.SetTip(_emojiStand, "캐릭터에 붙는다 — 그 캐릭터의 기준점 옆에 따라다닌다(이모지). 화면에 선다 — 캐릭터와 상관없이 무대 위 제 자리에 선다(화면 전환 · 날짜 소개). 화면에 서는 연출은 씬에 그 세트가 놓여 있지 않아도 미리본다");
-        _emojiStand.SelectionChanged += (_, _) =>
-        {
-            if (!_refreshing && _emojiStand.SelectedIndex >= 0)
-            {
-                WithEmoji(e => e.Screen = _emojiStand.SelectedIndex == 1);
-            }
-        };
         _emojiFields.Children.Add(Labeled("그림(스킨)", _emojiSkin));
-        _emojiFields.Children.Add(Labeled("반전 판", _emojiSkinFlipped));
-        Button newSkin = SmallButton("새 스킨", (_, _) => Guard("새 스킨", () => NewEmojiSkin(flipped: false)));
-        Button newFlipped = SmallButton("새 반전 판", (_, _) => Guard("새 반전 판", () => NewEmojiSkin(flipped: true)));
-        ToolTip.SetTip(newSkin, "이 이모지의 이름으로 빈 스킨을 만들어 그림으로 삼는다 — 되돌리기 한 번. 아래 조각 칸에서 그림을 준다");
-        ToolTip.SetTip(newFlipped, "이 이모지의 반전 판 스킨(이름_반전)을 만든다 — 되돌리기 한 번");
-        _emojiFields.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { newSkin, newFlipped } });
+        Button newSkin = SmallButton("새 스킨", (_, _) => Guard("새 스킨", () => NewEmojiSkin()));
+        ToolTip.SetTip(newSkin, "이 연출의 이름으로 빈 스킨을 만들어 그림으로 삼는다 — 되돌리기 한 번. 아래 조각 칸에서 그림을 준다");
+        _emojiFields.Children.Add(newSkin);
         _emojiFields.Children.Add(_emojiSkinParts);
-        ToolTip.SetTip(_emojiSkinFlipped, "붙은 캐릭터가 좌우 반전일 때 입는 스킨(말풍선의 꼬리가 반대쪽인 판) — 자리와 움직임은 뒤집히고 이 그림은 뒤집지 않고 그린다. 없으면 같은 그림이 뒤집혀 보인다");
         _emojiFields.Children.Add(Labeled("등장", _emojiEnter));
         _emojiFields.Children.Add(Labeled("머묾(되풀이)", _emojiHold));
         _emojiFields.Children.Add(Labeled("퇴장", _emojiExit));
@@ -94,15 +78,14 @@ public partial class MainWindow
         _emojiFields.Children.Add(Labeled("머무는 시간", _emojiHoldSeconds));
         _emojiFields.Children.Add(Labeled("오프셋 X", _emojiOffsetX));
         _emojiFields.Children.Add(Labeled("오프셋 Y", _emojiOffsetY));
-        _emojiFields.Children.Add(Labeled("붙는 자리", _emojiLocator));
         panel.Children.Add(_emojiFields);
 
         ToolTip.SetTip(_emojiEnter, "뜰 때 한 번 도는 모션(튀어나옴). 유지(commit)면 그 자세에서 머묾이 시작한다");
         ToolTip.SetTip(_emojiHold, "머무는 동안 처음부터 되풀이하는 모션(까딱임·punch). 등장이 끝난 자세에서 시작하고 바퀴가 쌓이지 않는다. 끝에서 처음으로 튀는 머묾(흘러내렸다가 다시 위에서)은 끝 규칙을 '유지'로 둔다 — '복원' 모션은 중립값에서 끝나야 한다");
         ToolTip.SetTip(_emojiExit, "사라질 때 한 번 도는 모션(흐려짐). 머묾이 멈춘 그 자세에서 시작한다");
         ToolTip.SetTip(_emojiHoldSeconds, "등장이 끝난 뒤 퇴장이 시작하기까지(초). 비우면 끌 때까지 머무는 이모지(상태) — 미리보기는 머묾을 얼마간만 보인다");
-        ToolTip.SetTip(_emojiOffsetX, "붙는 자리에서의 오프셋(px) — Emoji_Anchor의 위치로 들어간다. 이모지마다 머리 옆·위·입 옆이 다르다");
-        ToolTip.SetTip(_emojiLocator, "기준점 이름(faceAura·face·bust·body·feet·handLeft·handRight) — 붙은 캐릭터의 그 점에서부터 오프셋을 잰다. 비우면 붙는 노드에서부터");
+        ToolTip.SetTip(_emojiOffsetX, "자리 노드에 넣는 오프셋(px)");
+
 
         OnCommit(_emojiName, text =>
         {
@@ -126,33 +109,30 @@ public partial class MainWindow
             };
 
         Combo(_emojiSkin, (e, v) => e.Skin = v);
-        Combo(_emojiSkinFlipped, (e, v) => e.SkinFlipped = v);
         Combo(_emojiEnter, (e, v) => e.Enter = v);
         Combo(_emojiHold, (e, v) => e.Hold = v);
         Combo(_emojiExit, (e, v) => e.Exit = v);
         OnCommit(_emojiHoldSeconds, text => WithEmoji(e => e.HoldSeconds = string.IsNullOrWhiteSpace(text) ? null : TryFloat(text, out float v) ? v : e.HoldSeconds));
         OnCommit(_emojiOffsetX, text => WithEmoji(e => e.OffsetX = TryFloat(text, out float v) ? v : e.OffsetX));
         OnCommit(_emojiOffsetY, text => WithEmoji(e => e.OffsetY = TryFloat(text, out float v) ? v : e.OffsetY));
-        OnCommit(_emojiLocator, text => WithEmoji(e => e.Locator = text));
         return panel;
     }
 
     // 이 이모지의 스킨을 그 자리에서 고친다 — "씬" 탭의 스킨 칸(오브젝트가 입은 스킨)과 같은 줄을 쓴다.
     private readonly StackPanel _emojiSkinParts = new() { Spacing = 3 };
     private readonly Dictionary<string, SkinSetupBoxSet> _emojiSetupBoxes = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, SkinSetupBoxSet> _emojiFlippedSetupBoxes = new(StringComparer.Ordinal);
 
-    /// <summary>테스트 손잡이 — "이모지" 탭의 조각 그림 칸(반전 판이면 flipped).</summary>
-    internal TextBox? EmojiSkinPartBox(string node, bool flipped = false)
-        => _emojiSkinParts.Children.OfType<Panel>().SelectMany(p => p.Children.OfType<TextBox>()).FirstOrDefault(b => Equals(b.Tag, node) && Equals(b.Name == "flipped", flipped));
+    /// <summary>테스트 손잡이 — "연출" 탭의 조각 그림 칸.</summary>
+    internal TextBox? EmojiSkinPartBox(string node)
+        => _emojiSkinParts.Children.OfType<Panel>().SelectMany(p => p.Children.OfType<TextBox>()).FirstOrDefault(b => Equals(b.Tag, node));
 
-    internal SkinSetupBoxSet? EmojiSkinSetupBoxes(string node, bool flipped = false)
-        => (flipped ? _emojiFlippedSetupBoxes : _emojiSetupBoxes).TryGetValue(node, out SkinSetupBoxSet? boxes) ? boxes : null;
+    internal SkinSetupBoxSet? EmojiSkinSetupBoxes(string node)
+        => _emojiSetupBoxes.TryGetValue(node, out SkinSetupBoxSet? boxes) ? boxes : null;
 
-    internal string? NewEmojiSkinFromForm(bool flipped) => NewEmojiSkin(flipped);
+    internal string? NewEmojiSkinFromForm() => NewEmojiSkin();
 
-    /// <summary>이 이모지의 이름으로 새 스킨을 만들어 그림(또는 반전 판)으로 삼는다 — 한 칸.</summary>
-    private string? NewEmojiSkin(bool flipped)
+    /// <summary>이 연출의 이름으로 새 스킨을 만들어 그림으로 삼는다 — 한 칸.</summary>
+    private string? NewEmojiSkin()
     {
         if (CurrentEmoji is not { } emoji)
         {
@@ -160,28 +140,18 @@ public partial class MainWindow
         }
 
         MotionDocument document = _session.Editor.Document;
-        string stem = flipped ? emoji.Name + "_반전" : emoji.Name;
-        string name = stem;
+        string name = emoji.Name;
 
         for (int i = 2; document.FindSkin(name) is not null; i++)
         {
-            name = $"{stem}_{i.ToString(CultureInfo.InvariantCulture)}";
+            name = $"{emoji.Name}_{i.ToString(CultureInfo.InvariantCulture)}";
         }
 
         _session.Editor.Batch(MotionChangeKind.Scene, () =>
         {
             _session.Editor.AddSkin(name, emoji.Rig);
             EmojiAsset value = emoji.Clone();
-
-            if (flipped)
-            {
-                value.SkinFlipped = name;
-            }
-            else
-            {
-                value.Skin = name;
-            }
-
+            value.Skin = name;
             _session.Editor.UpdateEmoji(emoji.Name, value);
         });
         return name;
@@ -191,43 +161,18 @@ public partial class MainWindow
     {
         _emojiSkinParts.Children.Clear();
         _emojiSetupBoxes.Clear();
-        _emojiFlippedSetupBoxes.Clear();
 
-        if (emoji is null)
+        if (emoji is null || _session.Editor.Document.FindSkin(emoji.Skin) is not { } skin || skin.Rig != emoji.Rig)
         {
             return;
         }
 
-        IReadOnlyList<string> parts = RigParts.Of(_session.Rig, emoji.Rig);
+        _emojiSkinParts.Children.Add(new TextBlock { Text = $"조각 그림 — {skin.Name}", FontSize = 10, Opacity = 0.75, Margin = new Avalonia.Thickness(0, 4, 0, 0) });
 
-        void Rows(string? skinName, string title, Dictionary<string, SkinSetupBoxSet> boxes, bool flipped)
+        foreach (string node in RigParts.Of(_session.Rig, emoji.Rig))
         {
-            if (_session.Editor.Document.FindSkin(skinName) is not { } skin || skin.Rig != emoji.Rig)
-            {
-                return;
-            }
-
-            _emojiSkinParts.Children.Add(new TextBlock { Text = $"{title} — {skin.Name}", FontSize = 10, Opacity = 0.75, Margin = new Avalonia.Thickness(0, 4, 0, 0) });
-
-            foreach (string node in parts)
-            {
-                Control row = SkinPartRow(skin, node, boxes);
-
-                if (flipped && row is Panel panel)
-                {
-                    foreach (TextBox box in panel.Children.OfType<TextBox>())
-                    {
-                        box.Name = "flipped";
-                    }
-                }
-
-                _emojiSkinParts.Children.Add(row);
-            }
-
+            _emojiSkinParts.Children.Add(SkinPartRow(skin, node, _emojiSetupBoxes));
         }
-
-        Rows(emoji.Skin, "조각 그림", _emojiSetupBoxes, flipped: false);
-        Rows(emoji.SkinFlipped, "반전 판의 조각 그림", _emojiFlippedSetupBoxes, flipped: true);
     }
 
     // ── 이모지 안에서 구간의 모션을 고친다 (PLAN-parts.md §15) ─────────
@@ -499,7 +444,6 @@ public partial class MainWindow
             string rig = emoji?.Rig ?? "";
             List<string> motions = document.Motions.Where(m => m.Rig == rig).Select(m => m.Name).OrderBy(n => n, StringComparer.Ordinal).ToList();
             Fill(_emojiSkin, document.Skins.Where(s => s.Rig == rig).Select(s => s.Name), emoji?.Skin);
-            Fill(_emojiSkinFlipped, document.Skins.Where(s => s.Rig == rig).Select(s => s.Name), emoji?.SkinFlipped);
             RefreshEmojiSkinParts(emoji);
             SyncEmojiContext(); // 구간의 모션을 바꿨거나 떼어 냈으면 그래프가 따라간다
             Fill(_emojiEnter, motions, emoji?.Enter);
@@ -518,11 +462,6 @@ public partial class MainWindow
             Write(_emojiHoldSeconds, emoji?.HoldSeconds is { } hold ? hold.ToString("0.###", CultureInfo.InvariantCulture) : "");
             Write(_emojiOffsetX, emoji is null ? "" : emoji.OffsetX.ToString("0.###", CultureInfo.InvariantCulture));
             Write(_emojiOffsetY, emoji is null ? "" : emoji.OffsetY.ToString("0.###", CultureInfo.InvariantCulture));
-            Write(_emojiLocator, emoji?.Locator ?? "");
-            _emojiStand.SelectedIndex = emoji is null ? -1 : emoji.Screen ? 1 : 0;
-            // 화면에 서는 연출에는 붙는 자리·반전 판이 뜻이 없다.
-            _emojiLocator.IsEnabled = emoji is { Screen: false };
-            _emojiSkinFlipped.IsEnabled = emoji is { Screen: false };
         }
         finally
         {
@@ -550,9 +489,8 @@ public partial class MainWindow
     {
         MotionEditor editor = _session.Editor;
         SceneObject? selected = _viewport.SelectedObject;
-        // 세트를 열어 두었으면 그 세트의 연출이다 — 씬에서 캐릭터에 붙어 있는 세트가 아니면 화면에 서는 것으로 만든다.
+        // 세트를 열어 두었으면 그 세트의 연출이다.
         string? openSet = SelectedSet;
-        bool screen = openSet is not null && editor.Document.Scenes.All(s => s.Objects.All(o => o.Rig != openSet || s.ParentOf(o) is null));
         // 리그: 연 세트, 아니면 고른 오브젝트의 것(조각이 있으면), 아니면 조각이 있는 첫 리그, 그것도 없으면 이모지 리그를 툴이 정의한다.
         string rig = openSet
             ?? (selected is not null && RigParts.Of(_session.Rig, selected.Rig).Count > 0
@@ -575,9 +513,9 @@ public partial class MainWindow
             EnsureRigDefined(rig);
             editor.AddEmoji(name, rig);
 
-            if (skin is not null || screen)
+            if (skin is not null)
             {
-                editor.UpdateEmoji(name, new EmojiAsset { Skin = skin, Screen = screen });
+                editor.UpdateEmoji(name, new EmojiAsset { Skin = skin });
             }
         });
 

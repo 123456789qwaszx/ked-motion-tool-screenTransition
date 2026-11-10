@@ -24,7 +24,7 @@ dotnet test KedMotionTool.sln -c Release --no-build
 예시 문서를 다시 쓴다(빌더 `tests/Mt.Authoring.Tests/TransitionExamples.cs`를 고친 뒤):
 
 ```bash
-MT_WRITE_EXAMPLES=1 dotnet test tests/Mt.Authoring.Tests -c Release --filter EmojiExampleTests
+MT_WRITE_EXAMPLES=1 dotnet test tests/Mt.Authoring.Tests -c Release --filter TransitionExampleTests
 ```
 
 화면을 그림으로 뽑는다(헤드리스가 Skia로 실제 렌더 — 고친 화면은 눈으로 확인한다):

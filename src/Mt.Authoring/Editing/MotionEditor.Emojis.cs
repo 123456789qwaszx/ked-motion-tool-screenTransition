@@ -60,8 +60,6 @@ public sealed partial class MotionEditor
         Mutate(MotionChangeKind.Scene, () =>
         {
             emoji.Skin = Blank(value.Skin);
-            emoji.SkinFlipped = Blank(value.SkinFlipped);
-            emoji.Screen = value.Screen;
             emoji.Enter = Blank(value.Enter);
             emoji.Hold = Blank(value.Hold);
             emoji.Exit = Blank(value.Exit);
@@ -69,7 +67,6 @@ public sealed partial class MotionEditor
             emoji.AnchorNode = string.IsNullOrWhiteSpace(value.AnchorNode) ? EmojiAsset.DefaultAnchorNode : value.AnchorNode.Trim();
             emoji.OffsetX = value.OffsetX;
             emoji.OffsetY = value.OffsetY;
-            emoji.Locator = Blank(value.Locator);
         });
     }
 
@@ -131,11 +128,6 @@ public sealed partial class MotionEditor
             if (emoji.Skin == name)
             {
                 emoji.Skin = newName;
-            }
-
-            if (emoji.SkinFlipped == name)
-            {
-                emoji.SkinFlipped = newName;
             }
         }
     }

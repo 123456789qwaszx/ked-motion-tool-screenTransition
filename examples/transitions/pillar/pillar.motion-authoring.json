@@ -1937,7 +1937,6 @@
       "name": "pillar",
       "rig": "pillar",
       "skin": "pillar",
-      "screen": true,
       "enter": "pillar_in",
       "hold": "pillar_hold",
       "exit": "pillar_out",

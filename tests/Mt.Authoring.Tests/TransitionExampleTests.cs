@@ -9,14 +9,14 @@ using Mt.Authoring.Validation;
 namespace Mt.Authoring.Tests;
 
 /// <summary>
-/// 예시 문서(<c>examples/emoji</c>)가 살아 있는지 — 문제 없이 서고, 저장된 파일이 지은 것과 같고, 그림이 다 있다.
-/// 예시를 고쳤으면 <c>MT_WRITE_EXAMPLES=1 dotnet test --filter EmojiExampleTests</c>로 파일을 다시 쓴다.
+/// 예시 문서(<c>examples/transitions</c>)가 살아 있는지 — 문제 없이 서고, 저장된 파일이 지은 것과 같고, 그림이 다 있다.
+/// 예시를 고쳤으면 <c>MT_WRITE_EXAMPLES=1 dotnet test --filter TransitionExampleTests</c>로 파일을 다시 쓴다.
 /// </summary>
-public class EmojiExampleTests
+public class TransitionExampleTests
 {
     private static readonly RigSchemaFile Dump = RigSchemaFile.Load(Fixtures.PathOf("rig-schemas.json"));
 
-    private static string ExampleDirectory()
+    private static string ExampleDirectory(string name)
     {
         DirectoryInfo? at = new(AppContext.BaseDirectory);
 
@@ -25,43 +25,13 @@ public class EmojiExampleTests
             at = at.Parent;
         }
 
-        return Path.Combine(at?.FullName ?? throw new InvalidOperationException("저장소 뿌리를 못 찾았다"), "examples", "emoji");
+        return Path.Combine(at?.FullName ?? throw new InvalidOperationException("저장소 뿌리를 못 찾았다"), "examples", "transitions", name);
     }
-
-    [Fact]
-    public void 예시_문서는_문제_없이_서고_저장된_파일과_같다()
-    {
-        MotionEditor editor = EmojiExamples.Build();
-        MotionDocument document = editor.Document;
-        RigSchemaFile rig = RigAssets.Compose(Dump, document);
-
-        Assert.True(!MotionValidator.Validate(document, rig.NodeIds, null, rig.AlphaNodeIds).Any(), string.Join("\n", MotionValidator.Validate(document, rig.NodeIds, null, rig.AlphaNodeIds).Select(p => $"{p.MotionName}: {p.Message}")));
-        Assert.Empty(EmojiValidator.Validate(document, rig.NodeIds).Select(p => $"{p.EmojiName}: {p.Message}"));
-        Assert.Equal(22, document.Emojis.Count);
-
-        string directory = ExampleDirectory();
-        string path = Path.Combine(directory, "emoji-examples.motion-authoring.json");
-        string json = MotionDocumentJson.Write(document);
-
-        if (Environment.GetEnvironmentVariable("MT_WRITE_EXAMPLES") == "1")
-        {
-            File.WriteAllText(path, json);
-        }
-
-        Assert.Equal(json, File.ReadAllText(path));
-
-        // 스킨이 가리키는 그림이 다 있다.
-        Assert.All(document.Skins.SelectMany(s => s.AllImages()).Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
-    }
-
-    // ── 화면 이동 연출 예시(PLAN-set.md S6) ────────────────────────────
-
-    private static string StationDirectory() => Path.Combine(Path.GetDirectoryName(ExampleDirectory())!, "transitions", "station");
 
     [Fact]
     public void 화면_이동_예시는_층_표에서_세트가_서고_문제_없이_돌고_저장된_파일과_같다()
     {
-        string directory = StationDirectory();
+        string directory = ExampleDirectory("station");
         MotionEditor editor = TransitionExamples.BuildStation(Path.Combine(directory, "art", "layers.tsv"));
         MotionDocument document = editor.Document;
         RigSchemaFile rig = RigAssets.Compose(Dump, document);
@@ -109,7 +79,7 @@ public class EmojiExampleTests
     [Fact]
     public void 기둥과_노을_예시는_시차로_지은_층들이_차례로_솟고_저장된_파일과_같다()
     {
-        string directory = Path.Combine(Path.GetDirectoryName(ExampleDirectory())!, "transitions", "pillar");
+        string directory = ExampleDirectory("pillar");
         MotionEditor editor = TransitionExamples.BuildPillar(Path.Combine(directory, "art", "layers.tsv"));
         MotionDocument document = editor.Document;
         RigSchemaFile rig = RigAssets.Compose(Dump, document);
@@ -165,7 +135,7 @@ public class EmojiExampleTests
     [InlineData("mercury", "star", 0.7)]
     public void 나머지_세_장면은_검증을_지나고_저장된_파일과_같다(string name, string late, double turn)
     {
-        string directory = Path.Combine(Path.GetDirectoryName(ExampleDirectory())!, "transitions", name);
+        string directory = ExampleDirectory(name);
         string layers = Path.Combine(directory, "art", "layers.tsv");
         MotionEditor editor = name switch
         {

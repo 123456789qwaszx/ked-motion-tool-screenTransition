@@ -45,7 +45,7 @@ public class EmojiTests
         editor.SetKeys("fade", Part, MotionChannelKind.Alpha, Axis.X, new[] { Linear(0f, 1f), Linear(0.3f, 0f) });
 
         editor.AddEmoji("sweat", EmojiRigFixture.RigKind);
-        editor.UpdateEmoji("sweat", new EmojiAsset { Skin = "땀", Enter = "pop", Hold = "bob", Exit = "fade", HoldSeconds = 1f, OffsetX = 120f, OffsetY = 300f, Locator = "faceAura" });
+        editor.UpdateEmoji("sweat", new EmojiAsset { Skin = "땀", Enter = "pop", Hold = "bob", Exit = "fade", HoldSeconds = 1f, OffsetX = 120f, OffsetY = 300f });
         return editor;
     }
 
@@ -171,7 +171,6 @@ public class EmojiTests
         Assert.Equal(1.0, sweat["holdSeconds"]!.GetValue<double>(), 3);
         Assert.Null(sweat["stay"]);
         Assert.Equal(new[] { 120.0, 300.0 }, sweat["offset"]!.AsArray().Select(v => v!.GetValue<double>()));
-        Assert.Equal("faceAura", sweat["locator"]!.GetValue<string>());
         Assert.Equal(json, EmojisJson.Write(editor.Document)); // 결정적
 
         // 머무는 이모지는 holdSeconds 대신 stay.

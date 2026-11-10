@@ -169,7 +169,7 @@ internal static class TransitionExamples
 
         // ── 연출 — 화면에 선다. 1초 머물고 걷힌다.
         editor.AddEmoji(Station, Station);
-        editor.UpdateEmoji(Station, new EmojiAsset { Skin = Station, Enter = In, Hold = Hold, Exit = Out, HoldSeconds = 1f, Screen = true });
+        editor.UpdateEmoji(Station, new EmojiAsset { Skin = Station, Enter = In, Hold = Hold, Exit = Out, HoldSeconds = 1f });
         return editor;
     }
 
@@ -270,7 +270,7 @@ internal static class TransitionExamples
         Curve(editor, Out, MotionEditor.BackdropNode, MotionChannelKind.Alpha, Axis.X, L(0f, 1f), L(0.55f, 1f), L(E, 0f));
 
         editor.AddEmoji(Pillar, Pillar);
-        editor.UpdateEmoji(Pillar, new EmojiAsset { Skin = Pillar, Enter = In, Hold = Hold, Exit = Out, HoldSeconds = 1.5f, Screen = true });
+        editor.UpdateEmoji(Pillar, new EmojiAsset { Skin = Pillar, Enter = In, Hold = Hold, Exit = Out, HoldSeconds = 1.5f });
         return editor;
     }
 
@@ -308,7 +308,7 @@ internal static class TransitionExamples
     private static void Cue(MotionEditor editor, string kind, float holdSeconds)
     {
         editor.AddEmoji(kind, kind);
-        editor.UpdateEmoji(kind, new EmojiAsset { Skin = kind, Enter = kind + "_in", Hold = kind + "_hold", Exit = kind + "_out", HoldSeconds = holdSeconds, Screen = true });
+        editor.UpdateEmoji(kind, new EmojiAsset { Skin = kind, Enter = kind + "_in", Hold = kind + "_hold", Exit = kind + "_out", HoldSeconds = holdSeconds });
     }
 
     /// <summary>

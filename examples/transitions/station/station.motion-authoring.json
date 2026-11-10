@@ -1715,7 +1715,6 @@
       "name": "station",
       "rig": "station",
       "skin": "station",
-      "screen": true,
       "enter": "station_in",
       "hold": "station_hold",
       "exit": "station_out",
