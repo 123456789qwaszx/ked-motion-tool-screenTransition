@@ -438,24 +438,12 @@ public class ViewportViewTests
     });
 
     [Fact]
-    public void 카메라는_뼈대의_Zoom_Pan_노드에_들어가고_보기_변환은_항등이다() => HeadlessUi.Run(() =>
+    public void 화면_좌표와_루트_좌표는_서로_되돌아온다() => HeadlessUi.Run(() =>
     {
-        (Window window, ViewportView view, MotionEditor editor) = Show();
+        (Window window, ViewportView view, _) = Show();
 
         try
         {
-            Assert.True(view.CameraInTree);
-            Point origin = view.ToScreen(Vec2.Zero);
-            Quad rest = view.ObjectQuad("s1")!.Value;
-            Assert.Equal(0f, rest.Center.X, 1);
-
-            editor.SetCamera(null, 20f, 50f, 0f); // 배율 2, pan +50px
-            Assert.Equal(2f, view.CameraScale, 4);
-            Assert.Equal(origin, view.ToScreen(Vec2.Zero)); // 격자(StageShot_Root 공간)는 안 움직인다
-            Quad shot = view.ObjectQuad("s1")!.Value; // 오브젝트는 pan + 2·(자리) 만큼 — 런타임 StagePan/Zoom과 같다
-            Assert.Equal(50f, shot.Center.X, 1);
-            Assert.Equal((rest.TopRight.X - rest.TopLeft.X) * 2f, shot.TopRight.X - shot.TopLeft.X, 1);
-
             Vec2 back = view.ToRoot(view.ToScreen(new Vec2(123f, -45f)));
             Assert.Equal(123f, back.X, 2);
             Assert.Equal(-45f, back.Y, 2);

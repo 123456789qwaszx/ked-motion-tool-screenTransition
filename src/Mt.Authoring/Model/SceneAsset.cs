@@ -12,8 +12,6 @@ public sealed class SceneAsset
 
     public string Name { get; set; } = DefaultName;
 
-    public CameraSettings Camera { get; set; } = new();
-
     public List<SceneObject> Objects { get; set; } = new();
 
     public SceneObject? Find(string id)
@@ -54,7 +52,6 @@ public sealed class SceneAsset
     public SceneAsset Clone() => new()
     {
         Name = Name,
-        Camera = new CameraSettings { Zoom = Camera.Zoom, PanX = Camera.PanX, PanY = Camera.PanY },
         Objects = Objects.Select(o => o.Clone()).ToList(),
     };
 
@@ -63,16 +60,6 @@ public sealed class SceneAsset
     {
         Objects = { new SceneObject { Id = SceneObject.DefaultId, Rig = SceneObject.DefaultRig, Portrait = portrait } },
     };
-}
-
-/// <summary>샷(카메라) — 보기 전용. 코어 <c>ShotIntentState</c>와 같은 뜻(zoom 1당 배율 0.05, pan은 리그 공간 px).</summary>
-public sealed class CameraSettings
-{
-    public float Zoom { get; set; }
-
-    public float PanX { get; set; }
-
-    public float PanY { get; set; }
 }
 
 /// <summary>

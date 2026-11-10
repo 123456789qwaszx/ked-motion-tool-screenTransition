@@ -141,9 +141,6 @@ public partial class MainWindow : Window
     private static readonly IBrush PlacementNodeBrush = new SolidColorBrush(Color.FromRgb(0xB0, 0xB0, 0xB0));
     private static readonly IBrush ForbiddenNodeBrush = new SolidColorBrush(Color.FromRgb(0x70, 0x70, 0x70));
     private readonly ComboBox _exportScope = new() { ItemsSource = new[] { "전체", "이 rigKind만", "이 오브젝트가 입는 모션만" }, SelectedIndex = 0, FontSize = 11 };
-    private readonly TextBox _camZoom = new() { FontSize = 11, Width = 56 };
-    private readonly TextBox _camPanX = new() { FontSize = 11, Width = 56 };
-    private readonly TextBox _camPanY = new() { FontSize = 11, Width = 56 };
 
     // 오른쪽 — 오브젝트(채널 박스)
     private readonly TextBox _objX = new() { FontSize = 11, Width = 64 };
@@ -165,7 +162,6 @@ public partial class MainWindow : Window
     internal TextBox ObjectCharacterBox => _objCharacter;
     private readonly TextBlock _objSummary = new() { FontSize = 11, Opacity = 0.8, TextWrapping = TextWrapping.Wrap };
     private readonly Expander _placementExpander = new() { Header = "시작 배치", FontSize = 11, IsExpanded = false };
-    private readonly Expander _cameraExpander = new() { Header = "카메라(샷)", FontSize = 11, IsExpanded = false };
 
     // 왼쪽
     private readonly ListBox _motionList = new() { MinHeight = 120 };
@@ -270,7 +266,6 @@ public partial class MainWindow : Window
                 _dope.CurrentTime = _viewport.Time - _contextOffset;
             });
             RefreshChannelBox();
-            RefreshCameraPanel();
         };
         _viewport.PlayStateChanged += (_, _) => _playButton.Content = _viewport.IsPlaying ? "❚❚" : "▶";
 
@@ -1791,10 +1786,6 @@ public partial class MainWindow : Window
             Children = { addMotionButton, SmallButton("모션 삭제", (_, _) => Guard("모션 삭제", RemoveMotion)) },
         });
 
-        Button addCameraButton = SmallButton("카메라 모션 추가", (_, _) => Guard("카메라 모션 추가", () => AddCameraMotion()));
-        ToolTip.SetTip(addCameraButton, "카메라(zoom·pan)를 키와 커브로 움직이는 모션 — 이름 camera, camera_2…, 길이 1초, 유지·절대값. 지금 씬 카메라 값으로 처음·끝 키가 선다. 오른쪽 '모션' 탭의 카메라 칸에 값을 넣으면 그 시각에 키, 커브는 그래프에서. motions.json에는 나가지 않는다");
-        LeftPanel.Children.Add(addCameraButton);
-
         Button addPresetButton = SmallButton("프리셋에서 추가", (_, _) => Guard("프리셋에서 추가", () => AddPreset()));
         ToolTip.SetTip(addPresetButton, "컨트롤러 표 위에 지은 연기 9종(끄덕·젓기·깡충·움찔·떨림·숙임·바운스·호흡·돌아서기)을 선택 오브젝트의 리그로 더한다 — 이름은 id(겹치면 id_2…). 표가 없는 리그는 안 된다");
         _presetCombo.SelectionChanged += (_, _) =>
@@ -1869,7 +1860,7 @@ public partial class MainWindow : Window
         return panel;
     }
 
-    /// <summary>씬 탭 — 고른 오브젝트의 배치(모션 키가 아니다). 자주 쓰는 자리·층은 펼쳐 두고, 시작 배치·붙이기·카메라는 접는다(기본값이 아니면 펼친다).</summary>
+    /// <summary>씬 탭 — 고른 오브젝트의 배치(모션 키가 아니다). 자주 쓰는 자리·층은 펼쳐 두고, 시작 배치·붙이기는 접는다(기본값이 아니면 펼친다).</summary>
     private Control BuildSceneTab()
     {
         var panel = new StackPanel { Spacing = 4, Margin = new Avalonia.Thickness(0, 6, 0, 0) };
@@ -1962,21 +1953,6 @@ public partial class MainWindow : Window
         // id 칸은 화면에 없다(소유자, 2026-10-28): 이름 바꾸기는 하이어아키 F2. 컨트롤은 테스트 손잡이로만 남는다.
         ToolTip.SetTip(_objId, "이름 바꾸기 — [a-z0-9_]+");
         OnCommit(_objId, _ => RenameSelectedObject());
-        _cameraExpander.Content = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            Spacing = 4,
-            Children = { Small("zoom"), _camZoom, Small("pan X"), _camPanX, Small("Y"), _camPanY },
-        };
-        ToolTip.SetTip(_cameraExpander, "무대 카메라(샷 커맨드 shot_zoom·shot_track) — 뼈대의 StageZoom/StagePan에 들어간다. 뷰포트 확대(휠·MMB)와는 다르다");
-        ToolTip.SetTip(_camZoom, "샷 zoom — 1당 배율 +0.05(코어 규약). 보기만 바뀐다");
-        panel.Children.Add(_cameraExpander);
-
-        foreach (TextBox box in new[] { _camZoom, _camPanX, _camPanY })
-        {
-            OnCommit(box, _ => CommitCamera());
-        }
-
         _viewport.ObjectSelected += (_, _) => RefreshObjects();
         panel.Children.Add(BuildSkinPanel());
         panel.Children.Insert(0, BuildSetNodePanel()); // 세트를 열었으면 그 오브젝트의 칸이 맨 위다
@@ -1994,7 +1970,6 @@ public partial class MainWindow : Window
         panel.Children.Add(Labeled("재생 기준", _motionDefaultMode));
         ToolTip.SetTip(_motionDefaultMode, "키 값을 어떻게 읽나 — 상대값(relative) = 시작값 + 키(배율은 ×) · 절대값(absolute) = 키 그대로. 뷰포트 미리보기와 매니퓰레이터·채널 박스가 포즈를 키 값으로 바꿀 때 쓴다. 파일에는 안 나간다: 재생은 대본의 <<motion slot 이름 relative|absolute>>가 정한다(생략 = relative)");
 
-        panel.Children.Add(BuildCameraPanel());
         panel.Children.Add(BuildAlphaPanel());
         panel.Children.Add(BuildEventPanel());
 
@@ -2309,14 +2284,9 @@ public partial class MainWindow : Window
             _objSy.Text = selected is null ? "" : F(selected.ScaleY);
             _objLayer.SelectedIndex = selected is null ? -1 : SceneLayers.IndexOf(selected.Layer);
             _objVisible.IsChecked = selected?.Visible ?? false;
-            CameraSettings? camera = _viewport.Scene?.Camera;
-            _camZoom.Text = camera is null ? "" : F(camera.Zoom);
-            _camPanX.Text = camera is null ? "" : F(camera.PanX);
-            _camPanY.Text = camera is null ? "" : F(camera.PanY);
 
             // 접힌 묶음은 값이 기본이 아닐 때만 스스로 펼친다(닫지는 않는다).
             _placementExpander.IsExpanded |= selected is not null && (selected.PositionX != 0 || selected.PositionY != 0 || selected.RotationZ != 0 || selected.ScaleX != 1 || selected.ScaleY != 1);
-            _cameraExpander.IsExpanded |= camera is not null && (camera.Zoom != 0 || camera.PanX != 0 || camera.PanY != 0);
         }
         finally
         {
@@ -2432,15 +2402,6 @@ public partial class MainWindow : Window
             string header = _settings.ShowStageSkeleton ? node.id
                 : isStageRoot ? StageNodes.StageName(StageNodes.Stages.First(st => StageNodes.StageRootOf(st) == node.id))
                 : layer;
-
-            if (node.id == StageNodes.ZoomRoot)
-            {
-                header += $"  ·  zoom {scene.Camera.Zoom:0.##}";
-            }
-            else if (node.id == StageNodes.PanRoot)
-            {
-                header += $"  ·  pan {scene.Camera.PanX:0},{scene.Camera.PanY:0}";
-            }
 
             TreeViewItem item = Folder(header, "skel:" + node.id, defaultExpanded: occupied.Contains(node.id));
             item.Tag = isContent ? new HierarchyFolder(stage, layer)
@@ -2935,29 +2896,6 @@ public partial class MainWindow : Window
     internal IReadOnlyList<string> HierarchyPathOfController(string objectId, string controllerId)
         => PathOf(_hierarchyParents.Keys.FirstOrDefault(i => i.Tag is HierarchyController c && c.ObjectId == objectId && c.ControllerId == controllerId));
 
-    private void CommitCamera()
-    {
-        if (_refreshing || _viewport.Scene is not { } scene)
-        {
-            return;
-        }
-
-        if (!TryFloat(_camZoom.Text ?? "", out float zoom) || !TryFloat(_camPanX.Text ?? "", out float panX) || !TryFloat(_camPanY.Text ?? "", out float panY))
-        {
-            return;
-        }
-
-        Guard("카메라", () => _session.Editor.SetCamera(scene.Name, zoom, panX, panY));
-    }
-
-    internal void CommitCameraFromForm(float zoom, float panX, float panY)
-    {
-        _camZoom.Text = F(zoom);
-        _camPanX.Text = F(panX);
-        _camPanY.Text = F(panY);
-        CommitCamera();
-    }
-
     private void RemoveObject()
     {
         if (_viewport.SelectedObjectId is { } id)
@@ -3101,7 +3039,7 @@ public partial class MainWindow : Window
             _motionList.ItemTemplate ??= new Avalonia.Controls.Templates.FuncDataTemplate<string>((name, _) =>
             {
                 MotionAsset? motion = _session.Editor.Document.Find(name);
-                bool fits = motion is null || CameraRig.IsCamera(motion) || _viewport.SelectedObject is not { } o || _session.Rig is null || ScenePreview.CanWear(_session.Rig, o, motion);
+                bool fits = motion is null || _viewport.SelectedObject is not { } o || _session.Rig is null || ScenePreview.CanWear(_session.Rig, o, motion);
                 var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Opacity = string.IsNullOrEmpty(name) ? 0.6 : fits ? 1 : 0.5 };
                 row.Children.Add(new TextBlock { Text = string.IsNullOrEmpty(name) ? "(이름 없음 — 아래 문제 칸의 '이름 고치기')" : name, FontSize = 11 });
                 row.Children.Add(new TextBlock { Text = motion is null ? "" : motion.Rig + (fits ? "" : " · 안 맞음"), FontSize = 10, Opacity = 0.6, VerticalAlignment = VerticalAlignment.Center });
@@ -3717,7 +3655,6 @@ public partial class MainWindow : Window
         finally
         {
             _refreshDepth--;
-            RefreshCameraPanel();
             RefreshEventPanel();
         }
     }

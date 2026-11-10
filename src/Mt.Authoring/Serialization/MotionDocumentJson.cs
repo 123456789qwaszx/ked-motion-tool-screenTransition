@@ -62,7 +62,6 @@ public static class MotionDocumentJson
         foreach (SceneAsset scene in document.Scenes)
         {
             scene.Objects ??= new List<SceneObject>();
-            scene.Camera ??= new CameraSettings();
         }
 
         document.EnsureDefaultScene();

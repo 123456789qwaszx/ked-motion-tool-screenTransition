@@ -79,7 +79,6 @@ public class RigAssetTests
 
         Assert.Throws<InvalidOperationException>(() => editor.AddRig(RigTemplates.Emoji()));                       // 이미 있다
         Assert.Throws<InvalidOperationException>(() => editor.AddRig(RigTemplates.Emoji("character")));            // 덤프가 원본인 리그
-        Assert.Throws<InvalidOperationException>(() => editor.AddRig(RigTemplates.Emoji("camera")));
         Assert.Throws<InvalidOperationException>(() => editor.AddRig(RigTemplates.Emoji("1bad")));
         Assert.Throws<InvalidOperationException>(() => editor.AddRig(new RigAsset { Kind = "x", Nodes = { new RigNodeAsset { Id = "A", Parent = "B" }, new RigNodeAsset { Id = "B" } } })); // 부모가 뒤에
         Assert.Throws<InvalidOperationException>(() => editor.AddRig(new RigAsset { Kind = "x", Nodes = { new RigNodeAsset { Id = "A" }, new RigNodeAsset { Id = "A" } } }));

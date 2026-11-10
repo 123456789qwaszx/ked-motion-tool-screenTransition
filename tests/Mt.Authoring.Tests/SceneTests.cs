@@ -166,21 +166,6 @@ public class SceneTests
     }
 
     [Fact]
-    public void 카메라는_씬에_남고_되돌리기_한_번이다()
-    {
-        var editor = new MotionEditor(new MotionDocument());
-        long before = editor.Revision;
-        editor.SetCamera(null, 20f, 100f, -50f);
-        editor.SetCamera(null, 20f, 100f, -50f);
-        Assert.Equal(before + 1, editor.Revision);
-        CameraSettings camera = editor.Document.ActiveSceneAsset!.Camera;
-        Assert.Equal(20f, camera.Zoom);
-        Assert.Equal(-50f, camera.PanY);
-        string json = MotionDocumentJson.Write(editor.Document);
-        Assert.Equal(100f, MotionDocumentJson.Read(json).ActiveSceneAsset!.Camera.PanX);
-    }
-
-    [Fact]
     public void 삭제_복제_이름바꾸기는_오브젝트_하나씩이고_다음_id는_숫자를_올린다()
     {
         var editor = new MotionEditor(new MotionDocument());
@@ -312,52 +297,6 @@ public class SceneTests
         }
 
         Assert.Equal(1920f, staged.GetRectSize("stage/Stage00Depth_Mid_Content").X, 3);
-    }
-
-    [Fact]
-    public void 카메라는_런타임과_같은_노드에_들어가고_층마다_패럴랙스가_붙는다()
-    {
-        var editor = new MotionEditor(new MotionDocument());
-        editor.AddSceneObject(null, "far", "character", SceneLayers.Far);
-        editor.SetCamera(null, 20f, 100f, 0f); // 배율 2, pan +100
-        SceneAsset scene = editor.Document.ActiveSceneAsset!;
-        RectNodeTree tree = ScenePreview.Build(RigFile, scene, null, null, null, null, BuiltinTuning.StageRig);
-
-        Assert.Equal(2f, tree.GetState("stage/StageZoom_Root").LocalScale.X, 4);
-        Assert.Equal(100f, tree.GetState("stage/StagePan_Root").AnchoredPosition.X, 4);
-        // Far: pan × −0.04, scale ^ −0.15 · Mid: 항등 · Close: pan × 0.2, scale ^ 0.16 (PresentationResponseProfile)
-        Assert.Equal(-4f, tree.GetState("stage/Stage00Depth_Far_FramingTransform").AnchoredPosition.X, 4);
-        Assert.Equal(MathF.Pow(2f, -0.15f), tree.GetState("stage/Stage00Depth_Far_FramingScale").LocalScale.X, 4);
-        Assert.Equal(0f, tree.GetState("stage/Stage00Depth_Mid_FramingTransform").AnchoredPosition.X, 4);
-        Assert.Equal(1f, tree.GetState("stage/Stage00Depth_Mid_FramingScale").LocalScale.X, 4);
-        Assert.Equal(20f, tree.GetState("stage/Stage02Depth_Close_FramingTransform").AnchoredPosition.X, 4);
-        Assert.Equal(MathF.Pow(2f, 0.16f), tree.GetState("stage/Stage02Depth_Close_FramingScale").LocalScale.X, 4);
-
-        // 월드: mid 오브젝트는 pan + 2·0 = 100, far 오브젝트는 pan + 2·(−4) = 92.
-        Assert.Equal(100f, tree.TransformPoint("s1/CharSlot_Track", Vec3.Zero).X, 2);
-        Assert.Equal(92f, tree.TransformPoint("far/CharSlot_Track", Vec3.Zero).X, 2);
-    }
-
-    [Fact]
-    public void 자리_있는_오브젝트도_카메라_pan_zoom을_따라_움직인다()
-    {
-        // place는 런타임에서 커맨드 순간 한 번 풀리는 것 — 그 뒤의 shot은 무대째 움직여야 한다. 샷을 먼저 넣으면 place가 pan을 되감는다.
-        var editor = new MotionEditor(new MotionDocument()); // 새 문서 = 캐릭터 s1 하나짜리 기본 씬
-        editor.SetObjectPlace(null, "s1", "center");
-        RectNodeTree rest = ScenePreview.Build(RigFile, editor.Document.ActiveSceneAsset!, null, null, null, null, BuiltinTuning.StageRig);
-        Vec2 placed = rest.TransformPoint("s1/CharSlot_Track", Vec3.Zero).XY;
-
-        editor.SetCamera(null, 0f, 100f, -40f);
-        RectNodeTree panned = ScenePreview.Build(RigFile, editor.Document.ActiveSceneAsset!, null, null, null, null, BuiltinTuning.StageRig);
-        Vec2 moved = panned.TransformPoint("s1/CharSlot_Track", Vec3.Zero).XY;
-        Assert.Equal(placed.X + 100f, moved.X, 2);
-        Assert.Equal(placed.Y - 40f, moved.Y, 2);
-
-        editor.SetCamera(null, 20f, 0f, 0f); // 배율 2 — 자리 점이 원점에서 두 배 멀어진다
-        RectNodeTree zoomed = ScenePreview.Build(RigFile, editor.Document.ActiveSceneAsset!, null, null, null, null, BuiltinTuning.StageRig);
-        Vec2 scaled = zoomed.TransformPoint("s1/CharSlot_Track", Vec3.Zero).XY;
-        Assert.Equal(placed.X * 2f, scaled.X, 2);
-        Assert.Equal(placed.Y * 2f, scaled.Y, 2);
     }
 
     [Fact]

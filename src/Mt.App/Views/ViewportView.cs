@@ -20,7 +20,6 @@ namespace Mt.App.Views;
 ///
 /// 포즈는 <see cref="MotionPreview"/>(코어 수학), 자리는 <see cref="PortraitLayout"/>(런타임 사이징)이다 —
 /// 여기에는 그리기·시계·입력만 있다. 무대는 기준 해상도 크기이고 컨트롤 안에 레터박스로 맞춘다.
-/// 깊이는 mid(DepthScale 1) 고정이고 카메라는 없다 — v1 범위.
 ///
 /// 타임 슬라이더는 따로(<see cref="TimeSliderView"/>)다. 재생 토글은 전역 Alt+`(셸), Home/End 처음/끝.
 /// <b>포즈 들고 스크럽</b>(마야 MMB 드래그): <see cref="HoldScrubTo"/>로 시각을 옮겨도 보이는 포즈는 그대로라 S로 그 포즈를 다른 프레임에 키한다.
@@ -61,7 +60,7 @@ public sealed class ViewportView : Control
     private RigSchemaFile? _rig;
     private DepthTuningFile? _depth;
     private FocusTuningFile? _focus;
-    // 무대 뼈대(PresentataionUIRoot). 리그가 있으면 내장 뼈대를 쓴다 — 카메라·패럴랙스가 이 트리에 들어간다.
+    // 무대 뼈대(PresentataionUIRoot). 리그가 있으면 내장 뼈대를 쓴다.
     private RigSchemaRigDto? _stage;
     // 씬 전체의 시작 상태(오브젝트마다 슬롯 접두사). 모션은 선택 오브젝트에만 얹는다.
     private RectNodeTree? _template;
@@ -819,8 +818,7 @@ public sealed class ViewportView : Control
     {
         MotionAsset? motion = EditMotion;
 
-        // 카메라 모션에는 캐릭터의 포즈를 키하지 않는다 — 카메라 값은 SetCameraValue로.
-        if (_editor is null || motion is null || CameraRig.IsCamera(motion))
+        if (_editor is null || motion is null)
         {
             return;
         }
@@ -957,7 +955,7 @@ public sealed class ViewportView : Control
 
         string key = Prefix + node;
 
-        if (_editor is null || motion is null || CameraRig.IsCamera(motion) || _template is null || pose is null || !pose.Contains(key) || axes.Count == 0)
+        if (_editor is null || motion is null || _template is null || pose is null || !pose.Contains(key) || axes.Count == 0)
         {
             return;
         }
@@ -1154,33 +1152,6 @@ public sealed class ViewportView : Control
         InvalidateVisual();
     }
 
-    /// <summary>카메라 모션을 보는 중일 때 지금 시각의 카메라 값(zoom·pan). 카메라 모션이 아니면 null.</summary>
-    public CameraSettings? CameraValue()
-    {
-        if (Motion is { } motion && CameraRig.IsCamera(motion) && Scene is { } scene)
-        {
-            return CameraRig.Pose(scene.Camera, motion, _clock.Time, motion.PreviewMode, _flags.IsMuted);
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// 카메라 값을 지금 시각에 키한다(마야 채널 박스에 값을 넣은 것) — 그 성분의 키 하나, 되돌리기 한 칸.
-    /// <paramref name="node"/>는 <see cref="CameraRig.PanNode"/>(x·y) 또는 <see cref="CameraRig.ZoomNode"/>(x). 재생 기준이 상대값이면 씬의 카메라와의 차가 키 값이다.
-    /// </summary>
-    public void SetCameraValue(string node, Axis axis, float value)
-    {
-        if (_editor is null || Motion is not { } motion || !CameraRig.IsCamera(motion) || Scene is not { } scene)
-        {
-            return;
-        }
-
-        float start = node == CameraRig.ZoomNode ? scene.Camera.Zoom : axis == Axis.X ? scene.Camera.PanX : scene.Camera.PanY;
-        float time = (float)Math.Max(0, SnapTime(_clock.Time));
-        _editor.KeyComponents(motion.Name, node, MotionChannelKind.Position, time, new[] { (axis, CameraRig.KeyValueFor(motion.PreviewMode, start, value)) }, DefaultTangent);
-    }
-
     public bool HasRig => _template is not null;
 
     /// <summary>선택 오브젝트의 초상 종횡비(없으면 자리표시).</summary>
@@ -1233,9 +1204,6 @@ public sealed class ViewportView : Control
         InvalidateVisual();
     }
 
-    /// <summary>카메라가 트리(뼈대의 Zoom/Pan 노드)에 들어가 있나. 뼈대가 없으면 보기 변환으로 입힌다(같은 식).</summary>
-    public bool CameraInTree => _stage is not null;
-
     /// <summary>presets/depth.json — 레이어를 깊이(DepthY·DepthScale)로. null이면 레이어는 그리는 순서만.</summary>
     public void SetDepth(DepthTuningFile? depth)
     {
@@ -1252,12 +1220,7 @@ public sealed class ViewportView : Control
         InvalidateVisual();
     }
 
-    /// <summary>씬 카메라(보기 전용) 배율 — 코어 규약 zoom 1당 +0.05.</summary>
-    public float CameraScale => ShotIntentMath.EvaluateCameraScale(Scene?.Camera.Zoom ?? 0f);
-
-    private Vec2 CameraPan => Scene is { } scene ? new Vec2(scene.Camera.PanX, scene.Camera.PanY) : Vec2.Zero;
-
-    /// <summary>루트 공간 → 컨트롤 좌표(카메라 적용). 테스트가 쓴다.</summary>
+    /// <summary>루트 공간 → 컨트롤 좌표. 테스트가 쓴다.</summary>
     public Point ToScreen(Vec2 root) => ToControl(root);
 
     /// <summary>선택 오브젝트의 초상 비트맵(호환용). null이면 자리표시 사각형.</summary>
@@ -1571,14 +1534,6 @@ public sealed class ViewportView : Control
             return EmojiActor is { } actor ? EmojiPreview.Pose(_template, _editor.Document, emoji, actor, seconds, alphas) : _template.Clone();
         }
 
-        // 카메라 모션 — 씬의 카메라 값에 모션을 얹어 무대의 카메라 노드를 다시 세운다. 캐릭터는 시작 상태로 선다.
-        if (CameraRig.IsCamera(motion) && Scene is { } cameraScene)
-        {
-            RectNodeTree tree = _template.Clone();
-            StageShotResponse.Apply(tree, CameraRig.Pose(cameraScene.Camera, motion!, seconds, motion!.PreviewMode, _flags.IsMuted));
-            return tree;
-        }
-
         return motion is not null && SelectedObject is { } o && CanWear(o)
             ? ScenePreview.Pose(_template, o, motion, seconds, _flags.IsMuted, alphas)
             : _template.Clone();
@@ -1654,7 +1609,7 @@ public sealed class ViewportView : Control
     /// </summary>
     public float? AlphaValue(string? node)
     {
-        if (!CanTakeAlpha(node) || EditMotion is not { } motion || CameraRig.IsCamera(motion))
+        if (!CanTakeAlpha(node) || EditMotion is not { } motion)
         {
             return null;
         }
@@ -1666,7 +1621,7 @@ public sealed class ViewportView : Control
     /// <summary>불투명도를 지금 시각에 키한다(값 칸) — 알파 채널의 키 하나, 되돌리기 한 칸. 없던 채널이면 생긴다.</summary>
     public void SetAlphaValue(string node, float value)
     {
-        if (_editor is null || !CanTakeAlpha(node) || EditMotion is not { } motion || CameraRig.IsCamera(motion) || _template is null)
+        if (_editor is null || !CanTakeAlpha(node) || EditMotion is not { } motion || _template is null)
         {
             return;
         }
@@ -1708,25 +1663,22 @@ public sealed class ViewportView : Control
         }
     }
 
-    // 카메라(샷): 보이는 좌표 = 루트 × 배율 + pan (코어 ShotIntentMath와 같은 규약). 보기만 바뀐다.
     private Point ToControl(Vec2 root)
     {
         Rect stage = StageRect;
-        Vec2 shot = CameraInTree ? root : root * CameraScale + CameraPan;
-        Vec2 canvas = PortraitLayout.ToCanvas(shot, _stageSize);
+        Vec2 canvas = PortraitLayout.ToCanvas(root, _stageSize);
         double scale = stage.Width / _stageSize.X;
         return new Point(stage.X + canvas.X * scale, stage.Y + canvas.Y * scale);
     }
 
-    /// <summary>컨트롤 좌표 → 루트 공간(가운데 원점·y 위). 카메라를 벗긴다.</summary>
+    /// <summary>컨트롤 좌표 → 루트 공간(가운데 원점·y 위).</summary>
     public Vec2 ToRoot(Point control)
     {
         Rect stage = StageRect;
         double scale = stage.Width / _stageSize.X;
         double canvasX = (control.X - stage.X) / scale;
         double canvasY = (control.Y - stage.Y) / scale;
-        var shot = new Vec2((float)(canvasX - _stageSize.X / 2), (float)(_stageSize.Y / 2 - canvasY));
-        return CameraInTree ? shot : (shot - CameraPan) * (1f / CameraScale);
+        return new Vec2((float)(canvasX - _stageSize.X / 2), (float)(_stageSize.Y / 2 - canvasY));
     }
 
     // ── 그리기 ────────────────────────────────────────────────────────
@@ -1754,7 +1706,7 @@ public sealed class ViewportView : Control
             return;
         }
 
-        // 오브젝트는 무대 밖도 그대로 그리고, 카메라에 안 잡히는 바깥을 회색으로 덮어 가른다. 축·손잡이는 그 위에.
+        // 오브젝트는 무대 밖도 그대로 그리고, 무대 바깥을 회색으로 덮어 가른다. 축·손잡이는 그 위에.
         _drawAlphas.Clear();
         RectNodeTree pose = CurrentPose(_drawAlphas) ?? _template;
         DrawObjects(context, pose);
@@ -1790,12 +1742,6 @@ public sealed class ViewportView : Control
             return;
         }
 
-        if (CameraRig.IsCamera(motion) && CameraValue() is { } shot)
-        {
-            DrawLabel(context, $"카메라 모션 {motion!.Name} · zoom {shot.Zoom:0.##} · pan {shot.PanX:0.#}, {shot.PanY:0.#}", new Point(stage.X + 8, stage.Y + 6));
-            return;
-        }
-
         // 배치 모드 — 키를 놓는 손잡이가 아니라 고른 오브젝트의 사각형과 원점.
         if (IsLayoutMode)
         {
@@ -1815,7 +1761,7 @@ public sealed class ViewportView : Control
         DrawLabel(context, $"{objectLabel} · {motionLabel}", new Point(stage.X + 8, stage.Y + 6));
     }
 
-    /// <summary>무대 프레임 바깥(카메라가 안 잡는 곳)을 회색으로 덮는다 — 네 띠.</summary>
+    /// <summary>무대 프레임 바깥을 회색으로 덮는다 — 네 띠.</summary>
     private void DrawOutside(DrawingContext context, Rect stage)
     {
         // 무대만 보기 — 바깥을 다 가린다(게임에서 보이는 그대로). 보통은 반투명으로 덮어 무대 밖의 것도 비친다.
@@ -2207,10 +2153,7 @@ public sealed class ViewportView : Control
             return;
         }
 
-        // 카메라 모션에는 캐릭터의 포즈를 키하지 않는다.
-        bool canPose = ShownEmoji is not null ? EmojiEdit is not null : !CameraRig.IsCamera(Motion);
-
-        if (canPose && TryStartManipulation(position))
+        if ((ShownEmoji is null || EmojiEdit is not null) && TryStartManipulation(position))
         {
             Pause();
             e.Pointer.Capture(this);
@@ -2453,7 +2396,7 @@ public sealed class ViewportView : Control
         RectNodeTree? pose = CurrentPose();
         string key = Prefix + node;
 
-        if (motion is null || CameraRig.IsCamera(motion) || pose is null || !pose.Contains(key) || MotionRules.ForbiddenNodes.Contains(node))
+        if (motion is null || pose is null || !pose.Contains(key) || MotionRules.ForbiddenNodes.Contains(node))
         {
             return;
         }

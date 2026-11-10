@@ -114,14 +114,6 @@ tests: Ked.Presentation.Core.Tests(NUnit, 원본 그대로) · Mt.Authoring.Test
 
 움직인 키가 안 움직인 키의 시각에 닿으면 움직인 키가 이긴다(마야와 같다). 시간은 0 아래로 내려가지 않는다.
 
-## 카메라 모션 — 카메라를 키와 커브로
-
-왼쪽 **카메라 모션 추가**가 카메라용 모션(`camera`, `camera_2`…)을 만든다. 가짜 리그 `camera` 위의 보통 모션이라
-(`Camera_Zoom` 위치 x = zoom, `Camera_Pan` 위치 x·y = pan) 그래프 에디터·도프 시트·탄젠트·복사/붙여넣기·되돌리기가 캐릭터 모션과 똑같다.
-고르면 뷰포트가 무대를 그 커브대로 움직이고, 오른쪽 "모션" 탭의 **카메라** 칸(zoom · pan X · pan Y)이 지금 시각의 값을 보인다 — 값을 넣고 Enter = 그 시각에 키.
-재생 기준·종료 처리도 그대로다(절대값 = 키가 곧 카메라 값, 상대값 = 그때 카메라 + 키; 유지 = 끝 값이 남는다).
-**`motions.json`에는 나가지 않는다** — 런타임의 `motions/2`는 리그 노드만 안다.
-
 ## 스킨 · 조각 그림 (`docs/PLAN-parts.md` P1)
 
 그림 여러 장으로 된 리그(이모지처럼 조각 노드가 있는 리그)는 **스킨**으로 그림을 준다 — Spine의 슬롯·어태치먼트·스킨과 같은 모양이다.
@@ -212,15 +204,14 @@ tests: Ked.Presentation.Core.Tests(NUnit, 원본 그대로) · Mt.Authoring.Test
 - 왼쪽 **씬 — 오브젝트** 하이어아키(유니티 하이어아키와 같은 모양): `Scene › Stage00 › 층(Content) › 오브젝트 › 자리/깊이/연기 › 컨트롤러`. 오브젝트 밑은 기본으로 리거의 컨트롤러 표(`presets/controllers.json`, 없으면 내장본)다 — 묶음 폴더(`자리 · 절대값`, `깊이 · 절대값`, `연기 · 상대값` — 재생 기준, 툴팁에 대본 낱말) 안에 `몸 · position XY`, `발 기준 회전 · rotate Z` 같은 손잡이(채널 박스 줄은 표의 `axisLabels`로 `좌우`·`상하`처럼 성분마다 다른 이름을 쓸 수 있다). **컨트롤러를 클릭**하면 그 주 노드가 채널 박스·매니퓰레이터의 노드가 되고, 매니퓰레이터가 선택(Q)이 아니면 종류(이동·회전·배율)에 맞춰 바뀐다. 도프 시트 노드 행과 아웃라이너 채널 이름도 `연기 · 몸`(별칭 노드는 `연기 · 몸 Y`)으로 보인다. 설정 창의 **리그 노드 보기**를 켜면(리거용) 아래처럼 덤프 노드 26단이 그대로다. 무대 뼈대(`StageViewportLayer › … › FramingScale`)는 기본으로 숨겨 `Scene › Stage00 › mid › 오브젝트`만 보이고, 설정 창의 **무대 뼈대 보기**로 전부 연다. 뼈대 전체(`StageViewportLayer › StageShot_Root › StagePan_Root › StageZoom_Root › Stage00_Root › Mask › DepthSystem › Depth_Mid_Root › FramingTransform › FramingScale › Content`)가 그대로 보이되, 오브젝트가 선 가지만 기본 펼침이고 나머지는 접혀 있다(유니티처럼 필요할 때 펼친다). 리그 노드는 덤프 `rig-schemas.json`의 `parent` **그대로 중첩**된다. 오브젝트 항목이 곧 리그 루트(`__root`)다. 연기 축은 파랑, 배치 축은 회색, 키잉 금지 노드는 기울임이다. 오브젝트는 기본 접힘(우클릭 "노드 전부 펼치기/접기"). **노드를 클릭**하면 그 노드가 채널 박스·매니퓰레이터의 노드가 된다(키 따라가기는 꺼진다). "채널 추가"는 없다 — 채널 박스에 값을 넣거나 매니퓰레이터로 끌면 첫 키에서 채널·성분이 생긴다. 기본 씬은 `s1 · character`(Stage00 Mid) 하나다.
 - **만들 수 있는 것은 캐릭터 리그뿐이다.** 헤더의 **`+ 캐릭터 리그`** 버튼이 바로 만든다 — 층(Content)·Stage 항목을 고른 채면 거기에, 오브젝트/노드/컨트롤러를 고른 채면 그 오브젝트와 같은 무대·층에, 아무것도 안 골랐으면 선택 오브젝트의 무대·층(없으면 Stage00 Mid)에. 우클릭 → "캐릭터 리그 만들기"(Ctrl+Shift+N)도 같다. id는 자동(`s1`·`s2`… — Yarn 슬롯 키 꼴)이고 F2로 바꾼다. 그 밖의 메뉴: 이름 바꾸기(F2) · 복제(Ctrl+D) · 삭제(Del) · 숨기기/보이기 · 레이어 › · 노드 전부 펼치기/접기.
 - **오브젝트끼리 부모·자식은 없다**(소유자 결정, 2026-10-28). 오브젝트는 모두 그 무대·층의 Content에 선다 — 런타임 슬롯과 같다(런타임에도 슬롯을 슬롯에 붙이는 커맨드가 없다). 하이어아키 드래그, 부모 콤보, "부모에서 떼기", 월드 자세 보존 환산은 그래서 없다. 층·무대는 우클릭 "레이어 ›"와 씬 탭에서 바꾼다.
-- 오른쪽 **씬 탭**(고른 오브젝트의 배치, 모션 키가 아니다): **자리(place) × focus** · Layer · Stage · 보이기, 접힘 "시작 배치"(오프셋 X/Y(move) · Rot Z · Scale X/Y) · "카메라(샷)". id 칸은 없다 — 이름 바꾸기는 하이어아키 F2. 부모·노드·배역은 없다(아래). 접힌 묶음은 값이 기본이 아니면 스스로 펼친다. 런타임과 같은 두 겹이다: **자리**는 코어 place 폴드(`PlaceFocusStageReduction`)가 focus 프리셋(bust 기본) 점이 화면 지점(center/left/right/top/bottom/tl/tr/bl/br)에 오도록 `CharSlot_Track_Focus`를 푼 값이고, **오프셋**은 `CharSlot_Track`(move)·`CharSlot_SwayPivot`(rotate)·`CharSlot_Scale`(scale)에 그대로 들어간다(그 노드가 없는 리그는 루트에). 순서는 런타임 대본과 같이 깊이(size) → place → 오프셋이라(자리를 잡은 뒤 오프셋만큼 더 간다 — place는 오프셋을 되감지 않는다) 내장 깊이·focus 표로 세우면 실제 게임 프리팹의 `DepthY −580.56 · DepthScale 1.708`(Stage00 Mid)이 그대로 나온다. 모션 키가 아니다.
-- **월드 축·격자**: 루트 공간(가운데 원점·y 위·px). 빨강 x·초록 y 축, 가는 선 1u(기준 폭/48 = 40px), 굵은 선 5u, 무대 프레임. 항상 보인다. 오브젝트는 무대 프레임 밖도 잘리지 않고 그대로 그리며, 카메라에 안 잡히는 바깥은 회색으로 덮어 가른다.
+- 오른쪽 **씬 탭**(고른 오브젝트의 배치, 모션 키가 아니다): **자리(place) × focus** · Layer · Stage · 보이기, 접힘 "시작 배치"(오프셋 X/Y(move) · Rot Z · Scale X/Y). id 칸은 없다 — 이름 바꾸기는 하이어아키 F2. 부모·노드·배역은 없다(아래). 접힌 묶음은 값이 기본이 아니면 스스로 펼친다. 런타임과 같은 두 겹이다: **자리**는 코어 place 폴드(`PlaceFocusStageReduction`)가 focus 프리셋(bust 기본) 점이 화면 지점(center/left/right/top/bottom/tl/tr/bl/br)에 오도록 `CharSlot_Track_Focus`를 푼 값이고, **오프셋**은 `CharSlot_Track`(move)·`CharSlot_SwayPivot`(rotate)·`CharSlot_Scale`(scale)에 그대로 들어간다(그 노드가 없는 리그는 루트에). 순서는 런타임 대본과 같이 깊이(size) → place → 오프셋이라(자리를 잡은 뒤 오프셋만큼 더 간다 — place는 오프셋을 되감지 않는다) 내장 깊이·focus 표로 세우면 실제 게임 프리팹의 `DepthY −580.56 · DepthScale 1.708`(Stage00 Mid)이 그대로 나온다. 모션 키가 아니다.
+- **월드 축·격자**: 루트 공간(가운데 원점·y 위·px). 빨강 x·초록 y 축, 가는 선 1u(기준 폭/48 = 40px), 굵은 선 5u, 무대 프레임. 항상 보인다. 오브젝트는 무대 프레임 밖도 잘리지 않고 그대로 그리며, 무대 바깥은 회색으로 덮어 가른다.
 - **모션의 주인은 rigKind**다. 고른 오브젝트의 리그가 모션의 리그와 같거나 채널의 노드를 전부 가지면(공통 스키마) 그 오브젝트에 입혀 보인다. 아니면 "이 리그에 안 맞는다"로 표시된다.
 - **깊이 컨트롤러**(채널 박스의 슬라이더 0..40, close = 20, 그 너머는 `depth.json` 커브의 할선 연장 — 런타임과 같은 규칙): 놓으면 level의 배율을 `CharSlot_DepthScale` X·Y에, `−bust높이(820) × (배율 − 1)`을 `CharSlot_DepthY` Y에 굽는다(되돌리기 하나) — 런타임 `size`의 focus 보존이 정지 자세에서 남기는 값과 같아 얼굴은 제자리, 발은 멀수록 위로 간다(mid 14 = 1.708 · −580.56). 리거는 `controllers.json`의 `bakeY`를 빼서 끌 수 있다.
 - **깊이**: 덤프 옆 `presets/depth.json`(ExportedTuning)이 있으면 레이어(far·back·mid·front·close)가 깊이(DepthY·DepthScale)가 된다. 런타임 size 폴드와 같은 코어 함수(`SetDepthStageReduction`, focus 보존 bust)를 지나므로 보이는 깊이 = 정지 프레임의 깊이다. 없으면 레이어는 그리는 순서만 정한다. **그리는 순서**는 유니티 하이어아키 그대로 무대 Stage00 → Stage01 → Stage02(뒤 무대가 앞에), 무대 안에서는 far → close, 같은 층은 만든 순이다.
 - 채널 종류는 화면에서 `position · scale · rotate`로 부른다(파일 규약은 `euler` 그대로). **채널에 mode는 없다**(`motions/2`): relative/absolute는 대본의 `<<motion slot 이름 relative|absolute>>`(생략 = relative)가 정한다. 모션 탭의 **재생 기준**(상대값 relative / 절대값 absolute)은 툴이 키 값을 읽는 기준일 뿐이고 파일에 안 나간다 — 상대값이면 시작값 + 키(배율은 ×), 절대값이면 키 그대로. 매니퓰레이터·채널 박스가 포즈를 키 값으로 바꿀 때도 이 렌즈를 쓴다. 옛 `motions/1`·`motion-authoring/1`은 읽히고(채널 `mode` 무시, `defaultMode` → 재생 기준) 키 값은 그대로다.
 - 씬은 하나만 쓴다(저작본 `scenes[]`와 편집기 명령은 여럿을 담을 수 있지만 UI는 활성 씬 하나만 보인다 — 모션 추출용이라 전환 UI는 뺐다).
 - **배역은 없다.** 오브젝트는 리그만 가진다(저작본에 `character`가 없다). 덤프 옆 `presets/focus.json`(또는 `focus-tuning.json`)이 있으면 깊이·place 폴드의 focus 보존은 base 오프셋 + bust만 쓴다(배역 키는 빈 문자열) — 런타임에서 cast 없이 세운 것과 같다. 표가 없으면 base 오프셋 없이(0).
-- **카메라(샷)**: 씬 탭의 접힘 zoom · pan X/Y. 런타임과 같은 자리에 들어간다 — `StageZoom_Root.localScale = 1 + 0.05·zoom`, `StagePan_Root.anchoredPosition = pan`(`PresentationCameraRootApplier`). 깊이 층마다 패럴랙스(`PresentationResponseProfile`: Far는 pan×−0.04·scale^−0.15 … Close는 pan×0.2·scale^0.16, Mid는 0)가 `FramingTransform`·`FramingScale`에 붙는다(`StageShotResponse`). 격자·축은 `StageShot_Root` 공간이라 움직이지 않는다. 카메라 키는 규약에 없고 씬에만 남는다. 샷은 오브젝트가 다 선 뒤(자리·깊이·오프셋 뒤)에 들어간다 — 런타임에서 place는 커맨드 순간 한 번 풀리고 그 뒤 shot이 무대째 움직이므로, 자리 있는 오브젝트도 pan·zoom을 따라간다.
 - **모션 목록**은 rigKind 순으로 묶이고, 고른 오브젝트가 입을 수 없는 모션은 흐리게("안 맞음"). 툴바의 **내보내기 범위**: 전체 / 이 rigKind만 / 이 오브젝트가 입는 모션만 — 고른 모션의 문제만 내보내기를 막는다.
 - 씬은 저작본 `scenes[]`에 남고(미리보기 전용) `motions.json`에는 들어가지 않는다. 예전 문서의 `preview.portrait`는 열 때 첫 오브젝트의 초상이 된다.
 
@@ -233,7 +224,7 @@ tests: Ked.Presentation.Core.Tests(NUnit, 원본 그대로) · Mt.Authoring.Test
 - **채널 박스**(마야): 묶음 제목(자리 · 깊이 · 연기) 클릭 = 접기/펼치기(설정에 남는다). 표가 없는 리그는 하이어아키에서 고른 리그 노드의 **Translate X/Y · Rotate X/Y/Z · Scale X/Y** — 리그 노드는 유니티 계층 하나라 이 값 전부를 가진다. 칸의 값은 지금 시각의 포즈(키 없는 포즈 포함)다. 값을 넣으면(`+=3`·`-=1`·`*=2`·`/=2`는 지금 값에 상대) 매니퓰레이터를 놓은 것과 같다: **Auto Key**거나 그 시각에 키가 있으면 키, 아니면 키 없는 포즈(S로 키·Esc로 버림). 칸 색: 빨강 = 이 시각에 키, 연한 빨강 = 어딘가에 키, 주황 = 키 없는 포즈. 이름 클릭 = 그 커브를 그래프에(Shift/Ctrl: 더하기), **●** = 그 성분을 지금 값으로 지금 키(마야 Key Selected). 채널·성분은 첫 키에서 생긴다.
 - **S(키 놓기)**: 키 없는 포즈(드래그·채널 박스·MMB 스크럽)가 있으면 그것을 키로. 없으면 **고른 컨트롤러의 성분 전부를 지금 값으로 현재 시각에** 키(마야 Set Key on selected) — 깊이는 배율 X·Y + 깊이 Y가 한 번에. 키 값은 재생 기준대로(상대값이면 시작값과의 차이). 키가 하나뿐인 성분은 규칙 위반(빨강)으로 남는다 — 두 번째 키를 놓거나 돕는 손 "길이 자리에 키 넣기".
 - **매니퓰레이터**: **W** 이동 · **E** 회전 · **R** 배율 · **Q** 선택. 컨트롤러 표가 있는 리그에서는 W/E/R이 표의 기본 손잡이(`manipulator`: **몸·숙임·크기**)로 간다 — 고른 컨트롤러가 그 종류를 받으면(자리 X·Y를 고른 채 W) 그 노드 그대로, 다른 종류면 기본 손잡이의 노드로 옮긴다. 표에 없는 노드(리그 노드 보기)는 건드리지 않는다. 기즈모의 축 끝은 한 축만, 가운데는 자유. 이동은 화살표, 배율은 끝 상자, 회전은 고리(마야 모양). 손잡이는 노드 원점에 서되 원점이 그림 밖이면(발 기준 회전의 SwayPivot은 rect 아래 끝) 그림 가운데에 선다. 배율은 팔 방향으로 끈 거리로 잰다 — 팔 하나만큼 밖이 ×2, 안이 ×0에 가깝고, 가운데를 지나도 다시 커지거나 뒤집히지 않는다. 놓는 순간 **Auto Key**면 키가 들어가고(바뀐 성분만), 아니면 "키 없는 포즈"로 남아 **S**로 키를 놓거나 **Esc**/시각 이동으로 버린다. 그 시각에 이미 키가 있으면 바로 덮어쓴다. 채널·성분이 없으면 만든다.
-- 리그 덤프(`rig-schemas.json`)로 세운 트리 위에 초상 PNG 한 장. 사이징은 런타임 `HeightFitPreserveAspect`와 같다. 깊이 mid, 카메라 없음(v1).
+- 리그 덤프(`rig-schemas.json`)로 세운 트리 위에 초상 PNG 한 장. 사이징은 런타임 `HeightFitPreserveAspect`와 같다. 깊이 mid.
 - 포즈 = 코어 `MotionMath.Compose`. 길이를 지나면 restore는 시작 상태, commit은 마지막 키 — 재생도 그 규칙을 보여 준다.
 - **Alt+Q** 재생/일시정지 · **Alt+`** 처음부터 재생 · **`** 첫 프레임 · **Home/End** 처음/끝 · **←/→** 한 프레임(24fps). 타임 슬라이더·그래프의 현재 시각과 하나다.
 - 선택한 키의 노드에 피벗·x(빨강)·y(초록) 축.
@@ -253,7 +244,7 @@ dotnet run --project src/Mt.Cli -- emojis   a.motion-authoring.json emojis.json
 dotnet run --project src/Mt.Cli -- rigs     a.motion-authoring.json rigs.json
 ```
 
-- `pose`는 모션이 건드리는 노드의 값(위치·배율·회전·불투명도)과 카메라, 방금(0.4초 안에) 울린 이벤트 키를 낸다 — AI가 "이 시각에 정말 이렇게 되나"를 읽는 자리다.
+- `pose`는 모션이 건드리는 노드의 값(위치·배율·회전·불투명도), 방금(0.4초 안에) 울린 이벤트 키를 낸다 — AI가 "이 시각에 정말 이렇게 되나"를 읽는 자리다.
 - 리그 덤프는 `--rig`, 없으면 문서가 적어 둔 경로, 그것도 없으면 내장본.
 - **손으로(또는 AI가) 쓴 문서**는 키에 값과 탄젠트 **종류**(`auto`·`flat`·`linear`·`spline`·`plateau`)만 적으면 된다 — `mt`가 읽을 때 탄젠트 값을 세운다
   (앱이 편집할 때마다 하는 그 계산. `free`는 적힌 값 그대로). 앱이 저장한 문서에는 아무것도 안 바뀐다.

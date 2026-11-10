@@ -270,7 +270,7 @@ public class MainWindowTests
     }
 
     [Fact]
-    public void 내보내기_범위는_선택_오브젝트의_rigKind로_거르고_카메라_칸은_씬에_남는다()
+    public void 내보내기_범위는_선택_오브젝트의_rigKind로_거른다()
     {
         string directory = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
@@ -296,11 +296,6 @@ public class MainWindowTests
                 string json = File.ReadAllText(export);
                 Assert.Contains("\"bow\"", json, StringComparison.Ordinal);
                 Assert.DoesNotContain("robot_wave", json, StringComparison.Ordinal);
-
-                window.CommitCameraFromForm(10f, 20f, -5f);
-                Mt.Authoring.Model.CameraSettings camera = window.Viewport.Scene!.Camera;
-                Assert.Equal(10f, camera.Zoom);
-                Assert.Equal(-5f, camera.PanY);
             }
             finally
             {
@@ -802,7 +797,7 @@ public class MainWindowTests
                 // 뼈대는 기본 숨김: Scene › Stage00 › mid › s1. 켜면 26단 뼈대.
                 Assert.Equal(new[] { "Scene  scene  ·  PresentataionUIRoot", "Stage00", "mid" }, window.HierarchyPathOf("s1", null).Take(3));
                 window.ShowStageSkeleton = true;
-                Assert.Contains("StageZoom_Root  ·  zoom 0", window.HierarchyPathOf("s1", null));
+                Assert.Contains("StageZoom_Root", window.HierarchyPathOf("s1", null));
                 window.ShowStageSkeleton = false;
                 Assert.Equal(4, window.HierarchyPathOf("s1", null).Count);
             }
@@ -829,7 +824,7 @@ public class MainWindowTests
 
                 // 리그 노드는 연기/배치 폴더가 아니라 덤프의 parent 사슬이다. 오브젝트 항목이 곧 __root.
                 IReadOnlyList<string> path = window.HierarchyPathOf("s1", "CharacterPortrait_Track_Move_Y");
-                Assert.Equal(new[] { "Scene  scene  ·  PresentataionUIRoot", "StageViewportLayer", "StageShot_Root", "StagePan_Root  ·  pan 0,0", "StageZoom_Root  ·  zoom 0", "Stage00_Root", "Stage00Mask_Root", "Stage00DepthSystem_Root", "Stage00Depth_Mid_Root", "Stage00Depth_Mid_FramingTransform", "Stage00Depth_Mid_FramingScale", "Stage00Depth_Mid_Content", "s1  ·  character", "CharSlot_Track_Focus", "CharSlot_DepthY", "CharSlot_DepthScale", "CharSlot_Track_Idle", "CharSlot_Track", "CharSlot_Track_X", "CharSlot_Track_Y", "CharSlot_Rotation", "CharSlot_SwayPivot", "CharSlot_Scale", "CharacterPortrait_VisualOffset", "CharacterPortrait_Track", "CharacterPortrait_Rotation", "CharacterPortrait_Track_Move", "CharacterPortrait_Track_Move_X", "CharacterPortrait_Track_Move_Y" }, path);
+                Assert.Equal(new[] { "Scene  scene  ·  PresentataionUIRoot", "StageViewportLayer", "StageShot_Root", "StagePan_Root", "StageZoom_Root", "Stage00_Root", "Stage00Mask_Root", "Stage00DepthSystem_Root", "Stage00Depth_Mid_Root", "Stage00Depth_Mid_FramingTransform", "Stage00Depth_Mid_FramingScale", "Stage00Depth_Mid_Content", "s1  ·  character", "CharSlot_Track_Focus", "CharSlot_DepthY", "CharSlot_DepthScale", "CharSlot_Track_Idle", "CharSlot_Track", "CharSlot_Track_X", "CharSlot_Track_Y", "CharSlot_Rotation", "CharSlot_SwayPivot", "CharSlot_Scale", "CharacterPortrait_VisualOffset", "CharacterPortrait_Track", "CharacterPortrait_Rotation", "CharacterPortrait_Track_Move", "CharacterPortrait_Track_Move_X", "CharacterPortrait_Track_Move_Y" }, path);
                 Assert.DoesNotContain("연기 축", window.HierarchyPathOf("s1", "CharacterPortrait_SwayPivot"));
 
                 // 노드 위에서 "만들기" = 그 오브젝트와 같은 무대·층(오브젝트끼리 부모·자식은 없다). 트리에서는 같은 Content 밑.

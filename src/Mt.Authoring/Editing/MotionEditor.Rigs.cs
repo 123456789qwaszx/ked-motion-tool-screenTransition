@@ -9,8 +9,8 @@ public sealed partial class MotionEditor
     /// <summary>조각 수의 상한 — 터무니없는 값이 화면을 메우지 않게.</summary>
     public const int MaxRigParts = 16;
 
-    /// <summary>캐릭터 리그·카메라의 가짜 리그·무대 뼈대는 툴에서 정의하지 않는다.</summary>
-    private static readonly string[] ReservedRigKinds = { SceneObject.DefaultRig, Preview.CameraRig.RigKind, "stage" };
+    /// <summary>캐릭터 리그·무대 뼈대는 툴에서 정의하지 않는다.</summary>
+    private static readonly string[] ReservedRigKinds = { SceneObject.DefaultRig, "stage" };
 
     private static readonly Regex RigKindRule = new("^[a-zA-Z][a-zA-Z0-9_]*$", RegexOptions.Compiled);
 

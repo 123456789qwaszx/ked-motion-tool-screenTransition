@@ -1638,11 +1638,6 @@
   "scenes": [
     {
       "name": "scene",
-      "camera": {
-        "zoom": 0,
-        "panX": 0,
-        "panY": 0
-      },
       "objects": [
         {
           "id": "s1",

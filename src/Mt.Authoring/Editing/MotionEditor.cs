@@ -335,25 +335,6 @@ public sealed partial class MotionEditor
         }
     }
 
-    /// <summary>카메라(샷) — 보기 전용. zoom 1당 배율 0.05, pan은 리그 공간 px(코어 ShotIntentState).</summary>
-    public void SetCamera(string? sceneName, float zoom, float panX, float panY)
-    {
-        SceneAsset scene = RequireScene(sceneName);
-        CameraSettings camera = scene.Camera;
-
-        if (camera.Zoom == zoom && camera.PanX == panX && camera.PanY == panY)
-        {
-            return;
-        }
-
-        Mutate(MotionChangeKind.Scene, () =>
-        {
-            camera.Zoom = zoom;
-            camera.PanX = panX;
-            camera.PanY = panY;
-        });
-    }
-
     /// <summary>무대(stage00…).</summary>
     public void SetObjectStage(string? sceneName, string id, string stage)
     {
@@ -431,7 +412,7 @@ public sealed partial class MotionEditor
         return scene;
     }
 
-    /// <summary>씬 복제 — 오브젝트·카메라 전부, 새 이름으로. 활성 씬이 된다.</summary>
+    /// <summary>씬 복제 — 오브젝트 전부, 새 이름으로. 활성 씬이 된다.</summary>
     public SceneAsset DuplicateScene(string name, string newName)
     {
         ArgumentNullException.ThrowIfNull(newName);

@@ -18,11 +18,11 @@ public partial class MainWindow
     /// <summary>테스트 손잡이 — 붙여 만들 수 있는 rigKind들(메뉴에 나오는 것).</summary>
     internal IReadOnlyList<string> AttachableRigs => AttachableRigKinds();
 
-    /// <summary>덤프의 리그 중 붙여 만들 것 — 캐릭터(제 층에 서는 것)와 카메라의 가짜 리그를 뺀 나머지.</summary>
+    /// <summary>덤프의 리그 중 붙여 만들 것 — 캐릭터(제 층에 서는 것)를 뺀 나머지.</summary>
     private List<string> AttachableRigKinds()
     {
         List<string> kinds = (_session.Rig?.RigKinds ?? Enumerable.Empty<string>())
-            .Where(k => k != SceneObject.DefaultRig && k != CameraRig.RigKind)
+            .Where(k => k != SceneObject.DefaultRig)
             .ToList();
 
         // 이모지 리그는 언제나 고를 수 있다 — 아직 없으면 만들 때 툴이 정의한다(PLAN-parts.md §9, Spine처럼 툴이 원본).
