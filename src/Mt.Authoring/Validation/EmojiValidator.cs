@@ -40,7 +40,7 @@ public static class EmojiValidator
 
             if (rigNodeIds is not null && !rigNodeIds.TryGetValue(emoji.Rig ?? "", out nodes))
             {
-                Block($"리그 덤프에 rigKind '{emoji.Rig}'가 없다. 있는 것: [{string.Join(", ", rigNodeIds.Keys)}]");
+                Block($"세트 '{emoji.Rig}'가 없다. 있는 것: [{string.Join(", ", rigNodeIds.Keys)}]");
             }
 
             if (emoji.Skin is null)

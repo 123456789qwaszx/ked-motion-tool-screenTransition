@@ -9,95 +9,14 @@ using Mt.Authoring.Validation;
 
 namespace Mt.Authoring.Tests;
 
-/// <summary>툴에서 정의한 리그(<c>PLAN-parts.md</c> §9) — 덤프를 기다리지 않고 이모지 리그를 만든다. Spine처럼 툴이 원본.</summary>
+/// <summary>툴에서 정의한 세트 — 미리보기는 이것만으로 선다. Spine처럼 툴이 원본.</summary>
 public class RigAssetTests
 {
-    private static readonly RigSchemaFile Dump = RigSchemaFile.Load(Fixtures.PathOf("rig-schemas.json")); // character · screenEffect뿐
-
     private static MotionEditor NewEditor()
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddRig(RigTemplates.Emoji());
-        editor.AddSceneObject(null, "e1", RigTemplates.EmojiKind);
         return editor;
-    }
-
-    [Fact]
-    public void 문서의_리그는_덤프와_한_벌로_서고_조각과_불투명도_노드가_표시대로_나온다()
-    {
-        MotionEditor editor = NewEditor();
-        Assert.DoesNotContain(RigTemplates.EmojiKind, Dump.RigKinds);
-        RigSchemaFile rig = RigAssets.Compose(Dump, editor.Document);
-        Assert.Contains(RigTemplates.EmojiKind, rig.RigKinds);
-        Assert.Contains("character", rig.RigKinds);
-        Assert.Equal(Dump.Sha256, rig.Sha256); // 문서가 기억하는 것은 덤프의 해시다
-        Assert.Same(Dump, RigAssets.Compose(Dump, new MotionDocument())); // 더할 것이 없으면 그대로
-
-        Assert.Equal(new[] { "Emoji_Part1", "Emoji_Part2", "Emoji_Part3", "Emoji_Part4" }, RigParts.Of(rig, RigTemplates.EmojiKind));
-        Assert.Equal(new[] { "Emoji_Body", "Emoji_Part1", "Emoji_Part2", "Emoji_Part3", "Emoji_Part4" }, rig.AlphaNodeIds[RigTemplates.EmojiKind].OrderBy(n => n, StringComparer.Ordinal));
-        Assert.Contains("Emoji_Anchor", rig.NodeIds[RigTemplates.EmojiKind]);
-
-        // 씬에 서고, 조각은 정의한 크기다.
-        RectNodeTree tree = ScenePreview.Build(rig, editor.Document.ActiveSceneAsset!);
-        Assert.Equal("e1/Emoji_Body", tree.GetParentKey("e1/Emoji_Part2"));
-        Assert.Equal(RigTemplates.DefaultPartSize, tree.GetRectSize("e1/Emoji_Part1").X, 3);
-
-        // 조각은 이름이 아니라 표시(Image)로 가린다 — 이름 규칙에 안 맞아도 된다.
-        editor.AddRig(new RigAsset { Kind = "prop", Nodes = { new RigNodeAsset { Id = "Hand" }, new RigNodeAsset { Id = "Leaf", Parent = "Hand", Width = 80, Height = 40, Image = true } } });
-        RigSchemaFile both = RigAssets.Compose(Dump, editor.Document);
-        Assert.Equal(new[] { "Leaf" }, RigParts.Of(both, "prop"));
-        Assert.Empty(both.AlphaNodeIds["prop"]);
-
-        // 모션·스킨·이모지 검증이 이 리그의 노드로 선다.
-        editor.AddMotion("pop", RigTemplates.EmojiKind, 0.2f);
-        editor.AddChannel("pop", "Emoji_Body", MotionChannelKind.Alpha);
-        editor.SetKeys("pop", "Emoji_Body", MotionChannelKind.Alpha, Axis.X, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.2f, 1f) });
-        Assert.Empty(MotionValidator.Validate(editor.Document, both.NodeIds, both.AlphaNodeIds));
-        Assert.NotEmpty(MotionValidator.Validate(editor.Document, Dump.NodeIds)); // 덤프만으로는 모르는 리그다
-    }
-
-    [Fact]
-    public void 같은_이름이면_문서의_리그가_덤프의_것을_이긴다()
-    {
-        // 런타임이 나중에 이모지 리그를 덤프에 넣어도, 문서가 정의한 것이 쓰인다(툴이 원본).
-        RigSchemaFile dumpWithEmoji = RigSchemaFile.Load(EmojiRigFixture.WriteDump(Fixtures.PathOf("rig-schemas.json")));
-        var editor = new MotionEditor(new MotionDocument());
-        editor.AddRig(RigTemplates.Emoji(parts: 2, partSize: 64f));
-        RigSchemaFile rig = RigAssets.Compose(dumpWithEmoji, editor.Document);
-        Assert.Equal(new[] { "Emoji_Part1", "Emoji_Part2" }, RigParts.Of(rig, RigTemplates.EmojiKind));
-        Assert.Single(rig.Dto.rigs, r => r.rigKind == RigTemplates.EmojiKind);
-    }
-
-    [Fact]
-    public void 편집기는_세울_수_있는_리그만_받는다()
-    {
-        MotionEditor editor = NewEditor();
-        long revision = editor.Revision;
-
-        Assert.Throws<InvalidOperationException>(() => editor.AddRig(RigTemplates.Emoji()));                       // 이미 있다
-        Assert.Throws<InvalidOperationException>(() => editor.AddRig(RigTemplates.Emoji("character")));            // 덤프가 원본인 리그
-        Assert.Throws<InvalidOperationException>(() => editor.AddRig(RigTemplates.Emoji("1bad")));
-        Assert.Throws<InvalidOperationException>(() => editor.AddRig(new RigAsset { Kind = "x", Nodes = { new RigNodeAsset { Id = "A", Parent = "B" }, new RigNodeAsset { Id = "B" } } })); // 부모가 뒤에
-        Assert.Throws<InvalidOperationException>(() => editor.AddRig(new RigAsset { Kind = "x", Nodes = { new RigNodeAsset { Id = "A" }, new RigNodeAsset { Id = "A" } } }));
-        Assert.Throws<InvalidOperationException>(() => editor.AddRig(new RigAsset { Kind = "x", Nodes = { new RigNodeAsset { Id = "a/b" } } }));
-        Assert.Equal(revision, editor.Revision);
-
-        // 받은 객체를 문서에 꽂지 않는다 — 밖에서 고쳐도 문서는 그대로.
-        RigAsset given = RigTemplates.Emoji("prop");
-        editor.AddRig(given);
-        given.Nodes.Clear();
-        Assert.Equal(6, editor.Document.FindRig("prop")!.Nodes.Count);
-
-        // 저작본 왕복. 리그가 없는 문서에는 안 적힌다.
-        string json = MotionDocumentJson.Write(editor.Document);
-        Assert.Equal(json, MotionDocumentJson.Write(MotionDocumentJson.Read(json)));
-        Assert.DoesNotContain("\"rigs\"", MotionDocumentJson.Write(new MotionDocument()), StringComparison.Ordinal);
-
-        // 지우면 그 리그의 오브젝트는 남고(검증이 알린다) 씬은 던지지 않고 선다.
-        editor.RemoveRig(RigTemplates.EmojiKind);
-        var missing = new List<SceneObject>();
-        ScenePreview.Build(RigAssets.Compose(Dump, editor.Document), editor.Document.ActiveSceneAsset!, null, missing);
-        Assert.Equal("e1", Assert.Single(missing).Id);
     }
 
     // ── 리그 편집기(PLAN-parts.md §12) ─────────────────────────────────
@@ -125,7 +44,7 @@ public class RigAssetTests
         Assert.Throws<InvalidOperationException>(() => editor.AddRigNode(RigTemplates.EmojiKind, "1bad"));
         Assert.Throws<InvalidOperationException>(() => editor.AddRigNode(RigTemplates.EmojiKind, "a/b"));
         Assert.Throws<KeyNotFoundException>(() => editor.AddRigNode(RigTemplates.EmojiKind, "X", "Nope"));
-        Assert.Throws<KeyNotFoundException>(() => editor.AddRigNode("character", "X"));                                 // 덤프의 리그는 못 고친다
+        Assert.Throws<KeyNotFoundException>(() => editor.AddRigNode("character", "X"));                                 // 없는 세트
         Assert.Throws<InvalidOperationException>(() => editor.SetRigNodeParent(RigTemplates.EmojiKind, "Emoji_Glow", "Emoji_Spark")); // 제 밑으로
         Assert.Throws<InvalidOperationException>(() => editor.UpdateRigNode(RigTemplates.EmojiKind, "Extra", new RigNodeAsset { Width = -1f }));
         Assert.Equal(revision, editor.Revision);
@@ -156,7 +75,7 @@ public class RigAssetTests
         editor.UpdateRigNode(RigTemplates.EmojiKind, "Emoji_Glow", moved);
         editor.UpdateRigNode(RigTemplates.EmojiKind, "Emoji_Glow", moved);
         Assert.Equal(revision + 1, editor.Revision);
-        RigSchemaFile composed = RigAssets.Compose(Dump, editor.Document);
+        RigSchemaFile composed = RigAssets.Compose(editor.Document);
         Assert.True(composed.TryGetRig(RigTemplates.EmojiKind, out RigSchemaRigDto dto));
         RigSchemaNodeDto node = dto.nodes.Single(n => n.id == "Emoji_Glow");
         Assert.Equal((30f, -12f, 80f, 40f, true, false), (node.anchoredPosition.x, node.anchoredPosition.y, node.sizeDelta.x, node.sizeDelta.y, node.hasImage, node.hasCanvasGroup));
@@ -164,7 +83,7 @@ public class RigAssetTests
 
         // 가만히 선 자세의 회전·배율(배치 모드) — 세운 나무에 그대로 선다. 배율 0은 막는다.
         editor.UpdateRigNode(RigTemplates.EmojiKind, "Emoji_Glow", new RigNodeAsset { X = 30f, Y = -12f, Width = 80f, Height = 40f, Image = true, Rotation = 30f, ScaleX = 2f, ScaleY = -1f });
-        Assert.True(RigAssets.Compose(Dump, editor.Document).TryGetRig(RigTemplates.EmojiKind, out RigSchemaRigDto posed));
+        Assert.True(RigAssets.Compose(editor.Document).TryGetRig(RigTemplates.EmojiKind, out RigSchemaRigDto posed));
         RigSchemaNodeDto turned = posed.nodes.Single(n => n.id == "Emoji_Glow");
         Assert.Equal((30f, 2f, -1f), (turned.localEulerAngles.z, turned.localScale.x, turned.localScale.y));
         Assert.Throws<InvalidOperationException>(() => editor.UpdateRigNode(RigTemplates.EmojiKind, "Emoji_Glow", new RigNodeAsset { ScaleX = 0f }));
@@ -175,7 +94,7 @@ public class RigAssetTests
         Assert.Equal(new[] { "Extra", "Emoji_Anchor" }, Ids(editor));
         editor.Undo();
         Assert.Equal(7, Ids(editor).Length);
-        RigAssets.Compose(Dump, editor.Document); // 여전히 세울 수 있다
+        RigAssets.Compose(editor.Document); // 여전히 세울 수 있다
     }
 
     [Fact]
@@ -183,7 +102,6 @@ public class RigAssetTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddRig(RigTemplates.Emoji(parts: 2));
-        editor.AddSceneObject(null, "e1", RigTemplates.EmojiKind);
         editor.AddSkin("땀", RigTemplates.EmojiKind);
         editor.SetSkinPart("땀", "Emoji_Part1", "art/sweat.png");
         editor.AddMotion("pop", RigTemplates.EmojiKind, 0.2f);
@@ -247,7 +165,7 @@ public class RigAssetTests
         Assert.Equal(new[] { (0f, -50f), (0.2f, 0f), (1f, 0f) }, Keys("Emoji_Part3"));
 
         // 어느 쪽이든 규칙(처음과 끝에 키)이 그대로 선다.
-        RigSchemaFile rig = RigAssets.Compose(Dump, editor.Document);
+        RigSchemaFile rig = RigAssets.Compose(editor.Document);
         Assert.Empty(MotionValidator.Validate(editor.Document, rig.NodeIds, rig.AlphaNodeIds));
 
         // 채널이 없는 오브젝트·0초는 아무 일도 없다(기록 없음).
@@ -307,7 +225,7 @@ public class RigAssetTests
         Assert.Equal(1, editor.HideAllUntilTurn("in"));
         Assert.Equal(revision + 1, editor.Revision);
         Assert.Null(editor.Document.Find("in")!.FindChannel("Emoji_Part2", MotionChannelKind.Alpha));
-        RigSchemaFile rig = RigAssets.Compose(Dump, editor.Document);
+        RigSchemaFile rig = RigAssets.Compose(editor.Document);
         Assert.Empty(MotionValidator.Validate(editor.Document, rig.NodeIds, rig.AlphaNodeIds));
     }
 
@@ -387,7 +305,7 @@ public class RigAssetTests
         Assert.Throws<InvalidOperationException>(() => editor.SlideFromOutside("town_in", "Sun", StageSide.Left, 1f, 0.5f, stage));
         Assert.Throws<KeyNotFoundException>(() => editor.SlideFromOutside("town_in", "Nope", StageSide.Left, 0f, 0.5f, stage));
         Assert.Equal(revision, editor.Revision);
-        RigSchemaFile rig = RigAssets.Compose(Dump, editor.Document);
+        RigSchemaFile rig = RigAssets.Compose(editor.Document);
         Assert.Empty(MotionValidator.Validate(editor.Document, rig.NodeIds, rig.AlphaNodeIds));
     }
 }

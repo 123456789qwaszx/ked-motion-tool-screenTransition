@@ -37,13 +37,10 @@ public sealed class ToolSettings
     /// <summary>1프레임 단위 재생(마야 Real-time 24fps 표시). 꺼지면 연속.</summary>
     public bool PlayWholeFrames { get; set; }
 
-    /// <summary>오른쪽 인스펙터의 마지막 탭(0 채널 박스 · 1 씬 · 2 모션).</summary>
+    /// <summary>오른쪽 인스펙터의 마지막 탭(0 채널 박스 · 1 세트 · 2 모션 · 3 연출).</summary>
     public int InspectorTab { get; set; }
 
-    /// <summary>하이어아키에 무대 뼈대(Shot/Pan/Zoom/Mask/DepthSystem/Framing…)를 전부 보인다. 기본은 Scene › 무대 › 층만.</summary>
-    public bool ShowStageSkeleton { get; set; }
-
-    /// <summary>창 배치 — 왼쪽(씬·모션) 패널 폭(px). 스플리터로 끌면 저장된다.</summary>
+    /// <summary>창 배치 — 왼쪽(세트·모션) 패널 폭(px). 스플리터로 끌면 저장된다.</summary>
     public double LeftPanelWidth { get; set; } = 280;
 
     /// <summary>창 배치 — 오른쪽(인스펙터·채널 박스) 패널 폭(px).</summary>

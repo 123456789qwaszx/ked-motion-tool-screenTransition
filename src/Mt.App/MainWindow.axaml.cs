@@ -121,7 +121,7 @@ public partial class MainWindow : Window
     /// <summary>새 키(뷰포트 키·성분 토글)의 탄젠트 — 설정. 곡선 위에 끼우는 I·더블클릭은 모양을 지키는 free다.</summary>
     private TangentMode DefaultTangent => NewKeyTangentChoices[Math.Max(0, _newKeyTangent.SelectedIndex)];
 
-    // 왼쪽 — 씬
+    // 왼쪽 — 세트·모션
     // 높이 제한 없음 — 왼쪽 패널이 스크롤한다. 오브젝트가 없는 가지는 기본 접힘이라 길지 않다.
     private readonly TreeView _hierarchy = new() { MinHeight = 160, FontSize = 11 };
 
@@ -131,27 +131,15 @@ public partial class MainWindow : Window
     private readonly Dictionary<TreeViewItem, TreeViewItem?> _hierarchyParents = new();
     private readonly ContextMenu _hierarchyMenu = new();
     private readonly TextBlock _motionHeader = Header("모션");
-    private StackPanel? _sceneTabPanel;
     private object? _menuTarget;
     private static readonly IBrush ActingNodeBrush = new SolidColorBrush(Color.FromRgb(0xC8, 0xE0, 0xFF));
     private static readonly IBrush PlacementNodeBrush = new SolidColorBrush(Color.FromRgb(0xB0, 0xB0, 0xB0));
     private static readonly IBrush ForbiddenNodeBrush = new SolidColorBrush(Color.FromRgb(0x70, 0x70, 0x70));
 
     // 오른쪽 — 오브젝트(채널 박스)
-    private readonly TextBox _objX = new() { FontSize = 11, Width = 64 };
-    private readonly TextBox _objY = new() { FontSize = 11, Width = 64 };
-    private readonly TextBox _objRot = new() { FontSize = 11, Width = 64 };
-    private readonly TextBox _objSx = new() { FontSize = 11, Width = 64 };
-    private readonly TextBox _objSy = new() { FontSize = 11, Width = 64 };
-    private readonly ComboBox _objLayer = new() { ItemsSource = SceneLayers.Order, FontSize = 11 };
-    private readonly ComboBox _objStage = new() { ItemsSource = StageNodes.Stages, FontSize = 11 };
-
-    private readonly CheckBox _objVisible = new() { Content = "보이기", FontSize = 11 };
-    private readonly TextBox _objId = new() { FontSize = 11, Width = 90 };
 
 
-    private readonly TextBlock _objSummary = new() { FontSize = 11, Opacity = 0.8, TextWrapping = TextWrapping.Wrap };
-    private readonly Expander _placementExpander = new() { Header = "시작 배치", FontSize = 11, IsExpanded = false };
+
 
     // 왼쪽
     private readonly ListBox _motionList = new() { MinHeight = 120 };
@@ -176,7 +164,6 @@ public partial class MainWindow : Window
 
     // 오른쪽 — 보기
     private readonly CheckBox _snap = new() { Content = "시간 스냅", IsChecked = true, FontSize = 11 };
-    private readonly CheckBox _showStageSkeleton = new() { Content = "무대 뼈대 보기 (Shot·Pan·Zoom·Mask·Framing… 전부)", FontSize = 11 };
     private readonly TextBox _currentTime = new() { Text = "0", FontSize = 11, Width = 72 };
 
     private int _refreshDepth;
@@ -537,7 +524,6 @@ public partial class MainWindow : Window
             _newKeyTangent.SelectedIndex = tangentIndex < 0 ? 0 : tangentIndex;
             _autoKeyToggle.IsChecked = _settings.AutoKey;
             _autoKeyToggle.Foreground = _settings.AutoKey ? AutoKeyOnBrush : null;
-            _showStageSkeleton.IsChecked = _settings.ShowStageSkeleton;
             _inspectorTabs.SelectedIndex = Math.Clamp(_settings.InspectorTab, 0, 3);
             int autoSaveIndex = Array.IndexOf(AutoSaveMinutes, _settings.AutoSaveMinutes);
             _autoSaveCombo.SelectedIndex = autoSaveIndex < 0 ? 2 : autoSaveIndex;
@@ -1240,15 +1226,14 @@ public partial class MainWindow : Window
         RefreshChannels();
     }
 
-    /// <summary>테스트 손잡이 — 자산(리그·초상·무대 크기)을 뷰포트에 다시 실은 횟수. 키 편집에서는 오르지 않아야 한다.</summary>
+    /// <summary>테스트 손잡이 — 자산(세트·그림)을 뷰포트에 다시 실은 횟수. 키 편집에서는 오르지 않아야 한다.</summary>
     internal int AssetRefreshCount { get; private set; }
 
     private void RefreshAssets()
     {
         AssetRefreshCount++;
         _viewport.SetRig(_session.Rig);
-        _viewport.StageSize = _session.StageSize;
-        _viewport.ClearPortraits();
+        _viewport.ClearImages();
 
         // 스킨의 그림 — 파일이 없거나 못 읽으면 null을 넣는다(자리표시로 그려진다). 어느 스킨의 어느 장을 그릴지는 뷰포트가 그때그때 고른다.
         foreach ((string image, string? imagePath) in _session.SkinImages())
@@ -1267,44 +1252,9 @@ public partial class MainWindow : Window
             _viewport.SetImage(image, bitmap);
         }
 
-        foreach (SceneObject o in _viewport.SceneObjects)
-        {
-            if (_session.PortraitPathOf(o) is not { } portraitPath)
-            {
-                continue;
-            }
-
-            try
-            {
-                _viewport.SetPortrait(o.Id, new Bitmap(portraitPath));
-            }
-            catch (Exception exception)
-            {
-                _session.SetStatus($"{o.Id}의 초상을 읽지 못했다: {exception.Message}");
-            }
-        }
-
         RefreshChannelBox();
         RefreshObjects();
         RefreshProblems();
-    }
-
-    private async void OnPickPortraitClick(object? sender, RoutedEventArgs e)
-    {
-        try
-        {
-            string? path = await PickOpenAsync("초상 PNG", new FilePickerFileType("PNG") { Patterns = new[] { "*.png" } });
-
-            if (path is not null)
-            {
-                string objectId = _viewport.SelectedObjectId ?? throw new InvalidOperationException("먼저 오브젝트를 고른다.");
-                _session.SetPortrait(objectId, path);
-            }
-        }
-        catch (Exception exception)
-        {
-            _session.SetStatus($"초상 실패: {exception.Message}");
-        }
     }
 
     private void BuildToolbar()
@@ -1315,8 +1265,6 @@ public partial class MainWindow : Window
         Toolbar.Children.Add(ToolButton("저장", OnSaveClick));
         Toolbar.Children.Add(ToolButton("다른 이름으로…", OnSaveAsClick));
         Toolbar.Children.Add(Separator());
-        Toolbar.Children.Add(ToolButton("리그 덤프…", OnLoadRigClick));
-        Toolbar.Children.Add(Separator());
         Toolbar.Children.Add(ToolButton("되돌리기", (_, _) => UndoCommand()));
         Toolbar.Children.Add(ToolButton("다시하기", (_, _) => RedoCommand()));
         Toolbar.Children.Add(Separator());
@@ -1326,7 +1274,7 @@ public partial class MainWindow : Window
 
     private void BuildLeft()
     {
-        LeftPanel.Children.Add(Header("씬 — 오브젝트"));
+        LeftPanel.Children.Add(Header("층"));
         _hierarchy.SelectionChanged += (_, _) => OnHierarchySelected();
         // 더블클릭은 노드 선택과 같다(채널 박스가 그 노드를 보인다). "채널 추가"는 없다.
         _hierarchy.DoubleTapped += (_, _) =>
@@ -1341,23 +1289,8 @@ public partial class MainWindow : Window
         _hierarchy.ContextMenu = _hierarchyMenu;
         _hierarchyMenu.Opening += (_, _) => RebuildHierarchyMenu();
         _hierarchy.AddHandler(PointerPressedEvent, OnHierarchyPointerPressed, RoutingStrategies.Tunnel);
-        _hierarchy.KeyDown += OnHierarchyKeyDown;
         LeftPanel.Children.Add(_hierarchy);
-        var plus = SmallButton("+ 캐릭터 리그", (_, _) => Guard("캐릭터 리그 만들기", () =>
-            CreateObject(SceneObject.DefaultRig, _hierarchy.SelectedItem is TreeViewItem { Tag: { } tag } ? tag : null)));
-        ToolTip.SetTip(plus, "바로 캐릭터 리그를 만든다 — 고른 층(Content)·Stage면 거기에, 오브젝트/노드를 고른 채면 그 자식으로, 아무것도 안 골랐으면 선택 오브젝트의 무대·층(없으면 Stage00 Mid)에. 우클릭 메뉴와 같다 (Ctrl+Shift+N)");
-        LeftPanel.Children.Add(new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            Spacing = 4,
-            Children =
-            {
-                plus,
-                SmallButton("삭제", (_, _) => Guard("오브젝트 삭제", RemoveObject)),
-                SmallButton("초상 PNG…", OnPickPortraitClick),
-            },
-        });
-        ToolTip.SetTip(_hierarchy, "PresentataionUIRoot › … › Stage{NN}Depth_{Layer}_Content › 오브젝트 › 노드. 클릭 = 선택, 노드 클릭 = 채널 박스·매니퓰레이터의 손잡이(값을 넣거나 끌면 그 노드에 키가 생긴다). 우클릭 = 이름/복제/삭제/숨기기/레이어/만들기 메뉴(층 위에서 만들면 그 층에). 오브젝트끼리 부모·자식은 없다. '리그 노드 보기'(보기 설정)면 덤프 노드 26단. Del · Ctrl+D · Ctrl+Shift+N · F2");
+        ToolTip.SetTip(_hierarchy, "무대에 선 세트의 층. 클릭 = 고르기(채널 박스·매니퓰레이터가 그 층을 잡는다). 세트를 열었으면 우클릭으로 층을 짓고 고친다");
 
         LeftPanel.Children.Add(_motionHeader);
         _motionList.SelectionChanged += (_, _) => OnMotionSelected();
@@ -1376,7 +1309,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// 오른쪽 = 탭 셋(PLAN-inspector): 채널 박스(기본, 애니메이터) · 씬(무대 세팅) · 모션(속성). 설정·단축키는 툴바의 창으로,
+    /// 오른쪽 = 탭: 채널 박스(기본) · 세트(층 · 스킨) · 모션(속성) · 연출. 설정·단축키는 툴바의 창으로,
     /// 단축키의 그림자 버튼(Q/W/E/R·S·Esc·복사·붙여넣기…)은 없다. 마지막 탭·접힌 묶음은 설정에 남는다.
     /// </summary>
     private void BuildRight()
@@ -1384,7 +1317,7 @@ public partial class MainWindow : Window
         _inspectorTabs.ItemsSource = new[]
         {
             new TabItem { Header = "채널 박스", Content = BuildChannelBoxTab(), FontSize = 12 },
-            new TabItem { Header = "씬", Content = BuildSceneTab(), FontSize = 12 },
+            new TabItem { Header = "세트", Content = BuildSetTab(), FontSize = 12 },
             new TabItem { Header = "모션", Content = BuildMotionTab(), FontSize = 12 },
             new TabItem { Header = "연출", Content = BuildEmojiTab(), FontSize = 12 },
         };
@@ -1429,66 +1362,13 @@ public partial class MainWindow : Window
         return panel;
     }
 
-    /// <summary>씬 탭 — 고른 오브젝트의 배치(모션 키가 아니다). 자주 쓰는 자리·층은 펼쳐 두고, 시작 배치·붙이기는 접는다(기본값이 아니면 펼친다).</summary>
-    private Control BuildSceneTab()
+    /// <summary>세트 탭 — 연 세트의 층 칸과 스킨 칸.</summary>
+    private Control BuildSetTab()
     {
         var panel = new StackPanel { Spacing = 4, Margin = new Avalonia.Thickness(0, 6, 0, 0) };
-        panel.Children.Add(_objSummary);
-        ToolTip.SetTip(_objSummary, "고른 오브젝트 · 리그 · 무대 층. 이름 바꾸기는 하이어아키에서 F2");
-
-        panel.Children.Add(new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            Spacing = 4,
-            Children = { Small("Layer"), _objLayer, Small("Stage"), _objStage, _objVisible },
-        });
-        ToolTip.SetTip(_objLayer, "층(far·back·mid·front·close) — 깊이의 진실. 하이어아키에서 층 폴더로 끌어다 놓아도 된다");
-        _objLayer.SelectionChanged += (_, _) =>
-        {
-            if (!_refreshing && _objLayer.SelectedItem is string layer && _viewport.SelectedObject is { } o && o.Layer != layer)
-            {
-                Guard("레이어", () => _session.Editor.SetObjectLayer(null, o.Id, layer));
-            }
-        };
-        _objStage.SelectionChanged += (_, _) =>
-        {
-            if (!_refreshing && _objStage.SelectedItem is string stage && _viewport.SelectedObject is { } o && o.Stage != stage)
-            {
-                Guard("무대", () => _session.Editor.SetObjectStage(null, o.Id, stage));
-            }
-        };
-        _objVisible.IsCheckedChanged += (_, _) =>
-        {
-            if (!_refreshing && _viewport.SelectedObject is { } o)
-            {
-                Guard("보이기", () => _session.Editor.SetObjectVisible(null, o.Id, _objVisible.IsChecked == true));
-            }
-        };
-
-        _placementExpander.Content = new StackPanel
-        {
-            Spacing = 4,
-            Children =
-            {
-                new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { Small("오프셋 X"), _objX, Small("Y"), _objY, Small("Rot Z"), _objRot } },
-                new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Children = { Small("Scale X"), _objSx, Small("Y"), _objSy } },
-            },
-        };
-        ToolTip.SetTip(_placementExpander, "모션이 없을 때의 자리 — CharSlot_Track(move)·SwayPivot(rotate)·Scale에 그대로 들어간다. 채널 박스의 자리 키는 여기서 출발한다. 모션 키가 아니다");
-        panel.Children.Add(_placementExpander);
-
-        foreach (TextBox box in new[] { _objX, _objY, _objRot, _objSx, _objSy })
-        {
-            OnCommit(box, _ => CommitObjectPlacement());
-        }
-
-        // id 칸은 화면에 없다(소유자, 2026-10-28): 이름 바꾸기는 하이어아키 F2. 컨트롤은 테스트 손잡이로만 남는다.
-        ToolTip.SetTip(_objId, "이름 바꾸기 — [a-z0-9_]+");
-        OnCommit(_objId, _ => RenameSelectedObject());
         _viewport.ObjectSelected += (_, _) => RefreshObjects();
+        panel.Children.Add(BuildSetNodePanel());
         panel.Children.Add(BuildSkinPanel());
-        panel.Children.Insert(0, BuildSetNodePanel()); // 세트를 열었으면 그 오브젝트의 칸이 맨 위다
-        _sceneTabPanel = panel;
         return panel;
     }
 
@@ -1539,17 +1419,6 @@ public partial class MainWindow : Window
     /// <summary>설정 창의 컨트롤들은 미리 묶어 두고(창을 열 때마다 같은 인스턴스), 바꾸는 즉시 적용한다.</summary>
     private void WireSettingsControls()
     {
-        _showStageSkeleton.IsCheckedChanged += (_, _) =>
-        {
-            if (_refreshing)
-            {
-                return;
-            }
-
-            _settings.ShowStageSkeleton = _showStageSkeleton.IsChecked == true;
-            RebuildHierarchy();
-        };
-        ToolTip.SetTip(_showStageSkeleton, "하이어아키에 PresentataionUIRoot 뼈대 전체를 보인다. 끄면 Scene › 무대 › 층 › 오브젝트만");
         _snap.IsCheckedChanged += (_, _) =>
         {
             if (_refreshing)
@@ -1615,7 +1484,6 @@ public partial class MainWindow : Window
         }
 
         panel.Children.Add(Header("하이어아키"));
-        panel.Children.Add(_showStageSkeleton);
         panel.Children.Add(Header("키"));
         ToolTip.SetTip(_snapStepCombo, "키 배치·이동 및 타임라인 탐색 시, 시간을 지정한 간격의 배수에 맞춥니다.");
         Row("시간 스냅 간격", _snapStepCombo);
@@ -1688,9 +1556,9 @@ public partial class MainWindow : Window
         "타임 슬라이더\n" +
         "  클릭·드래그  스크럽      Shift+드래그  프레임 범위 선택      범위 안 MMB  범위의 키 이동      범위 밖 MMB  포즈 들고 스크럽(S로 키)\n" +
         "  우클릭  복사·붙여넣기·삭제·스냅 · 재생 범위 · 재생 모드 메뉴\n\n" +
-        "하이어아키\n" +
-        "  클릭  오브젝트·노드 고르기      우클릭  이름·복제·삭제·숨기기·레이어·만들기 메뉴\n" +
-        "  F2  이름 바꾸기      Ctrl+D  복제      Del  삭제      Ctrl+Shift+N  캐릭터 리그 만들기";
+        "하이어아키 (층)\n" +
+        "  클릭  세트의 오브젝트 고르기\n" +
+        "  우클릭(세트를 열었을 때)  오브젝트 더하기 · 부모 바꾸기 · 앞뒤 순서 · 숨기기 · 시차 · 화면 밖에서 들어온다/나간다";
 
     /// <summary>테스트 손잡이.</summary>
     internal int InspectorTabCount => _inspectorTabs.ItemCount;
@@ -1708,17 +1576,6 @@ public partial class MainWindow : Window
     internal void OpenSettingsFromMenu() => OpenSettings();
 
     internal void OpenShortcutsFromMenu() => OpenShortcuts();
-
-    internal bool ShowStageSkeleton
-    {
-        get => _settings.ShowStageSkeleton;
-        set
-        {
-            _settings.ShowStageSkeleton = value;
-            ApplySettings();
-            RebuildHierarchy();
-        }
-    }
 
     // ── 문서·목록 갱신 ─────────────────────────────────────────────────
 
@@ -1741,7 +1598,7 @@ public partial class MainWindow : Window
         RefreshChannelBox();
     }
 
-    /// <summary>오브젝트 목록·채널 박스·노드 목록을 선택 오브젝트에 맞춘다.</summary>
+    /// <summary>하이어아키 · 스킨 칸 · 채널 박스를 무대의 세트에 맞춘다.</summary>
     private void RefreshObjects()
     {
         _refreshDepth++;
@@ -1750,41 +1607,6 @@ public partial class MainWindow : Window
         {
             RebuildHierarchy();
             RefreshSkinPanel();
-
-            SceneObject? selected = _viewport.SelectedObject;
-            // 세트 보기의 오브젝트는 문서의 씬에 없다 — 씬의 칸(자리·층·오프셋)으로 고칠 것이 아니다. 세트의 칸과 스킨 칸만 남긴다.
-            bool has = selected is not null && _viewport.SetView is null;
-
-            foreach (Control child in _sceneTabPanel?.Children ?? Enumerable.Empty<Control>())
-            {
-                if (!ReferenceEquals(child, _setNodePanel) && !ReferenceEquals(child, _skinPanel))
-                {
-                    child.IsVisible = _viewport.SetView is null;
-                }
-            }
-
-            foreach (Control c in new Control[] { _objX, _objY, _objRot, _objSx, _objSy, _objVisible, _objId, _objLayer, _objStage })
-            {
-                c.IsEnabled = has;
-            }
-
-            _objSummary.Text = selected is null
-                ? "오브젝트 없음 — 왼쪽 하이어아키에서 층(Content)을 우클릭해 만든다"
-                : $"{selected.Id} · {selected.Rig} · {StageNodes.ContentOf(selected.Stage, selected.Layer)}"
-                  + (_viewport.Motion is null || _viewport.CanWear(selected) ? "" : " · 지금 모션은 이 리그에 안 맞는다");
-            _objId.Text = selected?.Id ?? "";
-            _objStage.SelectedIndex = selected is null ? -1 : StageNodes.Stages.ToList().IndexOf(selected.Stage);
-
-            _objX.Text = selected is null ? "" : F(selected.PositionX);
-            _objY.Text = selected is null ? "" : F(selected.PositionY);
-            _objRot.Text = selected is null ? "" : F(selected.RotationZ);
-            _objSx.Text = selected is null ? "" : F(selected.ScaleX);
-            _objSy.Text = selected is null ? "" : F(selected.ScaleY);
-            _objLayer.SelectedIndex = selected is null ? -1 : SceneLayers.IndexOf(selected.Layer);
-            _objVisible.IsChecked = selected?.Visible ?? false;
-
-            // 접힌 묶음은 값이 기본이 아닐 때만 스스로 펼친다(닫지는 않는다).
-            _placementExpander.IsExpanded |= selected is not null && (selected.PositionX != 0 || selected.PositionY != 0 || selected.RotationZ != 0 || selected.ScaleX != 1 || selected.ScaleY != 1);
         }
         finally
         {
@@ -1799,17 +1621,10 @@ public partial class MainWindow : Window
     /// <summary>트리 항목의 꼬리표 — 오브젝트 또는 오브젝트의 리그 노드.</summary>
     private sealed record HierarchyNode(string ObjectId, string? NodeId);
 
-    /// <summary>폴더 항목의 꼬리표 — Scene(둘 다 null) · stage · layer(Content). 만들기·드롭의 자리가 된다.</summary>
-    private sealed record HierarchyFolder(string? Stage, string? Layer);
+    /// <summary>세트 항목의 꼬리표 — 하이어아키의 맨 위.</summary>
+    private sealed record HierarchyFolder;
 
-    /// <summary>무대 뼈대의 다른 노드(Shot/Pan/Zoom/Mask/Framing…) — 보기만, 자리가 아니다.</summary>
-    private sealed record SkeletonNode(string NodeId);
-
-    /// <summary>
-    /// 유니티 <c>PresentataionUIRoot</c> 그대로: 뼈대 노드를 덤프의 parent대로 중첩하고, 최상위 오브젝트는 그 무대·층의
-    /// <c>Stage{NN}Depth_{Layer}_Content</c> 밑에, 리그 노드는 덤프의 parent 그대로.
-    /// 압축 보기는 뼈대를 Stage › 층(Content)만 남긴다(데이터는 같다). 펼침 상태는 키로 기억한다(오브젝트는 기본 접힘).
-    /// </summary>
+    /// <summary>무대에 선 세트 하나와 그 층들(부모 › 자식). 펼침 상태는 키로 기억한다.</summary>
     private void RebuildHierarchy()
     {
         SceneAsset? scene = _viewport.Scene;
@@ -1817,106 +1632,20 @@ public partial class MainWindow : Window
         _hierarchy.Items.Clear();
         _hierarchyParents.Clear();
 
-        if (scene is null)
+        if (scene is null || scene.Objects.Count == 0)
         {
             return;
         }
 
         TreeViewItem? selectedItem = null;
+        SceneObject shown = scene.Objects[0];
+        var setRoot = Folder($"세트  {shown.Rig}", "set:" + shown.Rig);
+        setRoot.Tag = new HierarchyFolder();
+        Attach(setRoot, null);
+        BuildObjectItem(shown, setRoot, nodeWasSelected, ref selectedItem);
+        _hierarchy.Items.Add(setRoot);
 
-        // 세트 보기 — 무대의 뼈대(Stage · 층)는 이 세트의 것이 아니다. 세트와 그 오브젝트들만.
-        if (_viewport.SetView is not null && scene.Objects.Count == 1)
-        {
-            var setRoot = Folder($"세트  {scene.Name}", "set:" + scene.Name);
-            setRoot.Tag = new HierarchyFolder(null, null);
-            Attach(setRoot, null);
-            BuildObjectItem(scene, scene.Objects[0], setRoot, nodeWasSelected, ref selectedItem);
-            _hierarchy.Items.Add(setRoot);
-
-            for (TreeViewItem? up = selectedItem is null ? null : _hierarchyParents.GetValueOrDefault(selectedItem); up is not null; up = _hierarchyParents.GetValueOrDefault(up))
-            {
-                up.IsExpanded = true;
-            }
-
-            _hierarchy.SelectedItem = selectedItem;
-            return;
-        }
-
-        var root = Folder($"Scene  {scene.Name}  ·  PresentataionUIRoot", "scene");
-        root.Tag = new HierarchyFolder(null, null);
-        Attach(root, null);
-
-        // 뼈대: 덤프 순서(부모 먼저)로 중첩 — 유니티 PresentataionUIRoot 그대로. 오브젝트가 선 가지(Content까지의 조상)만 기본 펼침,
-        // 나머지 가지는 기본 접힘(유니티처럼 필요할 때 펼친다).
-        IReadOnlyList<RigSchemaNodeDto> skeleton = BuiltinTuning.StageRig.nodes;
-        var parentOf = skeleton.ToDictionary(n => n.id, n => string.IsNullOrEmpty(n.parent) ? RigSchemaLoader.RootKey : n.parent, StringComparer.Ordinal);
-        var occupied = new HashSet<string>(StringComparer.Ordinal);
-
-        foreach (SceneObject o in scene.Objects)
-        {
-            // Content에서 루트까지 올라가며 표시한다. __root는 자기 자신을 부모로 가리키므로 거기서 멈춘다.
-            for (string id = StageNodes.ContentOf(o.Stage, o.Layer); id != RigSchemaLoader.RootKey && parentOf.ContainsKey(id); id = parentOf[id])
-            {
-                occupied.Add(id);
-            }
-        }
-
-        var itemsByNode = new Dictionary<string, TreeViewItem>(StringComparer.Ordinal) { [RigSchemaLoader.RootKey] = root };
-        var contentItems = new Dictionary<(string Stage, string Layer), TreeViewItem>();
-
-        foreach (RigSchemaNodeDto node in skeleton)
-        {
-            if (node.id == RigSchemaLoader.RootKey)
-            {
-                continue;
-            }
-
-            bool isStageRoot = StageNodes.Stages.Any(st => StageNodes.StageRootOf(st) == node.id);
-            bool isContent = StageNodes.TryParseContent(node.id, out string stage, out string layer);
-
-            // 기본은 Scene › 무대 › 층만 — 뼈대의 다른 노드(Shot/Pan/Zoom/Mask/Framing…)는 "무대 뼈대 보기"를 켜야 보인다.
-            if (!_settings.ShowStageSkeleton && !isStageRoot && !isContent)
-            {
-                continue;
-            }
-
-            TreeViewItem parentItem = root;
-
-            for (string up = parentOf[node.id]; up != RigSchemaLoader.RootKey && parentOf.ContainsKey(up); up = parentOf[up])
-            {
-                if (itemsByNode.TryGetValue(up, out TreeViewItem? found))
-                {
-                    parentItem = found;
-                    break;
-                }
-            }
-
-            string header = _settings.ShowStageSkeleton ? node.id
-                : isStageRoot ? StageNodes.StageName(StageNodes.Stages.First(st => StageNodes.StageRootOf(st) == node.id))
-                : layer;
-
-            TreeViewItem item = Folder(header, "skel:" + node.id, defaultExpanded: occupied.Contains(node.id));
-            item.Tag = isContent ? new HierarchyFolder(stage, layer)
-                : isStageRoot ? new HierarchyFolder(StageNodes.Stages.First(st => StageNodes.StageRootOf(st) == node.id), null)
-                : new SkeletonNode(node.id);
-            Attach(item, parentItem);
-            itemsByNode[node.id] = item;
-
-            if (isContent)
-            {
-                contentItems[(stage, layer)] = item;
-            }
-        }
-
-        foreach (SceneObject o in scene.Objects)
-        {
-            TreeViewItem under = contentItems.GetValueOrDefault((o.Stage, o.Layer)) ?? root;
-            BuildObjectItem(scene, o, under, nodeWasSelected, ref selectedItem);
-        }
-
-        _hierarchy.Items.Add(root);
-
-        // 고른 항목이 보이도록 조상을 펼친다(유니티가 선택을 드러내듯).
+        // 고른 항목이 보이도록 조상을 펼친다.
         for (TreeViewItem? up = selectedItem is null ? null : _hierarchyParents.GetValueOrDefault(selectedItem); up is not null; up = _hierarchyParents.GetValueOrDefault(up))
         {
             up.IsExpanded = true;
@@ -1932,15 +1661,9 @@ public partial class MainWindow : Window
     }
 
     /// <summary>오브젝트 항목 + 리그 노드 트리.</summary>
-    private void BuildObjectItem(SceneAsset scene, SceneObject o, TreeViewItem parentItem, bool nodeWasSelected, ref TreeViewItem? selectedItem)
+    private void BuildObjectItem(SceneObject o, TreeViewItem parentItem, bool nodeWasSelected, ref TreeViewItem? selectedItem)
     {
-        string kind = o.Rig;
-        string suffix = o.Visible ? "" : "  ·  숨김";
-        TreeViewItem objectItem = Folder($"{o.Id}  ·  {kind}{suffix}", "object:" + o.Id, defaultExpanded: false);
-        objectItem.Tag = new HierarchyNode(o.Id, null);
-        objectItem.FontWeight = FontWeight.SemiBold;
-        objectItem.Opacity = o.Visible ? 1 : 0.55;
-        Attach(objectItem, parentItem);
+        TreeViewItem objectItem = parentItem;
 
         var itemsByNode = new Dictionary<string, TreeViewItem>(StringComparer.Ordinal);
         if (_session.Rig is { } rig && rig.TryGetRig(o.Rig, out RigSchemaRigDto dto))
@@ -1955,7 +1678,7 @@ public partial class MainWindow : Window
                 TreeViewItem nodeParent = string.IsNullOrEmpty(node.parent) || node.parent == RigSchemaLoader.RootKey || !itemsByNode.TryGetValue(node.parent, out TreeViewItem? found)
                     ? objectItem
                     : found;
-                bool forbidden = PlacementNodes.IsForbidden(node.id);
+                bool forbidden = MotionRules.ForbiddenNodes.Contains(node.id);
                 // 세트 보기 — 따로 보기(숨김 · 솔로)의 표시.
                 bool shown = _viewport.IsSetNodeShown(node.id);
                 string mark = _viewport.SetView is null ? "" : _viewport.SoloSetNode == node.id ? "   ◉ 이것만" : _viewport.IsSetNodeHidden(node.id) ? "   (숨김)" : "";
@@ -1963,9 +1686,9 @@ public partial class MainWindow : Window
                 nodeItem.Opacity = shown ? 1 : 0.45;
                 nodeItem.Tag = new HierarchyNode(o.Id, node.id);
                 nodeItem.FontWeight = FontWeight.Normal;
-                nodeItem.Foreground = forbidden ? ForbiddenNodeBrush : PlacementNodes.IsPlacementAxis(node.id) ? PlacementNodeBrush : ActingNodeBrush;
+                nodeItem.Foreground = forbidden ? ForbiddenNodeBrush : ActingNodeBrush;
                 nodeItem.FontStyle = forbidden ? FontStyle.Italic : FontStyle.Normal;
-                ToolTip.SetTip(nodeItem, forbidden ? "키잉 금지 노드(코어 규칙) — 채널을 둘 수 없다" : PlacementNodes.IsPlacementAxis(node.id) ? "배치 축 — 런타임 place/size가 움직인다. 모션 채널로 쓰면 겹칠 수 있다" : "연기 축 — 모션 채널의 자리");
+                ToolTip.SetTip(nodeItem, forbidden ? "키잉 금지 노드(코어 규칙) — 채널을 둘 수 없다" : node.id);
                 Attach(nodeItem, nodeParent);
                 itemsByNode[node.id] = nodeItem;
 
@@ -1976,10 +1699,6 @@ public partial class MainWindow : Window
             }
         }
 
-        if (selectedItem is null && o.Id == _viewport.SelectedObjectId && !nodeWasSelected)
-        {
-            selectedItem = objectItem;
-        }
     }
 
     private TreeViewItem Folder(string header, string key, bool defaultExpanded = true)
@@ -2040,33 +1759,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnHierarchyKeyDown(object? sender, KeyEventArgs e)
-    {
-        bool ctrl = e.KeyModifiers == KeyModifiers.Control;
-        bool ctrlShift = e.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift);
-
-        switch (e.PhysicalKey)
-        {
-            case PhysicalKey.Delete when e.KeyModifiers == KeyModifiers.None:
-                Guard("오브젝트 삭제", RemoveObject);
-                break;
-            case PhysicalKey.D when ctrl:
-                Guard("복제", DuplicateSelectedObject);
-                break;
-            case PhysicalKey.N when ctrlShift:
-                Guard("캐릭터 리그 만들기", () => CreateObject(SceneObject.DefaultRig, _hierarchy.SelectedItem is TreeViewItem { Tag: { } tag } ? tag : null));
-                break;
-            case PhysicalKey.F2 when e.KeyModifiers == KeyModifiers.None:
-                _objId.Focus();
-                _objId.SelectAll();
-                break;
-            default:
-                return;
-        }
-
-        e.Handled = true;
-    }
-
     /// <summary>유니티 하이어아키 우클릭 메뉴. 우클릭한 자리(_menuTarget)에 따라 달라진다.</summary>
     private void RebuildHierarchyMenu()
     {
@@ -2083,7 +1775,7 @@ public partial class MainWindow : Window
             return item;
         }
 
-        // 세트 보기 — 씬의 메뉴(캐릭터 만들기·레이어)가 아니라 세트의 오브젝트를 짓는 메뉴.
+        // 세트를 열었으면 층을 짓는 메뉴 — 연출·애니메이션으로 선 세트는 보기만 한다.
         if (_viewport.SetView is not null)
         {
             AddSetMenu(target);
@@ -2092,104 +1784,9 @@ public partial class MainWindow : Window
 
         if (o is not null)
         {
-            Item("이름 바꾸기", () =>
-            {
-                _objId.Focus();
-                _objId.SelectAll();
-            }, new KeyGesture(Key.F2));
-            Item("복제", DuplicateSelectedObject, new KeyGesture(Key.D, KeyModifiers.Control));
-            Item("삭제", RemoveObject, new KeyGesture(Key.Delete));
-            _hierarchyMenu.Items.Add(new Separator());
-            Item(o.Visible ? "숨기기" : "보이기", () => _session.Editor.SetObjectVisible(null, o.Id, !o.Visible));
-
-            var layer = new MenuItem { Header = "레이어", FontSize = 11 };
-
-            foreach (string l in SceneLayers.Order)
-            {
-                var pick = new MenuItem { Header = l + (l == o.Layer ? "  ✓" : ""), FontSize = 11 };
-                pick.Click += (_, _) => Guard("레이어", () => _session.Editor.SetObjectLayer(null, o.Id, l));
-                layer.Items.Add(pick);
-            }
-
-            _hierarchyMenu.Items.Add(layer);
-            _hierarchyMenu.Items.Add(new Separator());
-        }
-
-        string where = target switch
-        {
-            HierarchyFolder { Stage: { } fs, Layer: { } fl } => $" — {StageNodes.ContentOf(fs, fl)}에",
-            HierarchyFolder { Stage: { } fs } => $" — {StageNodes.StageName(fs)} Mid에",
-            _ when o is not null => $" — {StageNodes.ContentOf(o.Stage, o.Layer)}에",
-            _ => "",
-        };
-        Item("캐릭터 리그 만들기" + where, () => CreateObject(SceneObject.DefaultRig, target), new KeyGesture(Key.N, KeyModifiers.Control | KeyModifiers.Shift), enabled: target is not SkeletonNode);
-
-        // 세트를 장면에 놓는다 — 캐릭터에 붙이지 않고 그 층에 제 자리로(화면 전환·소개 같은 연출이 설 오브젝트).
-        if (_session.Editor.Document.Rigs.Count > 0 && target is not SkeletonNode)
-        {
-            var place = new MenuItem { Header = "세트 놓기" + where, FontSize = 11 };
-
-            foreach (string kind in _session.Editor.Document.Rigs.Select(r => r.Kind).OrderBy(k => k, StringComparer.Ordinal))
-            {
-                string captured = kind;
-                var pick = new MenuItem { Header = kind, FontSize = 11 };
-                pick.Click += (_, _) => Guard("세트 놓기", () => CreateObject(captured, target));
-                place.Items.Add(pick);
-            }
-
-            _hierarchyMenu.Items.Add(place);
-        }
-
-        if (o is not null)
-        {
-            _hierarchyMenu.Items.Add(new Separator());
             Item("노드 전부 펼치기", () => ExpandObjectNodes(o.Id, true));
             Item("노드 전부 접기", () => ExpandObjectNodes(o.Id, false));
         }
-    }
-
-    /// <summary>비어 있는 다음 id — character는 s1·s2…(Yarn 슬롯 키 꼴), 그 밖은 rigKind+번호. 채널 박스에서 바꾼다.</summary>
-    private string NewObjectId(string rig)
-    {
-        string stem = rig == SceneObject.DefaultRig ? "s" : MotionNames.Sanitize(rig);
-        SceneAsset? scene = _viewport.Scene;
-        int n = 1;
-
-        while (scene?.Find($"{stem}{n}") is not null)
-        {
-            n++;
-        }
-
-        return $"{stem}{n}";
-    }
-
-    /// <summary>
-    /// 만들기 — 자리(target)가 층(Content) 폴더면 그 무대·층에, 오브젝트/노드면 그 오브젝트의 무대·층에,
-    /// 그 밖이면 선택 오브젝트의 무대·층(없으면 Stage00 Mid)에. 만든 것을 고른다.
-    /// </summary>
-    private string CreateObject(string rig, object? target, string? id = null)
-    {
-        SceneObject? beside = ObjectIdOf(target) is { } besideId ? _viewport.Scene?.Find(besideId) : _viewport.SelectedObject;
-        string layer = beside?.Layer ?? SceneLayers.Mid;
-        string stage = beside?.Stage ?? SceneObject.DefaultStage;
-
-        switch (target)
-        {
-            case HierarchyFolder { Stage: { } fs, Layer: { } l }:
-                stage = fs;
-                layer = l;
-                break;
-            case HierarchyFolder { Stage: { } fs }:
-                stage = fs;
-                layer = SceneLayers.Mid;
-                break;
-        }
-
-        id ??= NewObjectId(rig);
-        _session.Editor.AddSceneObject(null, id, rig, layer, stage);
-        _viewport.SelectedObjectId = id;
-        RefreshAssets();
-        return id;
     }
 
     private void OnHierarchySelected()
@@ -2216,7 +1813,7 @@ public partial class MainWindow : Window
     /// <summary>노드 항목: 그 오브젝트를 고르고, 채널 박스·매니퓰레이터의 노드를 그 노드로. 키 따라가기는 끈다(사용자가 직접 골랐다).</summary>
     private void SelectNodeInHierarchy(HierarchyNode node)
     {
-        // 세트 보기에서는 그 오브젝트가 "씬" 탭의 세트 칸에 뜬다.
+        // 세트 보기에서는 그 오브젝트가 세트 탭의 세트 칸에 뜬다.
         if (_viewport.SetView is not null)
         {
             _rigNodeSelected = node.NodeId;
@@ -2249,83 +1846,6 @@ public partial class MainWindow : Window
 
     internal int HierarchyObjectCount => _viewport.SceneObjects.Count;
 
-    /// <summary>테스트 손잡이 — 하이어아키의 "세트 놓기 ▸ (세트)".</summary>
-    internal string PlaceSetFromMenu(string kind) => CreateObject(kind, null);
-
-    private void RemoveObject()
-    {
-        if (_viewport.SelectedObjectId is { } id)
-        {
-            _session.Editor.RemoveSceneObject(null, id);
-            RefreshAssets();
-        }
-    }
-
-    private void DuplicateSelectedObject()
-    {
-        if (_viewport.SelectedObjectId is { } id)
-        {
-            SceneObject copy = _session.Editor.DuplicateSceneObject(null, id);
-            _viewport.SelectedObjectId = copy.Id;
-            RefreshAssets();
-        }
-    }
-
-    private void RenameSelectedObject()
-    {
-        if (_refreshing || _viewport.SelectedObject is not { } o)
-        {
-            return;
-        }
-
-        string newId = (_objId.Text ?? "").Trim();
-
-        if (newId.Length == 0 || newId == o.Id)
-        {
-            _objId.Text = o.Id;
-            return;
-        }
-
-        Guard("이름 바꾸기", () =>
-        {
-            _session.Editor.RenameSceneObject(null, o.Id, newId);
-            _viewport.SelectedObjectId = newId;
-            RefreshAssets();
-        });
-    }
-
-    private void CommitObjectPlacement()
-    {
-        if (_refreshing || _viewport.SelectedObject is not { } o)
-        {
-            return;
-        }
-
-        if (!TryFloat(_objX.Text ?? "", out float x) || !TryFloat(_objY.Text ?? "", out float y) || !TryFloat(_objRot.Text ?? "", out float rot)
-            || !TryFloat(_objSx.Text ?? "", out float sx) || !TryFloat(_objSy.Text ?? "", out float sy))
-        {
-            return;
-        }
-
-        Guard("배치", () => _session.Editor.SetObjectPlacement(null, o.Id, x, y, rot, sx, sy));
-    }
-
-    /// <summary>테스트 손잡이 — 오브젝트 추가(최상위, 그 레이어)와 채널 박스.</summary>
-    internal void AddObjectFromForm(string id, string rig, string layer, string stage = SceneObject.DefaultStage)
-        => CreateObject(rig, new HierarchyFolder(stage, layer), id);
-
-    /// <summary>테스트 손잡이 — 우클릭 메뉴 "만들기"(오브젝트/노드 위면 그 오브젝트의 무대·층에). 새 id를 돌려준다.</summary>
-    internal string CreateObjectFromMenu(string rig, string? atObjectId, string? atNodeId)
-        => CreateObject(rig, atObjectId is null ? null : new HierarchyNode(atObjectId, atNodeId));
-
-    internal void DuplicateSelectedFromMenu() => DuplicateSelectedObject();
-
-    internal void RenameSelectedFromForm(string newId)
-    {
-        _objId.Text = newId;
-        RenameSelectedObject();
-    }
-
     /// <summary>테스트 손잡이 — 하이어아키 항목의 경로(Scene부터 헤더 순). 없으면 빈 목록.</summary>
     internal IReadOnlyList<string> HierarchyPathOf(string objectId, string? nodeId)
         => PathOf(_hierarchyParents.Keys.FirstOrDefault(i => i.Tag is HierarchyNode n && n.ObjectId == objectId && n.NodeId == nodeId));
@@ -2340,16 +1860,6 @@ public partial class MainWindow : Window
         }
 
         return path;
-    }
-
-    internal void CommitObjectPlacementFromForm(float x, float y, float rotationZ, float scaleX, float scaleY)
-    {
-        _objX.Text = F(x);
-        _objY.Text = F(y);
-        _objRot.Text = F(rotationZ);
-        _objSx.Text = F(scaleX);
-        _objSy.Text = F(scaleY);
-        CommitObjectPlacement();
     }
 
     private static TextBlock Small(string text) => new() { Text = text, FontSize = 10, Opacity = 0.7, VerticalAlignment = VerticalAlignment.Center };
@@ -2861,7 +2371,7 @@ public partial class MainWindow : Window
             name = MotionNames.Unique(_session.Editor.Document, MotionNames.Fallback);
         }
 
-        rig ??= _viewport.SelectedObject?.Rig ?? SceneObject.DefaultRig;
+        rig ??= _viewport.SelectedObject?.Rig ?? SelectedSet ?? _session.Editor.Document.Rigs.FirstOrDefault()?.Kind ?? "set";
         _session.Editor.AddMotion(name, rig, duration, end);
         _motionList.SelectedItem = name;
     }
@@ -3002,25 +2512,6 @@ public partial class MainWindow : Window
             _settings.Touch(path);
             RefreshRecentMenu();
             SaveSettings();
-        }
-    }
-
-    private async void OnLoadRigClick(object? sender, RoutedEventArgs e)
-    {
-        try
-        {
-            string? path = await PickOpenAsync("리그 덤프 (rig-schemas.json)", new FilePickerFileType("리그 덤프") { Patterns = new[] { "rig-schemas.json", "*.json" } });
-
-            if (path is not null)
-            {
-                _session.LoadRig(path);
-                RefreshChannelBox();
-                RefreshProblems();
-            }
-        }
-        catch (Exception exception)
-        {
-            _session.SetStatus($"리그 덤프 실패: {exception.Message}");
         }
     }
 

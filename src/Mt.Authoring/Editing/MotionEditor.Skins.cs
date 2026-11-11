@@ -2,7 +2,7 @@ using Mt.Authoring.Model;
 
 namespace Mt.Authoring.Editing;
 
-// 스킨 명령(PLAN-parts.md P1) — 각각 되돌리기 한 칸. 조각 노드가 그 리그에 있는지는 검증·화면의 일이다(편집기는 덤프를 모른다).
+// 스킨 명령(PLAN-parts.md P1) — 각각 되돌리기 한 칸. 조각 노드가 그 리그에 있는지는 검증·화면의 일이다.
 public sealed partial class MotionEditor
 {
     public SkinAsset AddSkin(string name, string rig)
@@ -20,19 +20,11 @@ public sealed partial class MotionEditor
         return skin;
     }
 
-    /// <summary>스킨을 지운다 — 그 스킨을 입은 오브젝트는 같은 칸에서 벗는다(없는 이름을 달고 남지 않게).</summary>
+    /// <summary>스킨을 지운다. 그 스킨을 가리키던 연출은 검증이 알린다.</summary>
     public void RemoveSkin(string name)
     {
         SkinAsset skin = RequireSkin(name);
-        Mutate(MotionChangeKind.Scene, () =>
-        {
-            Document.Skins.Remove(skin);
-
-            foreach (SceneObject o in Wearers(name))
-            {
-                o.Skin = null;
-            }
-        });
+        Mutate(MotionChangeKind.Scene, () => Document.Skins.Remove(skin));
     }
 
     /// <summary>이름 바꾸기 — 입고 있던 오브젝트가 같은 칸에서 따라온다.</summary>
@@ -48,11 +40,6 @@ public sealed partial class MotionEditor
         string trimmed = RequireSkinName(newName);
         Mutate(MotionChangeKind.Scene, () =>
         {
-            foreach (SceneObject o in Wearers(name))
-            {
-                o.Skin = trimmed;
-            }
-
             skin.Name = trimmed;
             RetargetEmojiSkins(name, trimmed);
         });
@@ -173,28 +160,6 @@ public sealed partial class MotionEditor
             }
         });
     }
-
-    /// <summary>오브젝트에 스킨을 입힌다. null이면 벗긴다. 리그가 다른 스킨은 못 입는다.</summary>
-    public void SetObjectSkin(string? sceneName, string id, string? skin)
-    {
-        SceneAsset scene = RequireScene(sceneName);
-        SceneObject o = RequireObject(scene, id);
-
-        if (skin is not null)
-        {
-            SkinAsset asset = RequireSkin(skin);
-
-            if (!string.Equals(asset.Rig, o.Rig, StringComparison.Ordinal))
-            {
-                throw new InvalidOperationException($"스킨 '{skin}'은 리그 '{asset.Rig}'의 것이다 — 오브젝트 '{id}'는 '{o.Rig}'다.");
-            }
-        }
-
-        Mutate(MotionChangeKind.Scene, () => o.Skin = skin);
-    }
-
-    private IEnumerable<SceneObject> Wearers(string skin)
-        => Document.Scenes.SelectMany(s => s.Objects).Where(o => string.Equals(o.Skin, skin, StringComparison.Ordinal));
 
     private string RequireSkinName(string? name)
     {

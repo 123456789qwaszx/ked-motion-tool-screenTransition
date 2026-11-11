@@ -73,7 +73,7 @@ public sealed partial class MotionEditor
         {
             foreach (string node in motion.Channels.Where(c => c.Kind != MotionChannelKind.Alpha).Select(c => c.Node).Distinct().ToList())
             {
-                // 불투명도를 받을 수 있는 오브젝트만(툴이 정의한 세트면 그 표시를 본다 — 덤프의 리그는 검증이 가린다).
+                // 불투명도를 받을 수 있는 오브젝트만(세트의 표시를 본다).
                 if (Document.FindRig(motion.Rig)?.Find(node) is { Alpha: false })
                 {
                     continue;

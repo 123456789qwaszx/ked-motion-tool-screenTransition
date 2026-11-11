@@ -45,7 +45,7 @@ public class TransitionExampleShots
                     window.CaptureRenderedFrame()?.Save(stream, new Avalonia.Media.Imaging.PngBitmapEncoderOptions());
                 }
 
-                // 연출을 본다 — 씬에 세트가 없어도 보기 전용 오브젝트가 대신 선다. 캐릭터(자리표시)는 그 뒤에 있다.
+                // 연출을 본다 — 그 세트가 무대에 선다.
                 window.InspectorTab = 3;
                 window.SelectEmoji("station");
 

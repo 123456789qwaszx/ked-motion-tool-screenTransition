@@ -9,7 +9,7 @@
 
 ## 구조
 
-`Ked.Presentation.Core`(런타임 코어의 사본 — 순수 C#, netstandard2.1 · C# 9) → `Mt.Authoring`(도메인) → `Mt.App`(Avalonia 화면) + `Mt.Cli`.
+`Ked.Presentation.Core`(런타임 코어의 사본 — 순수 C#, netstandard2.1 · C# 9) → `Mt.Authoring`(도메인) → `Mt.App`(Avalonia 화면).
 테스트: `tests/Mt.Authoring.Tests` · `tests/Mt.App.Tests`(xunit — 화면은 `HeadlessUi.Run`) · `tests/Ked.Presentation.Core.Tests`(NUnit).
 
 ## 명령

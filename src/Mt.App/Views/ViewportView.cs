@@ -16,10 +16,10 @@ using Mt.Authoring.Rig;
 namespace Mt.App.Views;
 
 /// <summary>
-/// 뷰포트 — 리그 덤프로 세운 트리 위에 초상 한 장을 올리고 모션을 재생한다.
+/// 뷰포트 — 세트 하나를 무대에 세우고 모션·연출을 재생한다.
 ///
-/// 포즈는 <see cref="MotionPreview"/>(코어 수학), 자리는 <see cref="PortraitLayout"/>(런타임 사이징)이다 —
-/// 여기에는 그리기·시계·입력만 있다. 무대는 기준 해상도 크기이고 컨트롤 안에 레터박스로 맞춘다.
+/// 포즈는 <see cref="MotionPreview"/>(코어 수학), 기하는 <see cref="StageGeometry"/>다 —
+/// 여기에는 그리기·시계·입력만 있다. 무대는 기준 화면(1920×1080) 크기이고 컨트롤 안에 레터박스로 맞춘다.
 ///
 /// 타임 슬라이더는 따로(<see cref="TimeSliderView"/>)다. 재생 토글은 전역 Alt+`(셸), Home/End 처음/끝.
 /// <b>포즈 들고 스크럽</b>(마야 MMB 드래그): <see cref="HoldScrubTo"/>로 시각을 옮겨도 보이는 포즈는 그대로라 S로 그 포즈를 다른 프레임에 키한다.
@@ -59,17 +59,15 @@ public sealed class ViewportView : Control
     private string? _motionName;
     private RigSchemaFile? _rig;
     // 무대 뼈대(PresentataionUIRoot). 리그가 있으면 내장 뼈대를 쓴다.
-    private RigSchemaRigDto? _stage;
-    // 씬 전체의 시작 상태(오브젝트마다 슬롯 접두사). 모션은 선택 오브젝트에만 얹는다.
+    // 무대의 시작 상태(세트의 노드 키에 오브젝트 접두사). 모션은 선택 오브젝트에만 얹는다.
     private RectNodeTree? _template;
-    private readonly Dictionary<string, Bitmap?> _portraits = new();
 
     /// <summary>조각 그림 — (오브젝트 id, 조각 노드 id) → 비트맵. 스킨이 그림을 준 조각만 든다(파일을 못 읽었으면 null — 자리표시).</summary>
     // 스킨의 그림 — 문서 기준 경로 → 비트맵. 어느 스킨의 어느 장을 그릴지는 그릴 때 고른다(입은 스킨 · 이모지 정의의 스킨 · 반전 판 · 그림 넘기기).
     private readonly Dictionary<string, Bitmap?> _images = new(StringComparer.Ordinal);
     private string? _selectedObjectId;
     public bool ShowGrid { get; set; } = true;
-    private Vec2 _stageSize = BaseResolutionFile.Default;
+    private Vec2 _stageSize = RigAssets.Stage;
     private KeySelection _selection = new();
     private CurveFlags _flags = new();
 
@@ -216,7 +214,7 @@ public sealed class ViewportView : Control
     /// <summary>포즈를 들고 있는가(MMB 스크럽 뒤). S가 모든 채널에 그 포즈를 키한다.</summary>
     public bool IsHoldingPose => _held is not null;
 
-    /// <summary>매니퓰레이터를 둘 수 있는 노드들 — 덤프의 노드 중 __root·키잉 금지 노드를 뺀 것.</summary>
+    /// <summary>매니퓰레이터를 둘 수 있는 노드들 — 세트의 노드 중 __root·키잉 금지 노드를 뺀 것.</summary>
     public IReadOnlyList<string> NodeChoices
     {
         get
@@ -230,58 +228,58 @@ public sealed class ViewportView : Control
         }
     }
 
-    // ── 씬·오브젝트 ───────────────────────────────────────────────────
-
-    /// <summary>뷰포트가 보여 주는 씬 — 문서의 활성 씬.</summary>
-    public SceneAsset? Scene => _editor is null
-        ? null
-        : SetScene() is { } set ? set
-        : CueScene() is { } cue ? cue
-        : _editor.Document.ActiveSceneAsset;
-
-    // ── 화면에 서는 연출을 본다 (PLAN-set.md S5) ──────────────────────
-
-    /// <summary>화면 연출을 볼 때, 씬에 그 세트가 안 놓여 있으면 대신 서는 오브젝트의 id — 문서의 씬에는 없다(보기 전용).</summary>
-    public const string CueObjectId = "cue";
-
-    private SceneAsset? _cueScene;
-    private (SceneAsset Source, string Rig)? _cueSceneOf;
+    // ── 무대 ───────────────────────────────────────────────────
 
     /// <summary>
-    /// 화면에 서는 연출을 보는 중이고 문서의 씬에 그 세트가 놓여 있지 않으면 — 씬의 사본에 그 세트 하나를 맨 앞 층에 더한 보기 전용 씬.
-    /// 화면 연출을 만들자마자 오브젝트를 놓지 않고도 본다.
+    /// 뷰포트의 무대 — 세트 하나가 선다(문서에는 없다, 보기 전용): 연 세트, 아니면 고른 연출의 세트, 아니면 고른 애니메이션의 세트.
+    /// 셋 다 없으면 null(빈 무대).
     /// </summary>
-    private SceneAsset? CueScene()
+    public SceneAsset? Scene
     {
-        if (_editor is null || _emojiName is null || _editor.Document.FindEmoji(_emojiName) is not { } emoji || _editor.Document.ActiveSceneAsset is not { } scene
-            || scene.Objects.Any(o => o.Rig == emoji.Rig))
+        get
         {
-            return null;
-        }
+            if (_editor is null)
+            {
+                return null;
+            }
 
-        if (_cueScene is null || _cueSceneOf is not { } of || !ReferenceEquals(of.Source, scene) || of.Rig != emoji.Rig || _cueScene.Objects.Count != scene.Objects.Count + 1)
-        {
-            _cueScene = scene.Clone();
-            _cueScene.Objects.Add(new SceneObject { Id = CueObjectId, Rig = emoji.Rig, Layer = SceneLayers.Close });
-            _cueSceneOf = (scene, emoji.Rig);
-        }
+            (string Rig, string? Skin)? shown = _setView is { } kind ? (kind, SkinOf(kind, _setSkin))
+                : ShownEmoji is { } emoji ? (emoji.Rig, emoji.Skin)
+                : Motion is { } motion ? (motion.Rig, SkinOf(motion.Rig, null))
+                : null;
 
-        return _cueScene;
+            if (shown is not { } s)
+            {
+                return null;
+            }
+
+            if (_stageScene is null || _stageScene.Objects[0].Rig != s.Rig || _stageScene.Objects[0].Skin != s.Skin)
+            {
+                _stageScene = new SceneAsset { Objects = { new SceneObject { Id = SetObjectId, Rig = s.Rig, Skin = s.Skin } } };
+            }
+
+            return _stageScene;
+        }
     }
+
+    private SceneAsset? _stageScene;
+
+    /// <summary>그 세트에 입힐 스킨 — 고른 것이 그 세트의 것이면 그것, 아니면 그 세트의 첫 스킨.</summary>
+    private string? SkinOf(string kind, string? chosen)
+        => _editor?.Document.FindSkin(chosen) is { } skin && skin.Rig == kind ? skin.Name : _editor?.Document.Skins.FirstOrDefault(s => s.Rig == kind)?.Name;
 
     // ── 세트 보기 (PLAN-set.md S1) ────────────────────────────────────
 
-    /// <summary>세트를 열었을 때 그 세트가 서는 오브젝트의 id — 문서의 씬에는 없다(보기 전용).</summary>
+    /// <summary>무대에 선 세트의 오브젝트 id.</summary>
     public const string SetObjectId = "set";
 
     private string? _setView;
     private string? _setSkin;
-    private SceneAsset? _setScene;
 
     /// <summary>세트 보기에서 입혀 볼 스킨 — 그 세트의 것이 아니거나 null이면 첫 스킨.</summary>
     public string? SetSkin
     {
-        get => SetScene()?.Objects[0].Skin;
+        get => _setView is { } kind ? SkinOf(kind, _setSkin) : null;
         set
         {
             _setSkin = value;
@@ -296,8 +294,8 @@ public sealed class ViewportView : Control
     public bool IsLayoutMode => _setView is not null && Motion is null && ShownEmoji is null;
 
     /// <summary>
-    /// 연 세트(rigKind) — 뷰포트와 하이어아키가 **그 세트만** 보인다: 문서의 씬 대신 그 세트 하나가 무대 가운데에 선 보기 전용 씬.
-    /// 그 리그의 모션을 고르면 이 오브젝트가 연기한다. null이면 문서의 씬.
+    /// 연 세트(rigKind) — 뷰포트와 하이어아키가 **그 세트만** 보인다. 그 리그의 모션을 고르면 이 오브젝트가 연기한다.
+    /// null이면 고른 연출·애니메이션의 세트가 선다.
     /// </summary>
     public string? SetView
     {
@@ -311,19 +309,11 @@ public sealed class ViewportView : Control
 
             DiscardPending();
             _setView = value;
-            _setScene = null;
             _hiddenSetNodes.Clear();
             _soloSetNode = null;
             RebuildTemplate();
 
-            if (value is not null)
-            {
-                SelectedObjectId = SetObjectId;
-            }
-            else if (Scene is { } scene && scene.Find(SelectedObjectId ?? "") is null)
-            {
-                SelectedObjectId = scene.Objects.FirstOrDefault()?.Id;
-            }
+            PickSelectedObject();
 
             InvalidateVisual();
         }
@@ -386,29 +376,9 @@ public sealed class ViewportView : Control
         return underSolo;
     }
 
-    /// <summary>세트 보기의 씬 — 그 세트 하나. 그 리그의 첫 스킨을 입는다(그림이 보이게 — 스킨을 고르는 것은 배치 모드에서).</summary>
-    private SceneAsset? SetScene()
-    {
-        if (_setView is not { } kind || _editor is null)
-        {
-            return null;
-        }
-
-        string? skin = _editor.Document.FindSkin(_setSkin) is { } chosen && chosen.Rig == kind
-            ? chosen.Name
-            : _editor.Document.Skins.FirstOrDefault(s => s.Rig == kind)?.Name;
-
-        if (_setScene is null || _setScene.Objects[0].Rig != kind || _setScene.Objects[0].Skin != skin)
-        {
-            _setScene = new SceneAsset { Name = kind, Objects = { new SceneObject { Id = SetObjectId, Rig = kind, Skin = skin } } };
-        }
-
-        return _setScene;
-    }
-
     public IReadOnlyList<SceneObject> SceneObjects => Scene?.Objects ?? (IReadOnlyList<SceneObject>)Array.Empty<SceneObject>();
 
-    /// <summary>선택 오브젝트 — 매니퓰레이터·모션 미리보기·초상 바꾸기의 대상.</summary>
+    /// <summary>선택 오브젝트 — 매니퓰레이터·모션 미리보기의 대상.</summary>
     public string? SelectedObjectId
     {
         get => _selectedObjectId;
@@ -551,7 +521,7 @@ public sealed class ViewportView : Control
     /// <summary>키를 놓는 시각(모션 기준) — 이모지 안에서는 시계에서 구간의 시작을 뺀다.</summary>
     private double EditTime => EmojiEdit is { } emojiEdit ? _clock.Time - emojiEdit.Offset : _clock.Time;
 
-    /// <summary>키 값의 시작값 — 보통은 씬으로 세운 트리.</summary>
+    /// <summary>키 값의 시작값 — 보통은 세트로 세운 트리.</summary>
     private RectNodeState StartStateOf(string key)
     {
         // 이모지 안에서는 그 구간이 얹히기 전의 자세(자리 · 앞 구간이 남긴 것).
@@ -566,13 +536,13 @@ public sealed class ViewportView : Control
     /// <summary>선택 노드의 트리 키(접두사 포함).</summary>
     private string? SelectedKey => SelectedNode is null ? null : Prefix + SelectedNode;
 
-    /// <summary>오브젝트를 골랐다.</summary>
+    /// <summary>오브젝트를 골랐다 — 또는 무대에 선 세트(스킨)가 바뀌었다.</summary>
     public event EventHandler? ObjectSelected;
 
     /// <summary>이 오브젝트에 지금 모션을 입혀 볼 수 있나(rigKind가 같거나 채널 노드가 전부 있으면).</summary>
     public bool CanWear(SceneObject o) => _rig is not null && Motion is { } motion && ScenePreview.CanWear(_rig, o, motion);
 
-    /// <summary>오브젝트의 그림(초상) 사각형 — 루트 공간. 그림 노드가 없는 리그면 루트 rect. 트리가 없으면 null.</summary>
+    /// <summary>오브젝트의 사각형 — 루트 공간(<see cref="QuadOf"/>). 트리가 없으면 null.</summary>
     public Quad? ObjectQuad(string objectId)
     {
         RectNodeTree? pose = PoseAt(_clock.Time);
@@ -586,7 +556,7 @@ public sealed class ViewportView : Control
         return QuadOf(pose, o);
     }
 
-    /// <summary>포즈 위의 오브젝트 사각형(루트 공간) — 초상이 있으면 보이는 그림, 없으면 루트 rect.</summary>
+    /// <summary>포즈 위의 오브젝트 사각형(루트 공간) — 첫 조각, 없으면 첫 색 사각형, 둘 다 없으면 루트 rect.</summary>
     private Quad? QuadOf(RectNodeTree pose, SceneObject o)
     {
         // 조각으로 그려지는 오브젝트는 첫 조각의 사각형이 고르는 자리다.
@@ -598,19 +568,11 @@ public sealed class ViewportView : Control
         // 색 오브젝트뿐인 세트 — 첫 색 사각형.
         if (RigParts.ColorsOf(_rig, o.Rig).Keys.FirstOrDefault(n => pose.Contains(o.KeyOf(n))) is { } colored)
         {
-            return PortraitLayout.RectQuad(pose, o.KeyOf(colored));
+            return StageGeometry.RectQuad(pose, o.KeyOf(colored));
         }
 
-        string? image = ScenePreview.ImageKeyOf(pose, o);
-        return image is not null
-            ? PortraitLayout.VisualQuad(pose, image, AspectOf(o))
-            : pose.Contains(ScenePreview.RootKeyOf(o)) ? PortraitLayout.RectQuad(pose, ScenePreview.RootKeyOf(o)) : null;
+        return pose.Contains(ScenePreview.RootKeyOf(o)) ? StageGeometry.RectQuad(pose, ScenePreview.RootKeyOf(o)) : null;
     }
-
-    private float AspectOf(SceneObject o)
-        => _portraits.TryGetValue(o.Id, out Bitmap? bitmap) && bitmap is { PixelSize: { Width: > 0, Height: > 0 } }
-            ? bitmap.PixelSize.Width / (float)bitmap.PixelSize.Height
-            : PortraitLayout.PlaceholderAspect;
 
     private double SnapTime(double seconds) => SnapEnabled ? TimeSnap.Snap(seconds, SnapStep) : seconds;
 
@@ -945,7 +907,7 @@ public sealed class ViewportView : Control
 
     public void EndHoldScrub() => _holdScrub = false;
 
-    /// <summary>지금 포즈의 값으로 키를 놓는다 — 시작값은 덤프(템플릿), 키 값은 모션의 재생 기준(relative/absolute)를 따른다.</summary>
+    /// <summary>지금 포즈의 값으로 키를 놓는다 — 시작값은 세트(템플릿), 키 값은 모션의 재생 기준(relative/absolute)를 따른다.</summary>
     private void KeyNow(string node, MotionChannelKind kind, IReadOnlyList<Axis> axes)
     {
         MotionAsset? motion = EditMotion;
@@ -1099,16 +1061,6 @@ public sealed class ViewportView : Control
     /// <summary>축을 그릴 노드. null이면 안 그린다.</summary>
     public string? SelectedNode { get; set; }
 
-    public Vec2 StageSize
-    {
-        get => _stageSize;
-        set
-        {
-            _stageSize = value.X > 0 && value.Y > 0 ? value : BaseResolutionFile.Default;
-            InvalidateVisual();
-        }
-    }
-
     public string? MotionName => _motionName;
 
     public MotionAsset? Motion => _editor is not null && _motionName is not null ? _editor.Document.Find(_motionName) : null;
@@ -1122,7 +1074,7 @@ public sealed class ViewportView : Control
 
     public EmojiAsset? ShownEmoji => _editor is not null && _emojiName is not null ? _editor.Document.FindEmoji(_emojiName) : null;
 
-    /// <summary>연출을 연기할 오브젝트 — 씬에 놓인 그 세트. 없으면 null(미리볼 데가 없다).</summary>
+    /// <summary>연출을 연기할 오브젝트 — 무대에 선 그 세트. 없으면 null(미리볼 데가 없다).</summary>
     public SceneObject? EmojiActor
     {
         get
@@ -1151,9 +1103,6 @@ public sealed class ViewportView : Control
     }
 
     public bool HasRig => _template is not null;
-
-    /// <summary>선택 오브젝트의 초상 종횡비(없으면 자리표시).</summary>
-    public float Aspect => SelectedObject is { } o ? AspectOf(o) : PortraitLayout.PlaceholderAspect;
 
     // ── 바인딩 ────────────────────────────────────────────────────────
 
@@ -1196,7 +1145,6 @@ public sealed class ViewportView : Control
     public void SetRig(RigSchemaFile? rig)
     {
         _rig = rig;
-        _stage = rig is null ? null : BuiltinTuning.StageRig;
         PickSelectedObject();
         RebuildTemplate();
         InvalidateVisual();
@@ -1204,24 +1152,6 @@ public sealed class ViewportView : Control
 
     /// <summary>루트 공간 → 컨트롤 좌표. 테스트가 쓴다.</summary>
     public Point ToScreen(Vec2 root) => ToControl(root);
-
-    /// <summary>선택 오브젝트의 초상 비트맵(호환용). null이면 자리표시 사각형.</summary>
-    public void SetPortrait(Bitmap? portrait)
-    {
-        if (SelectedObject is { } o)
-        {
-            SetPortrait(o.Id, portrait);
-        }
-    }
-
-    /// <summary>오브젝트의 초상 비트맵. 종횡비는 비트맵에서 온다.</summary>
-    public void SetPortrait(string objectId, Bitmap? portrait)
-    {
-        ArgumentNullException.ThrowIfNull(objectId);
-        _portraits[objectId] = portrait;
-        RebuildTemplate();
-        InvalidateVisual();
-    }
 
     /// <summary>스킨의 그림 비트맵 — 문서 기준 경로로. 못 읽었으면 null을 넣는다(자리표시로 그려진다).</summary>
     public void SetImage(string image, Bitmap? bitmap)
@@ -1278,7 +1208,7 @@ public sealed class ViewportView : Control
             return null;
         }
 
-        Quad rect = PortraitLayout.RectQuad(pose, key);
+        Quad rect = StageGeometry.RectQuad(pose, key);
         Worn? worn = WornBy(o);
         Bitmap? image = worn is { } w0 ? ImageOf(w0, node) : null;
 
@@ -1333,10 +1263,9 @@ public sealed class ViewportView : Control
         return new Quad(origin, origin + ux * fitW, origin + ux * fitW + uy * fitH, origin + uy * fitH);
     }
 
-    public void ClearPortraits()
+    public void ClearImages()
     {
         _images.Clear();
-        _portraits.Clear();
         RebuildTemplate();
         InvalidateVisual();
     }
@@ -1354,7 +1283,7 @@ public sealed class ViewportView : Control
         InvalidateVisual();
     }
 
-    /// <summary>선택 오브젝트가 없거나 씬에서 사라졌으면 — 모션을 입을 수 있는 첫 오브젝트, 없으면 첫 오브젝트.</summary>
+    /// <summary>선택 오브젝트가 없거나 무대에서 사라졌으면 — 모션을 입을 수 있는 첫 오브젝트, 없으면 첫 오브젝트.</summary>
     private void PickSelectedObject()
     {
         SceneAsset? scene = Scene;
@@ -1393,13 +1322,22 @@ public sealed class ViewportView : Control
         _template = null;
         SceneAsset? scene = Scene;
 
-        if (_rig is null || scene is null)
+        if (_rig is not null && scene is not null)
         {
-            return;
+            _template = ScenePreview.Build(_rig, scene);
         }
 
-        _template = ScenePreview.Build(_rig, scene, AspectOf, null, _stage);
+        // 무대에 선 세트가 바뀌면 하이어아키·스킨 칸이 따라오도록 알린다.
+        string? shown = scene?.Objects[0] is { } o ? o.Rig + "|" + o.Skin : null;
+
+        if (shown != _shownStage)
+        {
+            _shownStage = shown;
+            ObjectSelected?.Invoke(this, EventArgs.Empty);
+        }
     }
+
+    private string? _shownStage;
 
     // ── 시계 ──────────────────────────────────────────────────────────
 
@@ -1517,7 +1455,7 @@ public sealed class ViewportView : Control
         }
 
         return motion is not null && SelectedObject is { } o && CanWear(o)
-            ? ScenePreview.Pose(_template, o, motion, seconds, _flags.IsMuted, alphas)
+            ? MotionPreview.Pose(_template, motion, seconds, motion.PreviewMode, _flags.IsMuted, o.Prefix, alphas)
             : _template.Clone();
     }
 
@@ -1581,7 +1519,7 @@ public sealed class ViewportView : Control
         return EffectiveAlpha(pose, o.KeyOf(node), o.Prefix, alphas);
     }
 
-    /// <summary>그 노드가 불투명도를 받을 수 있나 — 덤프에 CanvasGroup이 있는 노드만.</summary>
+    /// <summary>그 노드가 불투명도를 받을 수 있나 — 세트에서 불투명도를 받는다고 표시한 노드만.</summary>
     public bool CanTakeAlpha(string? node)
         => node is not null && _rig is not null && SelectedObject is { } o
            && _rig.AlphaNodeIds.TryGetValue(o.Rig, out ICollection<string>? nodes) && nodes.Contains(node);
@@ -1621,12 +1559,6 @@ public sealed class ViewportView : Control
         _editor.KeyComponents(motion.Name, node, MotionChannelKind.Alpha, (float)Math.Max(0, SnapTime(EditTime)), new[] { (Axis.X, Math.Clamp(key, 0f, 1f)) }, DefaultTangent);
     }
 
-    /// <summary>지금 시각의 초상 사각형(루트 공간). 리그가 없으면 null.</summary>
-    public Quad? CurrentPortraitQuad()
-    {
-        return SelectedObject is { } o ? ObjectQuad(o.Id) : null;
-    }
-
     // ── 좌표 ──────────────────────────────────────────────────────────
 
     /// <summary>무대가 놓이는 컨트롤 영역(레터박스).</summary>
@@ -1648,7 +1580,7 @@ public sealed class ViewportView : Control
     private Point ToControl(Vec2 root)
     {
         Rect stage = StageRect;
-        Vec2 canvas = PortraitLayout.ToCanvas(root, _stageSize);
+        Vec2 canvas = StageGeometry.ToCanvas(root, _stageSize);
         double scale = stage.Width / _stageSize.X;
         return new Point(stage.X + canvas.X * scale, stage.Y + canvas.Y * scale);
     }
@@ -1684,7 +1616,7 @@ public sealed class ViewportView : Control
 
         if (_template is null)
         {
-            DrawLabel(context, _rig is null ? "리그 덤프(rig-schemas.json)를 실으면 오브젝트가 선다." : "씬에 오브젝트가 없다 — 왼쪽 '씬'에서 추가한다.", new Point(stage.X + 10, stage.Y + 10));
+            DrawLabel(context, _rig is null ? "" : "세트를 열거나, 연출이나 애니메이션을 고르면 그 세트가 선다.", new Point(stage.X + 10, stage.Y + 10));
             return;
         }
 
@@ -1735,7 +1667,7 @@ public sealed class ViewportView : Control
         DrawAxes(context, pose);
         DrawGizmo(context, pose);
 
-        string objectLabel = SelectedObject is { } so ? $"{so.Id} ({so.Rig} · {so.Layer})" : "오브젝트 없음";
+        string objectLabel = SelectedObject is { } so ? $"세트 {so.Rig}" : "오브젝트 없음";
         string motionLabel = motion is null
             ? "모션 없음"
             : $"{motion.Name} · {(motion.End == MotionEnd.Restore ? "restore — 끝에서 시작 상태로" : "commit — 마지막 키가 남는다")}"
@@ -1812,9 +1744,9 @@ public sealed class ViewportView : Control
         // 이모지 정의를 보는 중이면 그 오브젝트는 수명 안에서만 보인다(뜨기 전·사라진 뒤에는 없다).
         string? emojiActor = _editor is not null && ShownEmoji is { } shownEmoji && !EmojiPreview.IsAlive(_editor.Document, shownEmoji, _clock.Time) ? EmojiActor?.Id : null;
 
-        foreach (SceneObject o in scene.DrawOrder())
+        foreach (SceneObject o in scene.Objects)
         {
-            if (!o.Visible || o.Id == emojiActor)
+            if (o.Id == emojiActor)
             {
                 continue;
             }
@@ -1881,7 +1813,7 @@ public sealed class ViewportView : Control
 
                 if (colors.TryGetValue(node, out string? fill) && IsSetNodeShown(node) && Color.TryParse(fill, out Color color))
                 {
-                    Quad rect = PortraitLayout.RectQuad(pose, key);
+                    Quad rect = StageGeometry.RectQuad(pose, key);
 
                     using (context.PushOpacity(alpha))
                     {
@@ -1918,65 +1850,21 @@ public sealed class ViewportView : Control
             return;
         }
 
-        string? imageKey = ScenePreview.ImageKeyOf(pose, o);
+        // 그릴 것이 없는 세트: 루트 rect 윤곽과 이름.
+        string rootKey = ScenePreview.RootKeyOf(o);
 
-        if (imageKey is null)
+        if (!pose.Contains(rootKey))
         {
-            // 그림 노드가 없는 리그(배경 등): 루트 rect 윤곽과 이름.
-            string rootKey = ScenePreview.RootKeyOf(o);
-
-            if (!pose.Contains(rootKey))
-            {
-                return;
-            }
-
-            Quad root = PortraitLayout.RectQuad(pose, rootKey);
-            Point a = ToControl(root.BottomLeft);
-            Point b = ToControl(root.BottomRight);
-            Point c = ToControl(root.TopRight);
-            Point d = ToControl(root.TopLeft);
-            context.DrawGeometry(null, selected ? SelectedObjectPen : ObjectOutlinePen, new PolylineGeometry(new[] { a, b, c, d, a }, true));
-            DrawLabel(context, $"{o.Id} ({o.Rig})", new Point(Math.Min(a.X, d.X) + 4, Math.Min(c.Y, d.Y) + 4));
             return;
         }
 
-        Quad quad = PortraitLayout.VisualQuad(pose, imageKey, AspectOf(o));
-        using IDisposable faded = context.PushOpacity(EffectiveAlpha(pose, imageKey, o.Prefix, _drawAlphas)); // 초상에 알파 모션이 얹혔으면
-        Point topLeft = ToControl(quad.TopLeft);
-        Point topRight = ToControl(quad.TopRight);
-        Point bottomLeft = ToControl(quad.BottomLeft);
-        Point bottomRight = ToControl(quad.BottomRight);
-        _portraits.TryGetValue(o.Id, out Bitmap? portrait);
-
-        if (portrait is null)
-        {
-            var outline = new PolylineGeometry(new[] { topLeft, topRight, bottomRight, bottomLeft, topLeft }, true);
-            context.DrawGeometry(PlaceholderFill, PlaceholderPen, outline);
-            context.DrawLine(PlaceholderPen, topLeft, bottomRight);
-            context.DrawLine(PlaceholderPen, topRight, bottomLeft);
-        }
-        else
-        {
-            // 이미지 로컬 (0,0)-(w,h) → 화면 사각형 네 점. 직교 투영 아래서 평면 사각형의 변환은 아핀이라 세 점이면 정확하다.
-            double w = portrait.PixelSize.Width;
-            double h = portrait.PixelSize.Height;
-            var matrix = new Matrix(
-                (topRight.X - topLeft.X) / w, (topRight.Y - topLeft.Y) / w,
-                (bottomLeft.X - topLeft.X) / h, (bottomLeft.Y - topLeft.Y) / h,
-                topLeft.X, topLeft.Y);
-
-            using (context.PushTransform(matrix))
-            {
-                context.DrawImage(portrait, new Rect(0, 0, w, h));
-            }
-        }
-
-        if (selected)
-        {
-            context.DrawGeometry(null, SelectedObjectPen, new PolylineGeometry(new[] { topLeft, topRight, bottomRight, bottomLeft, topLeft }, true));
-        }
-
-        DrawLabel(context, o.Id, new Point(Math.Min(topLeft.X, bottomLeft.X) + 4, Math.Min(topLeft.Y, topRight.Y) + 4));
+        Quad root = StageGeometry.RectQuad(pose, rootKey);
+        Point a = ToControl(root.BottomLeft);
+        Point b = ToControl(root.BottomRight);
+        Point c = ToControl(root.TopRight);
+        Point d = ToControl(root.TopLeft);
+        context.DrawGeometry(null, selected ? SelectedObjectPen : ObjectOutlinePen, new PolylineGeometry(new[] { a, b, c, d, a }, true));
+        DrawLabel(context, $"{o.Id} ({o.Rig})", new Point(Math.Min(a.X, d.X) + 4, Math.Min(c.Y, d.Y) + 4));
     }
 
     private void DrawAxes(DrawingContext context, RectNodeTree pose)
@@ -1986,7 +1874,7 @@ public sealed class ViewportView : Control
             return;
         }
 
-        (Vec2 origin, Vec2 xEnd, Vec2 yEnd) = PortraitLayout.Axes(pose, key, 80f);
+        (Vec2 origin, Vec2 xEnd, Vec2 yEnd) = StageGeometry.Axes(pose, key, 80f);
         Point o = ToControl(origin);
         context.DrawLine(XAxisPen, o, ToControl(xEnd));
         context.DrawLine(YAxisPen, o, ToControl(yEnd));
@@ -2058,7 +1946,7 @@ public sealed class ViewportView : Control
     /// <summary>매니퓰레이터의 중심과 x·y 팔 끝(컨트롤 좌표, 팔 길이는 화면 고정). 팔 방향은 노드의 축, 중심은 <see cref="GizmoAnchor"/>.</summary>
     private (Point Center, Point XEnd, Point YEnd) GizmoPoints(RectNodeTree pose)
     {
-        (Vec2 origin, Vec2 xAxis, Vec2 yAxis) = PortraitLayout.Axes(pose, SelectedKey!, 100f);
+        (Vec2 origin, Vec2 xAxis, Vec2 yAxis) = StageGeometry.Axes(pose, SelectedKey!, 100f);
         Vec2 anchor = GizmoAnchor(pose, SelectedKey!);
         Point center = ToControl(anchor);
         return (center, Along(center, ToControl(anchor + (xAxis - origin))), Along(center, ToControl(anchor + (yAxis - origin))));
@@ -2150,7 +2038,7 @@ public sealed class ViewportView : Control
         }
     }
 
-    /// <summary>클릭 자리의 오브젝트(앞 레이어 우선). 초상 사각형 안이면 맞은 것.</summary>
+    /// <summary>클릭 자리의 오브젝트(앞 레이어 우선). 오브젝트 사각형 안이면 맞은 것.</summary>
     private bool TryPickObject(Point position, out string objectId)
     {
         objectId = "";
@@ -2164,12 +2052,8 @@ public sealed class ViewportView : Control
 
         var at = new Pixel(position.X, position.Y);
 
-        foreach (SceneObject o in scene.DrawOrder().Reverse())
+        foreach (SceneObject o in Enumerable.Reverse(scene.Objects))
         {
-            if (!o.Visible)
-            {
-                continue;
-            }
 
             if (ObjectQuad(o.Id) is not { } quad)
             {
@@ -2523,7 +2407,7 @@ public sealed class ViewportView : Control
                     continue;
                 }
 
-                Quad quad = (node.hasImage ? PartQuadOf(pose, o, node.id) : null) ?? PortraitLayout.RectQuad(pose, key);
+                Quad quad = (node.hasImage ? PartQuadOf(pose, o, node.id) : null) ?? StageGeometry.RectQuad(pose, key);
                 var polygon = new[] { quad.BottomLeft, quad.BottomRight, quad.TopRight, quad.TopLeft }.Select(c => ToControl(c)).Select(p => new Pixel(p.X, p.Y)).ToList();
 
                 if (GraphHitTest.Contains(polygon, at))
@@ -2672,7 +2556,7 @@ public sealed class ViewportView : Control
             return;
         }
 
-        Quad quad = PartQuadOf(pose, o, id) ?? PortraitLayout.RectQuad(pose, o.KeyOf(id));
+        Quad quad = PartQuadOf(pose, o, id) ?? StageGeometry.RectQuad(pose, o.KeyOf(id));
         context.DrawGeometry(null, SelectedObjectPen, new PolylineGeometry(
             new[] { ToControl(quad.TopLeft), ToControl(quad.TopRight), ToControl(quad.BottomRight), ToControl(quad.BottomLeft), ToControl(quad.TopLeft) }, true));
         Point origin = ToControl(pose.TransformPoint(o.KeyOf(id), Vec3.Zero).XY);
@@ -2694,7 +2578,7 @@ public sealed class ViewportView : Control
 
         foreach (RigNodeAsset node in rig.Nodes.Where(n => pose.Contains(o.KeyOf(n.Id))))
         {
-            Quad q = PortraitLayout.RectQuad(pose, o.KeyOf(node.Id));
+            Quad q = StageGeometry.RectQuad(pose, o.KeyOf(node.Id));
             points.AddRange(new[] { q.BottomLeft, q.BottomRight, q.TopLeft, q.TopRight });
         }
 
@@ -2762,7 +2646,7 @@ public sealed class ViewportView : Control
             }
 
             // 노드의 px 한 칸이 루트 공간에서 얼마인가 — 놓임은 노드의 px이다(PartQuadOf와 같은 축).
-            Quad rect = PortraitLayout.RectQuad(pose, actor.KeyOf(node));
+            Quad rect = StageGeometry.RectQuad(pose, actor.KeyOf(node));
             Vec2 size = pose.GetState(actor.KeyOf(node)).SizeDelta;
             Vec2 axisX = size.X > 1e-6f ? (rect.BottomRight - rect.BottomLeft) * (1f / size.X) : new Vec2(1f, 0f);
             Vec2 axisY = size.Y > 1e-6f ? (rect.TopLeft - rect.BottomLeft) * (1f / size.Y) : new Vec2(0f, 1f);

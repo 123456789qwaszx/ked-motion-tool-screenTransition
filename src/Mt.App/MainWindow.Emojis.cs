@@ -118,7 +118,7 @@ public partial class MainWindow
         return panel;
     }
 
-    // 이 이모지의 스킨을 그 자리에서 고친다 — "씬" 탭의 스킨 칸(오브젝트가 입은 스킨)과 같은 줄을 쓴다.
+    // 이 이모지의 스킨을 그 자리에서 고친다 — 세트 탭의 스킨 칸과 같은 줄을 쓴다.
     private readonly StackPanel _emojiSkinParts = new() { Spacing = 3 };
     private readonly Dictionary<string, SkinSetupBoxSet> _emojiSetupBoxes = new(StringComparer.Ordinal);
 
@@ -481,7 +481,7 @@ public partial class MainWindow
     // ── 명령 ──────────────────────────────────────────────────────────
 
     /// <summary>
-    /// 새 정의 — 키 emoji, emoji_2…, 리그는 고른 오브젝트의 것(조각이 있는 리그여야 한다; 아니면 덤프에서 조각이 있는 첫 리그).
+    /// 새 정의 — 키 emoji, emoji_2…, 리그는 고른 오브젝트의 것(조각이 있는 리그여야 한다; 아니면 조각이 있는 첫 세트).
     /// 고른 오브젝트가 스킨을 입고 있으면 그것이 그림이 된다. 만든 것을 고른다 — 되돌리기 한 번.
     /// </summary>
     private string AddEmoji()

@@ -4,12 +4,11 @@ using Mt.Authoring.Model;
 using Mt.Authoring.Rig;
 using Mt.Authoring.Serialization;
 using Mt.Authoring.Validation;
-using Ked.Presentation.Core;
 
 namespace Mt.App.Services;
 
 /// <summary>
-/// 열린 문서 하나의 살림 — 경로·편집기·리그 덤프·저장 여부. 화면은 이것을 통해서만 파일에 닿는다.
+/// 열린 문서 하나의 살림 — 경로·편집기·저장 여부. 화면은 이것을 통해서만 파일에 닿는다.
 /// 파일 선택 창은 화면의 일이고, 여기는 경로를 받아 읽고 쓴다(헤드리스 테스트가 그대로 쓴다).
 /// </summary>
 public sealed class DocumentSession
@@ -20,40 +19,30 @@ public sealed class DocumentSession
     {
         Editor = new MotionEditor(new MotionDocument());
         Editor.Changed += OnEditorChanged;
-        UseBuiltinTuning();
         _assetFingerprint = AssetFingerprintOf(Editor.Document);
     }
 
-    // ── 문서 ↔ 실은 자산 ──────────────────────────────────────────────
+    // ── 문서 ↔ 실은 그림 ──────────────────────────────────────────────
     //
-    // 문서가 적은 자산 참조(리그 덤프 경로·기준 해상도 경로·오브젝트별 초상)는 되돌리기·다시하기로도 바뀐다. 그때 실은 리그·깊이·focus·컨트롤러 표·
-    // 무대 크기와 뷰포트의 초상 비트맵이 문서와 어긋나지 않도록, 참조 지문을 두고 달라진 때만 다시 싣고 AssetsChanged를 올린다.
-    // 키 편집(Keys·Metadata)은 보지도 않고, 참조가 같으면 파일을 읽지 않는다.
+    // 세트의 모양과 스킨이 가리키는 그림은 되돌리기·다시하기로도 바뀐다. 뷰포트의 리그·비트맵이 문서와 어긋나지 않도록 지문을 두고
+    // 달라진 때만 AssetsChanged를 올린다. 키 편집(Keys·Metadata)은 보지도 않는다.
 
     private string _assetFingerprint = "";
-    private bool _syncingAssets;
 
-    /// <summary>테스트 손잡이 — 문서 참조를 따라 자산을 다시 실은 횟수.</summary>
+    /// <summary>테스트 손잡이 — 문서를 따라 세트·그림을 다시 실은 횟수.</summary>
     internal int AssetSyncCount { get; private set; }
 
     private static string AssetFingerprintOf(MotionDocument document)
-        => "rig=" + (document.RigSchemas?.Path ?? "") + "\nbase=" + (document.BaseResolution?.Path ?? "") + "\n"
-           + string.Join("\n", document.Scenes.SelectMany(scene => scene.Objects).Select(o => $"portrait {o.Id}={o.Portrait ?? ""} skin={o.Skin ?? ""}"))
-           + "\nrigs " + RigsKeyOf(document)
+        => "rigs " + RigsKeyOf(document)
            + "\n" + string.Join("\n", document.Skins.Select(s => $"skin {s.Name}:{s.Rig}:" + string.Join(",", s.Parts.Keys.Select(node => node + "=" + string.Join("|", s.ImagesOf(node))))));
 
     private void OnEditorChanged(object? sender, MotionChangedEventArgs e)
     {
-        if (_syncingAssets || e.Kind is MotionChangeKind.Keys or MotionChangeKind.Metadata)
+        if (e.Kind is MotionChangeKind.Keys or MotionChangeKind.Metadata)
         {
             return;
         }
 
-        SyncAssetsToDocument();
-    }
-
-    private void SyncAssetsToDocument()
-    {
         string fingerprint = AssetFingerprintOf(Editor.Document);
 
         if (fingerprint == _assetFingerprint)
@@ -61,115 +50,51 @@ public sealed class DocumentSession
             return;
         }
 
-        string[] before = _assetFingerprint.Split('\n');
-        string[] after = fingerprint.Split('\n');
-        bool rigChanged = before.Length == 0 || before[0] != after[0];
-        bool baseChanged = before.Length < 2 || before[1] != after[1];
         _assetFingerprint = fingerprint;
-
-        if (rigChanged)
-        {
-            UseBuiltinTuning();      // 참조가 사라졌으면 내장으로
-            TryLoadRigFromDocument(); // 있으면 그 덤프와 옆의 깊이·focus·컨트롤러 표
-        }
-
-        if (rigChanged || baseChanged)
-        {
-            if (!rigChanged)
-            {
-                StageSize = BaseResolutionFile.Default;
-            }
-
-            TryLoadAssetsFromDocument();
-        }
-
         AssetSyncCount++;
-        AssetsChanged?.Invoke(this, EventArgs.Empty); // 초상은 뷰포트가 문서 참조대로 다시 싣는다
-    }
-
-    /// <summary>내장 기본값으로 — 덤프 파일이 없는 문서의 시작 상태.</summary>
-    private void UseBuiltinTuning()
-    {
-        Rig = BuiltinTuning.RigSchemas;
-        RigPath = null;
-        StageSize = BuiltinTuning.BaseResolution;
+        AssetsChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public MotionEditor Editor { get; private set; }
 
     public string? DocumentPath { get; private set; }
 
-    /// <summary>리그 덤프 — 파일을 싣지 않았으면 내장 기본값(<see cref="BuiltinTuning"/>). null이 아니다.</summary>
-    /// <remarks>
-    /// 덤프의 리그에 문서가 정의한 리그(<c>PLAN-parts.md</c> §9)를 더한 것이다 — 같은 이름이면 문서의 것이 이긴다.
-    /// 문서의 리그가 바뀌면 다시 합친다. 세울 수 없는 리그가 있으면 덤프만으로 물러나고 상태 줄에 남긴다.
-    /// </remarks>
-    public RigSchemaFile? Rig
+    /// <summary>
+    /// 문서의 세트들을 코어의 리그 스키마로 세운 것(<see cref="RigAssets.Compose"/>) — 세트가 바뀌면 다시 세운다.
+    /// 세울 수 없는 세트가 있으면 앞의 것을 그대로 쓰고 상태 줄에 남긴다.
+    /// </summary>
+    public RigSchemaFile Rig
     {
         get
         {
-            if (_dumpRig is null || Editor.Document.Rigs.Count == 0)
-            {
-                return _dumpRig;
-            }
-
             string key = RigsKeyOf(Editor.Document);
 
-            if (_composedRig is null || key != _composedKey || !ReferenceEquals(_composedFrom, _dumpRig))
+            if (_rig is null || key != _rigKey)
             {
-                _composedKey = key;
-                _composedFrom = _dumpRig;
+                _rigKey = key;
 
                 try
                 {
-                    _composedRig = RigAssets.Compose(_dumpRig, Editor.Document);
+                    _rig = RigAssets.Compose(Editor.Document);
                 }
-                catch (Exception exception) when (exception is InvalidOperationException or KeyNotFoundException or System.Text.Json.JsonException or ArgumentException)
+                catch (Exception exception) when (exception is InvalidOperationException or KeyNotFoundException or ArgumentException)
                 {
-                    _composedRig = _dumpRig;
-                    Status = $"문서의 리그를 세우지 못했다 — 덤프의 리그만 쓴다: {exception.Message}";
+                    _rig ??= RigAssets.Compose(new MotionDocument());
+                    Status = $"세트를 세우지 못했다: {exception.Message}";
                 }
             }
 
-            return _composedRig;
-        }
-
-        private set
-        {
-            _dumpRig = value;
-            _composedRig = null;
+            return _rig;
         }
     }
 
-    private RigSchemaFile? _dumpRig;
-    private RigSchemaFile? _composedRig;
-    private RigSchemaFile? _composedFrom;
-    private string _composedKey = "";
+    private RigSchemaFile? _rig;
+    private string _rigKey = "";
 
     private static string RigsKeyOf(MotionDocument document)
         => string.Join("|", document.Rigs.Select(r => r.Kind + ":" + string.Join(",", r.Nodes.Select(n => $"{n.Id}<{n.Parent}@{n.X},{n.Y}#{n.Width}x{n.Height}r{n.Rotation}s{n.ScaleX},{n.ScaleY}c{n.Color}{(n.Image ? "i" : "")}{(n.Alpha ? "a" : "")}"))));
 
-    /// <summary>실은 덤프 파일의 경로. null이면 내장 리그다.</summary>
-    public string? RigPath { get; private set; }
-
-    public bool IsBuiltinRig => RigPath is null;
-
     public string Status { get; private set; } = "";
-
-    /// <summary>미리보기 초상 PNG의 절대 경로. 문서에는 문서 기준 상대 경로로 적힌다.</summary>
-    /// <summary>오브젝트의 초상 파일(절대 경로). 문서에 없거나 파일이 없으면 null.</summary>
-    public string? PortraitPathOf(SceneObject o)
-    {
-        ArgumentNullException.ThrowIfNull(o);
-
-        if (string.IsNullOrEmpty(o.Portrait))
-        {
-            return null;
-        }
-
-        string resolved = ResolveFromDocument(o.Portrait);
-        return File.Exists(resolved) ? resolved : null;
-    }
 
     /// <summary>문서의 스킨들이 쓰는 그림 전부 — 문서 기준 경로 → 파일 경로(파일이 없으면 null: 자리표시로 그린다).</summary>
     public IReadOnlyList<(string Image, string? Path)> SkinImages()
@@ -191,14 +116,11 @@ public sealed class DocumentSession
         // 표의 파일 하나를 문서 기준 경로로 바꿔 그 폴더를 얻는다(저장 전의 문서면 절대 경로로 남는다).
         string probe = RelativeToDocument(Path.Combine(folder, "x")).Replace('\\', '/');
         string relative = probe.Length > 1 ? probe[..^2] : "";
-        return Editor.ImportLayers(kind, sheet, relative, skin, StageSize);
+        return Editor.ImportLayers(kind, sheet, relative, skin, RigAssets.Stage);
     }
 
     public void SetSkinPart(string skin, string node, string? path)
         => Editor.SetSkinPart(skin, node, string.IsNullOrEmpty(path) ? null : RelativeToDocument(path));
-
-    /// <summary>기준 해상도(무대 크기). base-resolution.json이 없으면 1920×1080.</summary>
-    public Vec2 StageSize { get; private set; } = BaseResolutionFile.Default;
 
     public bool IsDirty => Editor.Revision != _savedRevision;
 
@@ -207,13 +129,13 @@ public sealed class DocumentSession
 
     public event EventHandler? StatusChanged;
 
-    /// <summary>리그 덤프·초상·기준 해상도가 바뀌었다. 뷰포트가 다시 싣는다.</summary>
+    /// <summary>스킨의 그림이 바뀌었다. 뷰포트가 다시 싣는다.</summary>
     public event EventHandler? AssetsChanged;
 
     /// <summary>검증에 쓰는 rigKind → 노드 표.</summary>
-    public IReadOnlyDictionary<string, ICollection<string>>? RigNodeIds => Rig?.NodeIds;
+    public IReadOnlyDictionary<string, ICollection<string>> RigNodeIds => Rig.NodeIds;
 
-    public IReadOnlyList<MotionProblem> Problems => MotionValidator.Validate(Editor.Document, RigNodeIds, Rig?.AlphaNodeIds);
+    public IReadOnlyList<MotionProblem> Problems => MotionValidator.Validate(Editor.Document, RigNodeIds, Rig.AlphaNodeIds);
 
     public void SetStatus(string status)
     {
@@ -231,9 +153,6 @@ public sealed class DocumentSession
     {
         MotionDocument document = MotionDocumentJson.Read(File.ReadAllText(path));
         Replace(document, path);
-        TryLoadRigFromDocument();
-        TryLoadAssetsFromDocument();
-        _assetFingerprint = AssetFingerprintOf(Editor.Document);
         AssetsChanged?.Invoke(this, EventArgs.Empty);
         SetStatus($"열었다: {path}");
     }
@@ -271,74 +190,6 @@ public sealed class DocumentSession
         SetStatus($"저장했다: {path}");
     }
 
-    /// <summary>리그 덤프를 싣고 문서에 경로(문서 기준 상대)와 해시를 적는다.</summary>
-    public void LoadRig(string path)
-    {
-        RigSchemaFile rig = RigSchemaFile.Load(path);
-        _syncingAssets = true; // 여기서 직접 싣는다 — 문서 참조 변화에 다시 반응하지 않는다
-
-        try
-        {
-            LoadRigCore(path, rig);
-        }
-        finally
-        {
-            _syncingAssets = false;
-            _assetFingerprint = AssetFingerprintOf(Editor.Document);
-        }
-    }
-
-    private void LoadRigCore(string path, RigSchemaFile rig)
-    {
-        Rig = rig;
-        RigPath = path;
-        string? baseResolution = BaseResolutionFile.TryFindBeside(path);
-
-        // 덤프 참조와 기준 해상도 참조는 한 조작 — 되돌리기 한 칸.
-        Editor.Batch(MotionChangeKind.Document, () =>
-        {
-            Editor.SetRigSchemas(RelativeToDocument(path), rig.Sha256);
-
-            if (baseResolution is not null)
-            {
-                Editor.SetBaseResolution(RelativeToDocument(baseResolution));
-            }
-        });
-
-        if (baseResolution is not null)
-        {
-            StageSize = BaseResolutionFile.Load(baseResolution);
-        }
-
-        AssetsChanged?.Invoke(this, EventArgs.Empty);
-        SetStatus($"리그 덤프: {string.Join(", ", rig.RigKinds)} ({Path.GetFileName(path)})"
-                  + (baseResolution is null ? " — base-resolution.json이 옆에 없어 1920×1080으로 둔다" : $" · 무대 {StageSize.X:0}×{StageSize.Y:0}"));
-    }
-
-    /// <summary>오브젝트의 미리보기 초상. 문서에 문서 기준 상대 경로로 적힌다 — 산출물과는 무관하다.</summary>
-    public void SetPortrait(string objectId, string? path)
-    {
-        if (path is not null && !File.Exists(path))
-        {
-            throw new FileNotFoundException("초상 파일이 없다.", path);
-        }
-
-        _syncingAssets = true;
-
-        try
-        {
-            Editor.SetObjectPortrait(null, objectId, path is null ? null : RelativeToDocument(path));
-        }
-        finally
-        {
-            _syncingAssets = false;
-            _assetFingerprint = AssetFingerprintOf(Editor.Document);
-        }
-
-        AssetsChanged?.Invoke(this, EventArgs.Empty);
-        SetStatus(path is null ? $"{objectId}: 초상을 뺐다." : $"{objectId}: 초상 {Path.GetFileName(path)}");
-    }
-
     private void Replace(MotionDocument document, string? path)
     {
         Editor.Changed -= OnEditorChanged;
@@ -346,69 +197,8 @@ public sealed class DocumentSession
         Editor.Changed += OnEditorChanged;
         DocumentPath = path;
         _savedRevision = Editor.Revision;
-        UseBuiltinTuning();
         _assetFingerprint = AssetFingerprintOf(Editor.Document);
         DocumentReplaced?.Invoke(this, EventArgs.Empty);
-    }
-
-    /// <summary>문서가 적어 둔 초상·기준 해상도를 찾아 싣는다. 없는 파일은 상태 줄에 남기고 넘어간다.</summary>
-    private void TryLoadAssetsFromDocument()
-    {
-        MotionDocument document = Editor.Document;
-
-        if (document.BaseResolution is { Path: { Length: > 0 } basePath })
-        {
-            string resolved = ResolveFromDocument(basePath);
-
-            if (File.Exists(resolved))
-            {
-                StageSize = BaseResolutionFile.Load(resolved);
-            }
-            else
-            {
-                SetStatus($"기준 해상도 파일을 찾지 못했다: {resolved} — 1920×1080으로 둔다.");
-            }
-        }
-
-        foreach (SceneAsset scene in document.Scenes)
-        {
-            foreach (SceneObject o in scene.Objects)
-            {
-                if (!string.IsNullOrEmpty(o.Portrait) && !File.Exists(ResolveFromDocument(o.Portrait)))
-                {
-                    SetStatus($"{o.Id}의 초상 파일을 찾지 못했다: {ResolveFromDocument(o.Portrait)} — 자리표시로 보인다.");
-                }
-            }
-        }
-    }
-
-    /// <summary>문서가 적어 둔 리그 덤프를 찾아 싣는다. 해시가 다르면 알린다 — 조용히 맞는 척하지 않는다.</summary>
-    private void TryLoadRigFromDocument()
-    {
-        RigSchemasReference? reference = Editor.Document.RigSchemas;
-
-        if (reference is null || string.IsNullOrEmpty(reference.Path))
-        {
-            return;
-        }
-
-        string resolved = ResolveFromDocument(reference.Path);
-
-        if (!File.Exists(resolved))
-        {
-            SetStatus($"리그 덤프를 찾지 못했다: {resolved} — 내장 리그({BuiltinTuning.Source})로 연다.");
-            return;
-        }
-
-        RigSchemaFile rig = RigSchemaFile.Load(resolved);
-        Rig = rig;
-        RigPath = resolved;
-
-        if (!string.IsNullOrEmpty(reference.Sha256) && !string.Equals(reference.Sha256, rig.Sha256, StringComparison.Ordinal))
-        {
-            IReadOnlyList<MotionProblem> problems = Problems;
-            SetStatus($"리그가 바뀌었다 ({Path.GetFileName(resolved)}) — 모든 채널의 노드를 다시 검증했다: 문제 {problems.Count}건.");
-        }
     }
 
     private string RelativeToDocument(string path)

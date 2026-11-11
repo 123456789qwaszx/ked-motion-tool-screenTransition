@@ -2051,26 +2051,6 @@
       ]
     }
   ],
-  "scenes": [
-    {
-      "name": "scene",
-      "objects": [
-        {
-          "id": "s1",
-          "rig": "character",
-          "stage": "stage00",
-          "layer": "mid",
-          "positionX": 0,
-          "positionY": 0,
-          "rotationZ": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "visible": true
-        }
-      ]
-    }
-  ],
-  "activeScene": "scene",
   "skins": [
     {
       "name": "heredity",

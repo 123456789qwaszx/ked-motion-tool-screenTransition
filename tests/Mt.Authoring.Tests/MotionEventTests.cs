@@ -11,7 +11,7 @@ namespace Mt.Authoring.Tests;
 /// <summary>이벤트 키(<c>PLAN-parts.md</c> §2.5, <c>motions/3</c>) — "이 프레임에 이모지·소리".</summary>
 public class MotionEventTests
 {
-    private static readonly RigSchemaFile RigFile = RigSchemaFile.Load(Fixtures.PathOf("rig-schemas.json"));
+    private static readonly RigSchemaFile RigFile = RigTemplates.File();
 
     private static MotionEditor NewEditor() => new(Fixtures.NodBowDocument()); // nod 0.6초 · bow 0.4초
 

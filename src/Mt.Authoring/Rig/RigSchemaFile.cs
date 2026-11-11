@@ -1,33 +1,19 @@
-using System.Security.Cryptography;
-using System.Text.Json;
 using Ked.Presentation.Core;
 
 namespace Mt.Authoring.Rig;
 
 /// <summary>
-/// 리그 덤프(<c>ExportedTuning/rig-schemas.json</c>)를 읽은 것. 툴은 리그를 코드가 아니라 데이터로 안다 —
-/// 노드 이름·계층·앵커·피벗·크기는 전부 여기서 오고, 하드코딩된 노드 이름은 없다.
-///
-/// DTO는 코어 <c>Tuning/</c>의 것 그대로다(사본 금지). 필드라서 <see cref="JsonSerializerOptions.IncludeFields"/>가
-/// 필요하고, 해석(<see cref="RigSchemaLoader"/>)은 코어가 한다.
+/// 세트들을 코어의 리그 스키마 모양으로 든 것(<see cref="RigAssets.Compose"/>가 짓는다). 노드 이름·계층·앵커·피벗·크기는 전부 여기서 온다.
+/// 해석(<see cref="RigSchemaLoader"/>)은 코어가 한다.
 /// </summary>
 public sealed class RigSchemaFile
 {
-    private static readonly JsonSerializerOptions Options = new()
-    {
-        IncludeFields = true,
-        PropertyNameCaseInsensitive = true,
-        ReadCommentHandling = JsonCommentHandling.Skip,
-        AllowTrailingCommas = true,
-    };
-
     private readonly Dictionary<string, ICollection<string>> _nodeIds;
     private readonly Dictionary<string, ICollection<string>> _alphaNodeIds;
 
-    private RigSchemaFile(RigSchemasFileDto dto, string sha256)
+    private RigSchemaFile(RigSchemasFileDto dto)
     {
         Dto = dto;
-        Sha256 = sha256;
         _nodeIds = new Dictionary<string, ICollection<string>>(StringComparer.Ordinal);
         _alphaNodeIds = new Dictionary<string, ICollection<string>>(StringComparer.Ordinal);
 
@@ -47,16 +33,13 @@ public sealed class RigSchemaFile
 
     public RigSchemasFileDto Dto { get; }
 
-    /// <summary>파일 바이트의 SHA-256(소문자 16진수). 문서가 기억해 두고 다음에 열 때 대조한다.</summary>
-    public string Sha256 { get; }
-
     public IEnumerable<string> RigKinds => _nodeIds.Keys;
 
     /// <summary>rigKind → 노드 id 집합. <c>MotionValidator</c>·<c>MotionRules</c>에 그대로 넘긴다.</summary>
     public IReadOnlyDictionary<string, ICollection<string>> NodeIds => _nodeIds;
 
     /// <summary>
-    /// rigKind → 불투명도를 받을 수 있는 노드(덤프의 <c>hasCanvasGroup</c>). 알파 채널은 이 노드에만 놓인다 — 호스트가 쓸 CanvasGroup이 있어야 한다.
+    /// rigKind → 불투명도를 받을 수 있는 노드(<c>hasCanvasGroup</c>). 알파 채널은 이 노드에만 놓인다 — 호스트가 쓸 CanvasGroup이 있어야 한다.
     /// </summary>
     public IReadOnlyDictionary<string, ICollection<string>> AlphaNodeIds => _alphaNodeIds;
 
@@ -80,71 +63,22 @@ public sealed class RigSchemaFile
         => RigSchemaLoader.BuildTree(Dto, rigKind, keyPrefix);
 
     /// <summary>
-    /// 이 덤프에 리그들을 더한 것 — 문서가 정의한 리그(<c>PLAN-parts.md</c> §9)를 덤프의 리그와 한 벌로 쓴다.
-    /// 같은 rigKind가 덤프에도 있으면 **더하는 쪽이 이긴다**(툴에서 정의한 리그가 원본이다). 손상된 리그면 예외(트리를 한 번 세워 본다).
-    /// 해시는 덤프 파일의 것 그대로다 — 문서가 기억하는 것은 덤프의 해시다.
+    /// 무대 크기와 리그들로 짓는다. 손상된 리그면 예외다 — 트리를 한 번 세워 보는 것으로 코어의 필드 검사를 전부 지난다.
     /// </summary>
-    public RigSchemaFile With(IEnumerable<RigSchemaRigDto> extra)
+    public static RigSchemaFile Of(Vec2 stage, IEnumerable<RigSchemaRigDto> rigs)
     {
-        ArgumentNullException.ThrowIfNull(extra);
-        List<RigSchemaRigDto> added = extra.ToList();
-
-        if (added.Count == 0)
-        {
-            return this;
-        }
-
-        var kinds = new HashSet<string>(added.Select(r => r.rigKind), StringComparer.Ordinal);
+        ArgumentNullException.ThrowIfNull(rigs);
         var dto = new RigSchemasFileDto
         {
-            capturedUnderParentSize = Dto.capturedUnderParentSize,
-            rigs = Dto.rigs.Where(r => !kinds.Contains(r.rigKind)).Concat(added).ToList(),
+            capturedUnderParentSize = new Float2Dto { x = stage.X, y = stage.Y },
+            rigs = rigs.ToList(),
         };
-
-        foreach (RigSchemaRigDto rig in added)
-        {
-            RigSchemaLoader.BuildTree(dto, rig.rigKind);
-        }
-
-        return new RigSchemaFile(dto, Sha256);
-    }
-
-    public static RigSchemaFile Load(string path)
-    {
-        ArgumentNullException.ThrowIfNull(path);
-        return Parse(File.ReadAllBytes(path));
-    }
-
-    /// <summary>
-    /// 덤프가 손상됐으면(rigs 없음, 노드 id 없음, 트랜스폼 필드 비어 있음) 예외다 — 0으로 떨어뜨리지 않는다.
-    /// 트리를 한 번 세워 보는 것으로 코어의 필드 검사를 전부 지난다.
-    /// </summary>
-    public static RigSchemaFile Parse(byte[] bytes)
-    {
-        ArgumentNullException.ThrowIfNull(bytes);
-
-        RigSchemasFileDto dto = JsonSerializer.Deserialize<RigSchemasFileDto>(bytes, Options)
-            ?? throw new JsonException("빈 덤프다.");
-
-        if (dto.rigs is null || dto.rigs.Count == 0)
-        {
-            throw new JsonException("덤프에 rigs가 없다. 파일이 비었거나 역직렬화가 실패했다.");
-        }
 
         foreach (RigSchemaRigDto rig in dto.rigs)
         {
-            if (rig is null || string.IsNullOrEmpty(rig.rigKind))
-            {
-                throw new JsonException("덤프에 rigKind가 없는 리그가 있다.");
-            }
-
-            // 손상 검사는 코어에 맡긴다 — 여기서 같은 검사를 또 짓지 않는다.
             RigSchemaLoader.BuildTree(dto, rig.rigKind);
         }
 
-        return new RigSchemaFile(dto, ComputeSha256(bytes));
+        return new RigSchemaFile(dto);
     }
-
-    public static string ComputeSha256(byte[] bytes)
-        => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
 }

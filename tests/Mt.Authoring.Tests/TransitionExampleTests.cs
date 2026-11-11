@@ -14,7 +14,6 @@ namespace Mt.Authoring.Tests;
 /// </summary>
 public class TransitionExampleTests
 {
-    private static readonly RigSchemaFile Dump = RigSchemaFile.Load(Fixtures.PathOf("rig-schemas.json"));
 
     private static string ExampleDirectory(string name)
     {
@@ -34,7 +33,7 @@ public class TransitionExampleTests
         string directory = ExampleDirectory("station");
         MotionEditor editor = TransitionExamples.BuildStation(Path.Combine(directory, "art", "layers.tsv"));
         MotionDocument document = editor.Document;
-        RigSchemaFile rig = RigAssets.Compose(Dump, document);
+        RigSchemaFile rig = RigAssets.Compose(document);
 
         // 층 표: 바탕색 + 층 열 장이 오브젝트 열하나로 — 뒤에서 앞으로.
         RigAsset set = document.FindRig(TransitionExamples.Station)!;
@@ -61,7 +60,7 @@ public class TransitionExampleTests
         // 수명: 등장 1.2 › 머묾 1 › 퇴장 0.9. 등장의 가운데에서 왼쪽 기둥은 아직 들어오는 중이고, 끝나면 제자리다.
         EmojiAsset cue = document.FindEmoji(TransitionExamples.Station)!;
         Assert.Equal(3.1f, EmojiPreview.PhasesOf(document, cue).Total, 3);
-        var scene = new SceneAsset { Name = "s", Objects = { new SceneObject { Id = "t", Rig = TransitionExamples.Station } } };
+        var scene = new SceneAsset { Objects = { new SceneObject { Id = "t", Rig = TransitionExamples.Station } } };
         RectNodeTree template = ScenePreview.Build(rig, scene);
         float rest = template.GetState("t/pillars_left").AnchoredPosition.X;
         float PillarX(double t) => EmojiPreview.Pose(template, document, cue, scene.Objects[0], t).GetState("t/pillars_left").AnchoredPosition.X;
@@ -82,7 +81,7 @@ public class TransitionExampleTests
         string directory = ExampleDirectory("pillar");
         MotionEditor editor = TransitionExamples.BuildPillar(Path.Combine(directory, "art", "layers.tsv"));
         MotionDocument document = editor.Document;
-        RigSchemaFile rig = RigAssets.Compose(Dump, document);
+        RigSchemaFile rig = RigAssets.Compose(document);
 
         // 바탕색 + 층 열둘.
         Assert.Equal(13, document.FindRig(TransitionExamples.Pillar)!.Nodes.Count);
@@ -107,7 +106,7 @@ public class TransitionExampleTests
 
         // 등장의 가운데에서 노을은 이미 올라왔고 언덕은 아직 아래에 있다.
         EmojiAsset cue = document.FindEmoji(TransitionExamples.Pillar)!;
-        var scene = new SceneAsset { Name = "s", Objects = { new SceneObject { Id = "t", Rig = TransitionExamples.Pillar } } };
+        var scene = new SceneAsset { Objects = { new SceneObject { Id = "t", Rig = TransitionExamples.Pillar } } };
         RectNodeTree template = ScenePreview.Build(rig, scene);
         float Offset(string node, double t) => EmojiPreview.Pose(template, document, cue, scene.Objects[0], t).GetState("t/" + node).AnchoredPosition.Y - template.GetState("t/" + node).AnchoredPosition.Y;
         Assert.True(Offset("haze", 0.7) > -1f);
@@ -144,7 +143,7 @@ public class TransitionExampleTests
             _ => TransitionExamples.BuildMercury(layers),
         };
         MotionDocument document = editor.Document;
-        RigSchemaFile rig = RigAssets.Compose(Dump, document);
+        RigSchemaFile rig = RigAssets.Compose(document);
 
         string Problems<T>(IEnumerable<T> problems, Func<T, string> text) => string.Join("\n", problems.Select(text));
         Assert.True(!MotionValidator.Validate(document, rig.NodeIds, rig.AlphaNodeIds).Any(), Problems(MotionValidator.Validate(document, rig.NodeIds, rig.AlphaNodeIds), p => $"{p.MotionName}: {p.Message}"));
@@ -163,7 +162,7 @@ public class TransitionExampleTests
 
         // 늦게 나오는 층은 제 차례 전에 숨어 있고("제 차례 전까지 숨기기"), 등장이 끝나면 다 보인다.
         EmojiAsset cue = document.FindEmoji(name)!;
-        var scene = new SceneAsset { Name = "s", Objects = { new SceneObject { Id = "t", Rig = name } } };
+        var scene = new SceneAsset { Objects = { new SceneObject { Id = "t", Rig = name } } };
         RectNodeTree template = ScenePreview.Build(rig, scene);
 
         foreach (string node in late.Split(','))

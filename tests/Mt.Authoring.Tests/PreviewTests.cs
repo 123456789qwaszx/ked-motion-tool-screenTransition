@@ -9,7 +9,7 @@ namespace Mt.Authoring.Tests;
 
 public class MotionPreviewTests
 {
-    private static readonly RigSchemaFile RigFile = RigSchemaFile.Load(Fixtures.PathOf("rig-schemas.json"));
+    private static readonly RigSchemaFile RigFile = RigTemplates.File();
     private const string MoveY = "CharacterPortrait_Track_Move_Y";
     private const string Sway = "CharacterPortrait_SwayPivot";
 
@@ -27,21 +27,6 @@ public class MotionPreviewTests
 
         // 포즈는 사본이다 — 원본 트리는 그대로.
         Assert.Equal(0f, template.GetState(MoveY).AnchoredPosition.Y);
-    }
-
-    [Fact]
-    public void restore라도_길이_자리는_마지막_키의_포즈이고_길이를_지나야_시작_상태다()
-    {
-        // 마지막 키가 중립값이 아닌 restore — 끝 프레임의 채널 박스가 키 값(320)을 보여야 한다. 되돌리기는 길이를 지난 뒤.
-        var editor = new MotionEditor(new MotionDocument());
-        editor.AddMotion("step", "character", 0.5f, MotionEnd.Restore, MotionChannelMode.Absolute);
-        editor.AddChannel("step", "CharSlot_Track", MotionChannelKind.Position);
-        editor.SetKeys("step", "CharSlot_Track", MotionChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.5f, 320f) });
-        RectNodeTree template = RigFile.BuildTree("character");
-        MotionAsset step = editor.Document.Find("step")!;
-
-        Assert.Equal(320f, MotionPreview.Pose(template, step, 0.5).GetState("CharSlot_Track").AnchoredPosition.X, 3);
-        Assert.Equal(0f, MotionPreview.Pose(template, step, 0.5 + 1 / 24.0).GetState("CharSlot_Track").AnchoredPosition.X, 3);
     }
 
     [Fact]
@@ -64,116 +49,6 @@ public class MotionPreviewTests
 
         Assert.Equal(-18f, MotionPreview.Pose(template, nod, 0.3, c => c != y).GetState(MoveY).AnchoredPosition.Y, 4);
         Assert.Equal(0f, MotionPreview.Pose(template, nod, 0.3, c => c == y).GetState(MoveY).AnchoredPosition.Y, 4);
-    }
-
-    [Fact]
-    public void 미리보기_mode가_relative면_배율은_곱이고_absolute면_위치는_그_값이며_없는_노드는_건너뛴다()
-    {
-        var editor = new MotionEditor(new MotionDocument());
-        editor.AddMotion("a", "character", 1f, MotionEnd.Commit, MotionChannelMode.Relative);
-        editor.AddChannel("a", "CharSlot_Scale", MotionChannelKind.Scale);
-        editor.SetKeys("a", "CharSlot_Scale", MotionChannelKind.Scale, Axis.X, new[] { Fixtures.Key(0f, 1f), Fixtures.Key(1f, 2f) });
-        editor.AddChannel("a", "CharSlot_Track_X", MotionChannelKind.Position);
-        editor.SetKeys("a", "CharSlot_Track_X", MotionChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 100f), Fixtures.Key(1f, 300f) });
-        editor.AddChannel("a", "NoSuchNode", MotionChannelKind.Position);
-        editor.SetKeys("a", "NoSuchNode", MotionChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 1f), Fixtures.Key(1f, 2f) });
-
-        RectNodeTree template = RigFile.BuildTree("character");
-        float trackStart = template.GetState("CharSlot_Track_X").AnchoredPosition.X;
-        RectNodeTree relative = MotionPreview.Pose(template, editor.Document.Find("a")!, 1);
-
-        Assert.Equal(2f, relative.GetState("CharSlot_Scale").LocalScale.X, 4);
-        Assert.Equal(1f, relative.GetState("CharSlot_Scale").LocalScale.Y, 4); // 없는 성분은 그대로
-        Assert.Equal(trackStart + 300f, relative.GetState("CharSlot_Track_X").AnchoredPosition.X, 4); // relative: 시작값 + 키
-        Assert.False(relative.Contains("NoSuchNode"));
-
-        // 같은 키를 absolute 렌즈로 — 값 그대로. 키는 안 바뀐다(mode는 커맨드가 정하는 것, 여기서는 뷰포트의 렌즈).
-        editor.SetPreviewMode("a", MotionChannelMode.Absolute);
-        RectNodeTree absolute = MotionPreview.Pose(template, editor.Document.Find("a")!, 1);
-        Assert.Equal(300f, absolute.GetState("CharSlot_Track_X").AnchoredPosition.X, 4);
-        Assert.Equal(2f, absolute.GetState("CharSlot_Scale").LocalScale.X, 4);
-    }
-}
-
-public class PortraitLayoutTests
-{
-    private static readonly RigSchemaFile RigFile = RigSchemaFile.Load(Fixtures.PathOf("rig-schemas.json"));
-
-    [Fact]
-    public void 사이징은_런타임과_같다_sizeDelta는_부모_높이_곱_종횡비()
-    {
-        RectNodeTree tree = RigFile.BuildTree("character");
-        PortraitLayout.ApplySizing(tree, 0.8f);
-
-        Vec2 sizeDelta = tree.GetState(PortraitLayout.ImageNodeId).SizeDelta;
-        Assert.Equal(1080f * 0.8f, sizeDelta.X, 3);
-        Assert.Equal(0f, sizeDelta.Y);
-    }
-
-    [Fact]
-    public void 보이는_사각형은_높이_맞춤이고_무대_가운데_선다()
-    {
-        RectNodeTree tree = RigFile.BuildTree("character");
-        PortraitLayout.ApplySizing(tree, 0.8f);
-
-        Quad quad = PortraitLayout.VisualQuad(tree, PortraitLayout.ImageNodeId, 0.8f);
-
-        Assert.Equal(-432f, quad.BottomLeft.X, 2);
-        Assert.Equal(-540f, quad.BottomLeft.Y, 2);
-        Assert.Equal(432f, quad.TopRight.X, 2);
-        Assert.Equal(540f, quad.TopRight.Y, 2);
-        Assert.Equal(0f, quad.Center.X, 2);
-        Assert.Equal(0f, quad.Center.Y, 2);
-    }
-
-    [Fact]
-    public void 포즈가_바뀌면_사각형이_따라온다_nod_가운데는_18_아래다()
-    {
-        MotionAsset nod = Fixtures.NodBowDocument().Find("nod")!;
-        RectNodeTree template = RigFile.BuildTree("character");
-        PortraitLayout.ApplySizing(template, 0.8f);
-
-        Quad rest = PortraitLayout.VisualQuad(MotionPreview.Pose(template, nod, 0), PortraitLayout.ImageNodeId, 0.8f);
-        Quad dipped = PortraitLayout.VisualQuad(MotionPreview.Pose(template, nod, 0.3), PortraitLayout.ImageNodeId, 0.8f);
-
-        Assert.Equal(rest.Center.Y - 18f, dipped.Center.Y, 2);
-        Assert.Equal(rest.Center.X, dipped.Center.X, 2);
-    }
-
-    [Fact]
-    public void 회전하면_사각형이_기운다_축_정렬_경계가_아니다()
-    {
-        MotionAsset bow = Fixtures.NodBowDocument().Find("bow")!;
-        RectNodeTree template = RigFile.BuildTree("character");
-        PortraitLayout.ApplySizing(template, 0.8f);
-
-        Quad tilted = PortraitLayout.VisualQuad(MotionPreview.Pose(template, bow, 0.4), PortraitLayout.ImageNodeId, 0.8f);
-
-        Assert.NotEqual(tilted.BottomLeft.Y, tilted.BottomRight.Y);
-        float width = (tilted.BottomRight - tilted.BottomLeft).X;
-        float height = (tilted.TopLeft - tilted.BottomLeft).Y;
-        Assert.True(Math.Abs(width - 864f) < 864f * 0.02f, "너비가 거의 보존돼야 한다(8도 회전)");
-        Assert.True(height < 1080f && height > 1000f);
-    }
-
-    [Fact]
-    public void 캔버스_변환과_축()
-    {
-        Vec2 canvas = PortraitLayout.ToCanvas(new Vec2(10f, 20f), new Vec2(1920f, 1080f));
-        Assert.Equal(970f, canvas.X);
-        Assert.Equal(520f, canvas.Y);
-
-        RectNodeTree tree = RigFile.BuildTree("character");
-        (Vec2 origin, Vec2 xEnd, Vec2 yEnd) = PortraitLayout.Axes(tree, "CharacterPortrait_SwayPivot", 50f);
-        Assert.Equal(origin.X + 50f, xEnd.X, 3);
-        Assert.Equal(origin.Y + 50f, yEnd.Y, 3);
-    }
-
-    [Fact]
-    public void 종횡비_0은_거부한다()
-    {
-        RectNodeTree tree = RigFile.BuildTree("character");
-        Assert.Throws<ArgumentOutOfRangeException>(() => PortraitLayout.VisualQuad(tree, PortraitLayout.ImageNodeId, 0f));
     }
 }
 
@@ -373,19 +248,5 @@ public class KeyTimesTests
 
         List<float> selected = KeyTimes.OfSelection(nod, new[] { new KeyRef(y, 2), new KeyRef(y, 1), new KeyRef(y, 9) });
         Assert.Equal(new[] { 0.3f, 0.6f }, selected);
-    }
-}
-
-public class BaseResolutionFileTests
-{
-    [Fact]
-    public void 기준_해상도를_읽고_없거나_0이면_거부한다()
-    {
-        Vec2 size = BaseResolutionFile.Parse("""{ "canvasName": "[UIManager]", "referenceResolution": { "x": 1920.0, "y": 1080.0 } }""");
-        Assert.Equal(new Vec2(1920f, 1080f), size);
-
-        Assert.Throws<System.Text.Json.JsonException>(() => BaseResolutionFile.Parse("""{ "referenceResolution": { "x": 0, "y": 1080 } }"""));
-        Assert.Throws<System.Text.Json.JsonException>(() => BaseResolutionFile.Parse("""{ }"""));
-        Assert.Null(BaseResolutionFile.TryFindBeside(Fixtures.PathOf("rig-schemas.json")));
     }
 }

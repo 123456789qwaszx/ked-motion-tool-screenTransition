@@ -4,7 +4,7 @@ using Mt.Authoring.Model;
 namespace Mt.Authoring.Preview;
 
 /// <summary>
-/// 시각 t의 포즈 — 리그 트리(덤프에서 세운 시작 상태)에 모션 채널을 얹은 것.
+/// 시각 t의 포즈 — 세트 트리(세트로 세운 시작 상태)에 모션 채널을 얹은 것.
 ///
 /// 수학은 전부 코어다: 시작값 <see cref="MotionMath.StartOf"/>, 합성 <see cref="MotionMath.Compose"/>,
 /// 종점 <see cref="MotionMath.EndValue"/>. 그래서 뷰포트가 보여 주는 포즈 = 런타임이 재생하는 포즈다.
@@ -15,7 +15,7 @@ namespace Mt.Authoring.Preview;
 public static class MotionPreview
 {
     /// <param name="isMuted">뮤트된 성분(재생에서 뺀다 — 시작값 그대로). null이면 없음.</param>
-    /// <param name="keyPrefix">슬롯 접두사(예: "c1/") — 씬에서 오브젝트 하나에 얹을 때. 비면 접두사 없는 트리.</param>
+    /// <param name="keyPrefix">오브젝트 접두사(예: "set/") — 무대의 오브젝트 하나에 얹을 때. 비면 접두사 없는 트리.</param>
     public static RectNodeTree Pose(RectNodeTree template, MotionAsset motion, double seconds, Func<Graph.CurveRef, bool>? isMuted = null, string keyPrefix = "")
     {
         ArgumentNullException.ThrowIfNull(motion);
@@ -78,7 +78,7 @@ public static class MotionPreview
 
         foreach (MotionChannel channel in channels)
         {
-            // 덤프에 없는 노드는 건너뛴다 — 검증이 이미 소리를 낸다. 여기서 던지면 편집 중 화면이 죽는다.
+            // 세트에 없는 노드는 건너뛴다 — 검증이 이미 소리를 낸다. 여기서 던지면 편집 중 화면이 죽는다.
             string key = keyPrefix + channel.Node;
 
             if (string.IsNullOrEmpty(channel.Node) || !tree.Contains(key))

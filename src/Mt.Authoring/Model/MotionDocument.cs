@@ -5,8 +5,7 @@ namespace Mt.Authoring.Model;
 /// <summary>
 /// 저작 원본 한 벌 (<c>*.motion-authoring.json</c>, 스키마 <see cref="AuthoringFormat.AuthoringSchema"/>).
 ///
-/// 산출물(<c>motions/2</c>)에 들어가지 않는 제작 정보 — 탄젠트 모드·끊김·재생 기준(relative/absolute)·씬 —을
-/// 함께 든다. 내보내기는 그것을 벗기고 <see cref="MotionAsset"/>을 코어 <see cref="MotionClip"/>으로 바꾼다.
+/// 제작 정보 — 탄젠트 모드·끊김·재생 기준(relative/absolute)—를 함께 든다. 검증은 <see cref="MotionAsset"/>을 코어 <see cref="MotionClip"/>으로 바꿔 코어 규칙을 지난다.
 ///
 /// 전부 가변 클래스다. 편집은 <see cref="Editing.MotionEditor"/>만 하고, 되돌리기는 문서 전체 스냅샷이다
 /// (VnTool <c>ProjectEditor</c>의 방식) — 명령마다 역연산을 짓지 않는다.
@@ -15,41 +14,7 @@ public sealed class MotionDocument
 {
     public string Schema { get; set; } = AuthoringFormat.AuthoringSchema;
 
-    /// <summary>리그 덤프의 출처. 열 때 해시가 다르면 "리그가 바뀌었다"를 알린다 — 조용히 맞는 척하지 않는다.</summary>
-    public RigSchemasReference? RigSchemas { get; set; }
-
-    /// <summary>기준 해상도 덤프(<c>base-resolution.json</c>)의 경로. 뷰포트가 쓴다. v1에서는 없어도 된다.</summary>
-    public FileReference? BaseResolution { get; set; }
-
-    /// <summary>예전 판의 미리보기 초상. 읽을 때 기본 씬의 c1로 옮긴다 — 새 문서는 쓰지 않는다.</summary>
-    public PreviewSettings? Preview { get; set; }
-
     public List<MotionAsset> Motions { get; set; } = new();
-
-    /// <summary>미리보기 씬들(<c>PLAN-scene.md</c>). 내보내지 않는다. 비어 있으면 <see cref="EnsureDefaultScene"/>가 기본 씬을 둔다.</summary>
-    public List<SceneAsset> Scenes { get; set; } = new();
-
-    /// <summary>뷰포트가 보여 주는 씬 이름. 없으면 첫 씬.</summary>
-    public string? ActiveScene { get; set; }
-
-    public SceneAsset? FindScene(string? name)
-        => name is null ? null : Scenes.FirstOrDefault(s => string.Equals(s.Name, name, StringComparison.Ordinal));
-
-    /// <summary>보여 줄 씬 — ActiveScene, 없으면 첫 씬, 그것도 없으면 null.</summary>
-    [System.Text.Json.Serialization.JsonIgnore]
-    public SceneAsset? ActiveSceneAsset => FindScene(ActiveScene) ?? Scenes.FirstOrDefault();
-
-    /// <summary>씬이 없으면 캐릭터 하나짜리 기본 씬을 둔다(예전 Preview.Portrait는 c1의 초상이 된다). 있으면 아무것도 안 한다.</summary>
-    public void EnsureDefaultScene()
-    {
-        if (Scenes.Count == 0)
-        {
-            Scenes.Add(SceneAsset.Default(Preview?.Portrait));
-            Preview = null;
-        }
-
-        ActiveScene ??= Scenes[0].Name;
-    }
 
     /// <summary>
     /// 스킨들(<c>PLAN-parts.md</c> P1) — 리그의 조각마다 붙일 그림의 묶음. 미리보기 전용.
@@ -87,8 +52,8 @@ public sealed class MotionDocument
         => name is null ? null : Emojis.FirstOrDefault(e => string.Equals(e.Name, name, StringComparison.Ordinal));
 
     /// <summary>
-    /// 툴에서 정의한 리그들(<c>PLAN-parts.md</c> §9) — 캐릭터에 붙는 리그(이모지 등). 덤프의 리그와 한 벌로 쓰이고, 같은 이름이면 이쪽이 이긴다.
-    /// 저작본에는 <see cref="RigsOrNull"/>로 실린다(없으면 안 적는다). 런타임에는 리그 스키마 모양으로 따로 나간다.
+    /// 세트들 — 층(오브젝트)의 사각형 · 그림 · 색. 미리보기는 이것만으로 선다(<see cref="Rig.RigAssets.Compose"/>).
+    /// 저작본에는 <see cref="RigsOrNull"/>로 실린다(없으면 안 적는다).
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public List<RigAsset> Rigs { get; set; } = new();
@@ -107,32 +72,12 @@ public sealed class MotionDocument
         => Motions.FirstOrDefault(m => string.Equals(m.Name, name, StringComparison.Ordinal));
 }
 
-public sealed class RigSchemasReference
-{
-    /// <summary>문서 파일 기준 상대 경로 또는 절대 경로. 구분자는 <c>/</c>.</summary>
-    public string Path { get; set; } = "";
-
-    /// <summary>파일 바이트의 SHA-256, 소문자 16진수. 비어 있으면 아직 검증한 적이 없다.</summary>
-    public string Sha256 { get; set; } = "";
-}
-
-public sealed class FileReference
-{
-    public string Path { get; set; } = "";
-}
-
-public sealed class PreviewSettings
-{
-    /// <summary>뷰포트에 세울 초상화 이미지. 산출물과 무관한 미리보기 전용.</summary>
-    public string? Portrait { get; set; }
-}
-
 /// <summary>모션 하나의 저작본. 수치는 코어 <see cref="MotionClip"/>과 같고, 제작 정보만 더 든다.</summary>
 public sealed class MotionAsset
 {
     public string Name { get; set; } = "";
 
-    /// <summary>리그 덤프의 rigKind (예: character).</summary>
+    /// <summary>이 모션이 움직이는 세트(rigKind).</summary>
     public string Rig { get; set; } = "";
 
     /// <summary>초.</summary>

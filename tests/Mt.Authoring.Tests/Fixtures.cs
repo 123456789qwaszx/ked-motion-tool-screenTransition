@@ -6,12 +6,6 @@ namespace Mt.Authoring.Tests;
 
 internal static class Fixtures
 {
-    public static string PathOf(string name) => Path.Combine(AppContext.BaseDirectory, "Fixtures", name);
-
-    public static byte[] BytesOf(string name) => File.ReadAllBytes(PathOf(name));
-
-    public static string TextOf(string name) => File.ReadAllText(PathOf(name));
-
     /// <summary>
     /// 재생 저장소에서 Unity Animation 창으로 만들어 내보낸 그 두 모션을 편집기 명령으로 똑같이 짓는다.
     /// nod: Track_Move_Y 위치, y 0 → -18 → 0 (restore 0.6s). bow: SwayPivot 회전, z 0 → 8 (commit 0.4s, 미리보기는 absolute).
@@ -20,6 +14,7 @@ internal static class Fixtures
     public static MotionDocument NodBowDocument()
     {
         var editor = new MotionEditor(new MotionDocument());
+        editor.AddRig(RigTemplates.Character());
 
         editor.AddMotion("nod", "character", 0.6f, MotionEnd.Restore, MotionChannelMode.Relative);
         editor.AddChannel("nod", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position);

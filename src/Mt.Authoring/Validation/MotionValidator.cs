@@ -19,14 +19,14 @@ public sealed record MotionProblem(string MotionName, string Message, bool Block
 /// 편집 중 계속 돌리는 검증. 규칙은 코어 <see cref="MotionRules"/> 한 벌뿐이다 — 런타임 로더와 Unity 내보내기가
 /// 같은 규칙을 쓰므로 "툴에서는 되는데 재생에서 사라지는" 모션이 안 생긴다. 문구도 코어의 것을 그대로 보인다.
 ///
-/// 여기서 더 보는 것은 문서 수준(같은 이름 둘, 리그 덤프에 없는 rigKind)이다.
+/// 여기서 더 보는 것은 문서 수준(같은 이름 둘, 없는 세트)이다.
 /// 키의 **값**은 알리지 않는다 — 첫 키가 중립값이 아닌 것("지금 값 +140에서 시작")도, 복원(restore)이 중립값이 아닌 데서 끝나는 것(끝에서 시작값으로 돌아간다 —
 /// 한 방향으로 계속 도는 되풀이 머묾)도 작가의 뜻이다. (복원의 끝 값을 경고하던 것은 2026-11-10 소유자 결정으로 없앴다.)
 /// </summary>
 public static class MotionValidator
 {
-    /// <param name="rigNodeIds">rigKind → 노드 id 목록. null이면 노드 존재 검사를 생략한다(덤프가 아직 없는 자리).</param>
-    /// <param name="alphaNodeIds">rigKind → 불투명도를 받을 수 있는 노드(덤프의 hasCanvasGroup). 주면 알파 채널이 그 노드에 놓였는지 본다.</param>
+    /// <param name="rigNodeIds">rigKind → 노드 id 목록. null이면 노드 존재 검사를 생략한다.</param>
+    /// <param name="alphaNodeIds">rigKind → 불투명도를 받을 수 있는 노드(세트의 표시). 주면 알파 채널이 그 노드에 놓였는지 본다.</param>
     public static IReadOnlyList<MotionProblem> Validate(
         MotionDocument document,
         IReadOnlyDictionary<string, ICollection<string>>? rigNodeIds = null,
@@ -66,7 +66,7 @@ public static class MotionValidator
             {
                 problems.Add(new MotionProblem(
                     motion.Name,
-                    $"리그 덤프에 rigKind '{motion.Rig}'가 없다. 있는 것: [{string.Join(", ", rigNodeIds.Keys)}]"));
+                    $"세트 '{motion.Rig}'가 없다. 있는 것: [{string.Join(", ", rigNodeIds.Keys)}]"));
                 return problems;
             }
         }
@@ -87,7 +87,7 @@ public static class MotionValidator
                 {
                     problems.Add(new MotionProblem(
                         motion.Name,
-                        $"채널 {i}: '{motion.Channels[i].Node}'는 불투명도를 받을 수 없는 노드다(덤프에 CanvasGroup이 없다). 받을 수 있는 노드: [{string.Join(", ", alphaNodes)}]"));
+                        $"채널 {i}: '{motion.Channels[i].Node}'는 불투명도를 받을 수 없는 노드다. 받을 수 있는 노드: [{string.Join(", ", alphaNodes)}]"));
                 }
             }
         }

@@ -4,8 +4,9 @@
 
 ## 지금 어디인가 (2026-11-11)
 
-- **끝난 것**: T0 · T1-1(클립) · T1-2(예시를 한 덩어리로 · 조립) · T1-3(캐릭터에 붙는 연출) · **T1-4a(카메라) · 4b(붙이기 · 배역 키 · 이모지 리그 본) · 4c(컨트롤러 표 · 깊이 · 자리 · 프리셋)**. 전체 테스트 통과(705개), `dev`에 푸시.
-- **다음**: **T1-4의 나머지 — 세트만으로 서는 길 → 초상 → 씬 · 깊이 층 · 무대 뼈대 → 리그 덤프.** 아래 "T1-4 — 남은 걸음".
+- **끝난 것**: T0 · T1-1(클립) · T1-2(예시를 한 덩어리로 · 조립) · T1-3(캐릭터에 붙는 연출) · **T1-4(카메라 · 붙이기 · 컨트롤러 · 깊이 · 명령줄과 옛 산출물 · 씬 · 초상 · 리그 덤프)**. 전체 테스트 통과(619개), `dev`에 푸시.
+- **소유자 결정(2026-11-11)**: 이 툴은 당장 쓰기보다 **뒤의 기반 시설**이다. 기능이 유지되지 않아도 되니 **과감하게 깎는다** — 테스트도 옮기기보다 지워도 된다. 그래서 명령줄과 옛 산출물을 T5를 기다리지 않고 걷었다(§2의 12를 앞당겼다 — 지금은 내보낼 길이 없다).
+- **다음**: **T1-5 — 코어 사본 줄이기.** 그 뒤 T2.
 - **정해진 방향**: 이 저장소는 따로 뻗어 나가고, 화면 전환을 UI 수준으로 범용적인 도구로 만든다(§2의 6~13, §10).
 - **환경**: 클라우드 컨테이너에는 .NET SDK가 없다 — `apt-get install -y dotnet-sdk-10.0`(우분투 저장소의 10.0.1xx가 `global.json`에 맞는다). `builds.dotnet.microsoft.com`은 네트워크에서 막혀 있어 설치 스크립트는 못 쓴다.
 
@@ -47,6 +48,7 @@
 10. **가림은 기울지 않은 사각형부터.** 그 다음이 그림 가림(알파) · 기운 가림. 부드러운 가장자리 · 밝기 무늬 닦기는 뒤로.
 11. **기준 런타임은 유니티 UGUI 하나.** 형식은 엔진에 안 묶이게 적는다. 범위의 잣대: **"UGUI에서 특수한 셰이더 없이 되는 것"만 먼저** 받는다.
 12. **이름 바꾸기는 T2와 함께, 옛 산출물은 T5에서.** 코드의 `Rig` · `Emoji` · `Motion` → 전환 · 층 · 타임라인은 모델이 바뀌는 T2에서(같은 코드를 두 번 뒤집지 않게). `rigs.json` · `motions.json` · `emojis.json`은 새 산출물이 서는 T5에서 걷는다(그 사이 내보낼 길이 끊기지 않게).
+    → **옛 산출물은 2026-11-11에 앞당겨 걷었다**(소유자: 기반 시설이니 과감하게 — T1-4d). 이름 바꾸기는 그대로 T2.
 13. **범용화의 순서는 가림 · 매개변수가 먼저.** G2(가림) › G4(매개변수) › G1(그리는 것) › G3(되풀이) › G5(글). 매개변수의 "색을 갈아 끼운다"에 필요한 조각(색을 층의 값으로)만 G4 앞으로 당긴다.
 
 작업 관습은 `CLAUDE.md`.
@@ -135,7 +137,7 @@
 | 단계 | 내용 | 끝나면 |
 |---|---|---|
 | T0 | 출발점 · 이 계획서 · 방향 코드 | **끝** |
-| **T1** | **걷어 낸다 — 화면 전환에 필요 없는 것.** 아래 "걷어 낼 것" 표. 예시 다섯은 남는다 | 1~3 **끝**, 4 · 5 남음 — 툴이 세트와 연출만 안다 |
+| **T1** | **걷어 낸다 — 화면 전환에 필요 없는 것.** 아래 "걷어 낼 것" 표. 예시 다섯은 남는다 | 1~4 **끝**, 5 남음 — 툴이 세트와 연출만 안다 |
 | **T2** | **전환 하나로 합친다**(§3) — 세트 + 애니메이션 셋 + 연출 → 전환(층들 + 타임라인 하나 + 표지 둘). 왼쪽 목록이 "전환", 하이어아키가 "층". 예시 다섯을 한 타임라인으로 옮긴다. **코드의 이름도 여기서 바꾼다**(`Rig` · `Emoji` · `Motion` → 전환 · 층 · 타임라인 — §2의 12) | "세트 · 연출 · 등장/머묾/퇴장 모션"이라는 말이 화면과 코드에서 사라진다 |
 | **T3′** | **틀과 배치**(§4 · §10) — 화면 → 틀(전환당 하나). 층의 붙는 자리 · 늘어나기, 움직임의 단위(px / 틀 비율), 여러 틀 크기로 미리보기 | 예시 다섯이 21:9 · 4:3 · 세로에서도, 작은 패널 안에서도 선다 |
 | **T4** | **덮임 검사**(§5) — 틀에 대해. 표지 프레임과 머묾 구간, 고른 크기 전부. 덮는 전환일 때만 막는다 | "덮였다"를 눈으로 안 본다 |
@@ -175,33 +177,8 @@
 | 1. 클립 | **끝**(2026-11-10) | `ClipAsset` · `ClipPreview` · `ClipStage` · `ClipBake` · `ClipValidator` · `MotionEditor.Clips` · `MainWindow.Clips` · `ClipTimelineView`, CLI의 `bake` · `pose --clip`, 오른쪽 "클립" 탭(연출 탭이 3번이 됐다), 설정의 `TimelineHeight`, `docs/PLAN-clip.md`, 예시 `emoji_demo` 클립. 이벤트 키 구간 계산은 `MotionEvents.Between`으로 남겼다. 뷰포트의 "문맥"은 이제 연출(이모지)의 구간 하나뿐이다(`_contextOffset`). `extend`의 `a528d7c`는 이 세션에서 볼 수 없어(저장소 권한) 본으로 삼지 못하고 직접 걷었다 |
 | 2. 예시를 한 덩어리로 · 조립 | **끝**(2026-11-10) | 예시 다섯을 조립 없이 다시 지었다(빌더의 `At` — 작은 움직임을 그 시각에 놓기 · `Loop` — 한 바퀴를 이어 놓기). 캡처로 전과 같은 모습인지 견줬다. 걷은 것: `RigNodeAsset.Set` · `SetSkin`과 펼치기(`Expand` · 경로 이름 `a.b`), 재생 블록(`MotionPlayAsset` · `MotionFlatten` · `MainWindow.Plays` · 타임 슬라이더의 막대), 새 세트로 빼기(`ExtractRigNodes`), 안쪽 세트 열기/돌아가기 · 여기서 안쪽 고치기, 다른 문서에서 세트 들이기(`ImportSets`), `RigAssets.EffectiveSkin`. **세트 이름 바꾸기(`RenameRig`)는 남겼다**(`MotionEditor.RenameRig.cs`). 저작본의 `plays` · `set` · `setSkin` 자리는 이제 읽지 않는다(옛 문서의 것은 버려진다) |
 | 3. 캐릭터에 붙는 연출 | **끝**(2026-11-10) | 걷은 것: `EmojiAsset`의 반전 판(`SkinFlipped`) · 붙는 자리(`Locator` · `EmojiPreview.LocatorPoint`) · 화면/캐릭터 구분(`Screen` — 이제 연출은 다 화면에 선다), `EmojiEvents`(이벤트 키 `emoji` · `emoji_off` · `cue` · `cue_off`로 띄우기)와 뷰포트의 그 미리보기, `examples/emoji`와 그 빌더 · 캡처. 예시 테스트는 `TransitionExampleTests`로 이름을 바꿨다(다시 쓰기: `--filter TransitionExampleTests`). **아직 남은 것(T1-4에서)**: 씬 오브젝트를 캐릭터에 붙이기(`AttachTo` · `MainWindow.Attach`) · 이모지 리그 본(`RigTemplates.Emoji`) · 배역 키 — 캐릭터 리그와 함께 걷는다. 화면 테스트 넷은 붙이지 않은 오브젝트로 바꿨다(T1-4에서 다시 손본다) |
-| 4. 씬 · 카메라 · 깊이 · 캐릭터 리그 | **하는 중** | **4a 카메라 — 끝**(2026-11-11): 카메라 모션(`CameraRig` · "카메라 모션 추가" · "모션" 탭의 카메라 칸)과 씬의 샷 값(`CameraSettings` · `SetCamera` · 씬 탭의 카메라(샷) · `StageShotResponse` · 뷰포트의 샷 변환)을 걷었다. 불투명도 칸은 `MainWindow.Alpha.cs`로 옮겼다(카메라 셸 파일에 같이 있었다). 무대 뼈대(`StageNodes`)는 씬과 함께 걷는다. **4b 붙이기 · 배역 키 · 이모지 리그 본 — 끝**(2026-11-11): `SceneObject.AttachTo` · `AttachNode` · `Character`, `AttachObject` · `SetObjectCharacter`, `MainWindow.Attach`(붙는 리그 만들기 · 떼기), `RigTemplates`(테스트의 발판으로 옮겼다) · `SetRigParts`. 연출을 만들 세트가 없으면 이제 막는다(전에는 이모지 리그를 스스로 정의했다). 화면 테스트는 발판 `window.PlaceRig(리그)`(붙이지 않고 장면에 놓는다)로 옮겼다. **4c 컨트롤러 표 · 깊이 · 자리 · 프리셋 — 끝**(2026-11-11): `ControllersFile`(채널 박스의 자리·깊이·연기 묶음 · 하이어아키의 컨트롤러 항목 · 아웃라이너의 컨트롤러 보기 · W/E/R의 기본 손잡이 · "리그 노드 보기" 설정), `DepthTuningFile` · `FocusTuningFile`(층 → 깊이, 깊이 슬라이더), 자리(`SceneObject.Place` · `PlaceFocus` · 씬 탭의 자리 × focus), `MotionPresets`("프리셋에서 추가"), 돕는 손의 "재생 기준을 절대값으로" · "두 모션으로 나누기"(`SplitMotion`)와 그 경고. 채널 박스 · 하이어아키 · 아웃라이너는 이제 **노드**만 안다. 한 묶음으로 걷었다 — 서로 물려 있었다(깊이 굽기가 focus 표를, 컨트롤러 표가 깊이를 썼다). **남은 순서**: 세트만으로 서는 길 → 초상 → 씬 · 깊이 층 · 뼈대 → 덤프 |
+| 4. 씬 · 카메라 · 깊이 · 캐릭터 리그 | **끝**(2026-11-11) | **4a 카메라 — 끝**(2026-11-11): 카메라 모션(`CameraRig` · "카메라 모션 추가" · "모션" 탭의 카메라 칸)과 씬의 샷 값(`CameraSettings` · `SetCamera` · 씬 탭의 카메라(샷) · `StageShotResponse` · 뷰포트의 샷 변환)을 걷었다. 불투명도 칸은 `MainWindow.Alpha.cs`로 옮겼다(카메라 셸 파일에 같이 있었다). 무대 뼈대(`StageNodes`)는 씬과 함께 걷는다. **4b 붙이기 · 배역 키 · 이모지 리그 본 — 끝**(2026-11-11): `SceneObject.AttachTo` · `AttachNode` · `Character`, `AttachObject` · `SetObjectCharacter`, `MainWindow.Attach`(붙는 리그 만들기 · 떼기), `RigTemplates`(테스트의 발판으로 옮겼다) · `SetRigParts`. 연출을 만들 세트가 없으면 이제 막는다(전에는 이모지 리그를 스스로 정의했다). 화면 테스트는 발판 `window.PlaceRig(리그)`(붙이지 않고 장면에 놓는다)로 옮겼다. **4c 컨트롤러 표 · 깊이 · 자리 · 프리셋 — 끝**(2026-11-11): `ControllersFile`(채널 박스의 자리·깊이·연기 묶음 · 하이어아키의 컨트롤러 항목 · 아웃라이너의 컨트롤러 보기 · W/E/R의 기본 손잡이 · "리그 노드 보기" 설정), `DepthTuningFile` · `FocusTuningFile`(층 → 깊이, 깊이 슬라이더), 자리(`SceneObject.Place` · `PlaceFocus` · 씬 탭의 자리 × focus), `MotionPresets`("프리셋에서 추가"), 돕는 손의 "재생 기준을 절대값으로" · "두 모션으로 나누기"(`SplitMotion`)와 그 경고. 채널 박스 · 하이어아키 · 아웃라이너는 이제 **노드**만 안다. 한 묶음으로 걷었다 — 서로 물려 있었다(깊이 굽기가 focus 표를, 컨트롤러 표가 깊이를 썼다). **4d 명령줄 · 옛 산출물 — 끝**(2026-11-11, 소유자의 "과감하게"): 명령줄 `mt`(`Mt.Cli`)와 그 테스트, `motions.json` 가져오기/내보내기(`MotionsJson` · `MotionExport` · 툴바의 범위 콤보), `emojis.json`(`EmojisJson`), `rigs.json`(`RigAssets.WriteSchemas`), 산출물 스키마 상수, 견본 파일과 유니티 산출물 골든 · 무대 동등성 테스트. **4e 씬 · 초상 · 무대 뼈대 · 리그 덤프 — 끝**(2026-11-11): 미리보기가 **문서의 세트만으로** 선다(`RigAssets.Compose(문서)`, 무대는 `RigAssets.Stage` 1920×1080). 뷰포트에는 세트 하나(오브젝트 `set`)가 선다 — 연 세트 → 고른 연출의 세트 → 고른 애니메이션의 세트. `SceneAsset` · `SceneObject`는 보기 전용 그릇으로 줄었다(문서에 없다). 걷은 것: 문서의 씬(`scenes` · `activeScene` — 옛 문서의 것은 버려진다)과 `MotionEditor`의 씬 명령, 씬 탭의 오브젝트 칸 · 하이어아키의 씬 보기와 키(F2 · Ctrl+D · Del · Ctrl+Shift+N), 초상(`PortraitLayout`의 사이징 · 초상 PNG · 자리표시), 무대 뼈대(`StageNodes` · `stage-skeleton.json` · 설정 "무대 뼈대 보기"), 리그 덤프(`LoadRig` · 문서의 `rigSchemas` 참조 · 내장 `ExportedTuning` · `BuiltinTuning` · `BaseResolutionFile` · `RigSchemaFile.Load`), `character` 예약 이름, 조각의 이름 규칙(`_Part<n>` — 이제 세트의 "그림" 표시만 본다). 좌표 계산은 `StageGeometry`로 이름을 바꿔 남겼다. 테스트의 발판은 `RigTemplates`의 세트 둘(`Character` — nod · bow가 움직이는 마디의 사슬, `Emoji`)이다. 세션의 자산 지문에 세트의 모양을 다시 넣었다(빠뜨리면 세트를 고쳐도 뷰포트가 옛 세트를 보인다). 연출 · 애니메이션을 고르면 하이어아키가 그 세트로 바뀐다 |
 | 5. 코어 사본 줄이기 | | |
-
-### T1-4 — 남은 걸음
-
-4a · 4b · 4c는 끝났다(위 "T1 — 진행" 표). 남은 것은 한 덩어리로 물려 있다 — **씬이 사라지면 테스트의 발판(내장 캐릭터 리그 `character`와 기본 씬의 `s1`)이 함께 사라진다.**
-
-지금의 모양:
-
-- 뷰포트의 `Scene`은 셋 중 하나다: 세트를 열었으면 보기 전용 씬(오브젝트 `set` 하나 — `SetScene`), 연출을 고르고 그 세트가 씬에 없으면 씬의 사본 + 오브젝트 `cue`(`CueScene`), 그 밖에는 문서의 활성 씬(캐릭터 `s1`이 선다).
-- 리그는 `RigAssets.Compose(덤프 또는 내장 덤프, 문서)` — 무대의 크기도 덤프(`capturedUnderParentSize`)에서 온다.
-- 채널 박스 · 하이어아키 · 아웃라이너는 이미 노드만 안다(4c).
-
-걸음(안 — 하나씩, 각각 테스트 통과 · 커밋):
-
-1. **세트만으로 서는 길.** 덤프 없이 문서의 세트만으로 `RigSchemaFile`을 세운다(무대 크기는 기준 해상도 1920×1080). 뷰포트가 보이는 것을 "세트 하나"로 모은다: 연 세트 → 고른 연출의 세트 → 고른 애니메이션의 세트. `CueScene`의 오브젝트도 `set`으로 합친다. 이때부터 문서의 씬은 미리보기에 안 쓰인다.
-2. **테스트의 발판을 세트로 옮긴다.** 그래프 · 도프 시트 · 타임 슬라이더 · 키 · 되돌리기 테스트의 큰 몫이 `Fixtures.NodBowDocument()`(리그 `character`, 노드 `CharacterPortrait_Track_Move_Y` …)와 `s1`을 쓴다. **같은 노드 이름을 가진 발판 세트**를 문서에 정의해 주면(지금은 `character`가 예약 이름이라 막힌다 — 덤프가 사라지면 풀린다) 대부분 그대로 돈다. 캐릭터 기능 자체의 테스트(씬 · 층 · 초상 · 덤프 읽기)만 지운다.
-3. **초상**(`PortraitLayout`의 사이징 · `SceneObject.Portrait` · 초상 PNG 싣기 · 자리표시 사각형). `PortraitLayout.ToCanvas` · `RectQuad` 같은 좌표 계산은 세트도 쓴다 — 이름을 바꿔 남긴다.
-4. **씬 · 깊이 층 · 무대 뼈대.** `SceneAsset` · `SceneObject`(문서 모델) · `MotionEditor`의 씬 명령 · 씬 탭의 오브젝트 칸 · 하이어아키의 씬 보기 · `StageNodes` · `SceneLayers` · 내장 `stage-skeleton.json` · "무대 뼈대 보기" 설정 · `mt pose --object`.
-5. **리그 덤프.** `LoadRig` · `RigSchemaReference` · 내장 `ExportedTuning/rig-schemas.json` · `BuiltinTuning` · 툴바의 "리그 덤프…". `RigSchemaFile`은 세트를 코어 스키마로 세우는 그릇으로 남는다(T2에서 이름을 바꾼다).
-
-조심할 것:
-
-- 2번 없이 4 · 5번을 하면 테스트 수백 개가 한꺼번에 깨진다 — **발판을 먼저**.
-- `motions.json` 가져오기/내보내기 · `mt`의 `rigs` · `emojis`는 T5까지 남는다(§2의 12) — 캐릭터 리그 없이도 돌게만 한다. `nod` · `bow`의 "유니티 산출물과 바이트까지 같다" 골든 테스트는 발판 세트 위에서 그대로 돌 수 있다(형식만 본다).
-- 코어 사본(`Ked.Presentation.Core`)의 캐릭터 쪽은 T1-5에서 줄인다 — 여기서는 툴 쪽 참조만 끊는다.
-- 걸을 때마다 `README.md`(씬 · 뷰포트 절이 통째로 바뀐다) · `docs/USER-GUIDE.md` · F1 표를 같이 고친다. 끝나면 화면 캡처(`TransitionExampleShots`)로 예시 다섯이 전과 같은지 본다.
 
 출발점에서 온 옛 계획서들(`docs/PLAN.md` · `PLAN-*.md` · `HANDOFF.md`)에는 걷어 낸 기능의 이야기가 남아 있다 — 기록이라 그대로 두고, T6에서 이 툴의 문서로 갈 때 정리한다.
 

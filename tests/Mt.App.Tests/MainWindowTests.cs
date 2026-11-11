@@ -21,7 +21,9 @@ public class MainWindowTests
         string path = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", $"settings-{Guid.NewGuid():N}.json");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, "{ \"snapStep\": 0.016666666666666666 }"); // 이 테스트들의 기대값은 1/60 스냅 기준 — 기본값은 1/24(GraphMathTests)
-        return new(path);
+        var window = new MainWindow(path);
+        window.Session.Editor.AddRig(RigTemplates.Character()); // 모션들이 서는 발판 세트
+        return window;
     }
 
     [Fact]
@@ -50,7 +52,7 @@ public class MainWindowTests
     }
 
     [Fact]
-    public void 뷰포트와_그래프의_현재_시각은_하나이고_리그를_실으면_뷰포트에_초상이_선다()
+    public void 뷰포트와_그래프의_현재_시각은_하나이고_뷰포트에_모션의_세트가_선다()
     {
         HeadlessUi.Run(() =>
         {
@@ -59,12 +61,11 @@ public class MainWindowTests
 
             try
             {
-                window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 window.AddMotionFromForm("nod", "character", "0.6", MotionEnd.Restore);
 
                 Assert.Equal("nod", window.Viewport.MotionName);
                 Assert.True(window.Viewport.HasRig);
-                Assert.NotNull(window.Viewport.CurrentPortraitQuad());
+                Assert.NotNull(window.Viewport.ObjectQuad(Mt.App.Views.ViewportView.SetObjectId));
 
                 window.Viewport.ScrubTo(0.25);
                 Assert.Equal(0.25, window.Graph.CurrentTime, 9);
@@ -94,7 +95,6 @@ public class MainWindowTests
 
             try
             {
-                window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 window.AddMotionFromForm("nod", "character", "0.6", MotionEnd.Restore);
                 var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
                 window.AddChannelFromForm(y.Node, y.Kind);
@@ -141,7 +141,6 @@ public class MainWindowTests
 
             try
             {
-                window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 window.AddMotionFromForm("wave", "character", "0.5", MotionEnd.Restore);
                 Assert.Contains("CharacterPortrait_Track_Move_X", window.Viewport.NodeChoices);
                 Assert.DoesNotContain("CharSlot_Track_Focus", window.Viewport.NodeChoices);
@@ -180,11 +179,11 @@ public class MainWindowTests
         HeadlessUi.Run(() =>
         {
             var window = new MainWindow(settingsPath);
+            window.Session.Editor.AddRig(RigTemplates.Character());
             window.Show();
 
             try
             {
-                window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 window.AddMotionFromForm("nod", "character", "0.5", MotionEnd.Restore);
                 var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
                 window.AddChannelFromForm(y.Node, y.Kind);
@@ -218,7 +217,7 @@ public class MainWindowTests
     }
 
     [Fact]
-    public void 씬에_오브젝트를_더하고_채널_박스로_배치하면_되돌리기_한_번이다()
+    public void 세트를_열지_않아도_고른_애니메이션의_세트가_하이어아키에_선다()
     {
         HeadlessUi.Run(() =>
         {
@@ -227,27 +226,21 @@ public class MainWindowTests
 
             try
             {
-                window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
-                Assert.Single(window.Viewport.SceneObjects); // 기본 씬 s1
+                var editor = window.Session.Editor;
+                editor.AddRig(RigTemplates.Emoji());
+                editor.AddMotion("pop", RigTemplates.EmojiKind, 0.5f);
+                editor.AddMotion("nod", RigTemplates.CharacterKind, 0.5f);
+                string set = Mt.App.Views.ViewportView.SetObjectId;
 
-                window.AddObjectFromForm("s2", "character", "front");
-                Assert.Equal(2, window.Viewport.SceneObjects.Count);
-                Assert.Equal("s2", window.Viewport.SelectedObjectId);
+                window.SelectMotion("pop");
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.Equal(new[] { "세트  emoji", "Emoji_Anchor", "Emoji_Body" }, window.HierarchyPathOf(set, "Emoji_Body"));
 
-                long before = window.Session.Editor.Revision;
-                window.CommitObjectPlacementFromForm(120f, -30f, 5f, 1.2f, 1f);
-                Assert.Equal(before + 1, window.Session.Editor.Revision);
-                Mt.Authoring.Model.SceneObject s2 = window.Viewport.SelectedObject!;
-                Assert.Equal(120f, s2.PositionX);
-                Assert.Equal(-30f, s2.PositionY);
-                Assert.Equal(5f, s2.RotationZ);
-                Assert.Equal(1.2f, s2.ScaleX);
-
-                window.Session.Editor.Undo();
-                Assert.Equal(0f, window.Viewport.SelectedObject!.PositionX);
-
-                Assert.Throws<InvalidOperationException>(() => window.AddObjectFromForm("s2", "character", "mid")); // 겹치는 id
-                Assert.Throws<InvalidOperationException>(() => window.AddObjectFromForm("C3", "character", "mid")); // 규칙 밖
+                // 다른 세트의 애니메이션을 고르면 하이어아키가 그 세트로 바뀐다.
+                window.SelectMotion("nod");
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.Empty(window.HierarchyPathOf(set, "Emoji_Body"));
+                Assert.Equal("세트  character", window.HierarchyPathOf(set, "CharacterPortrait_Track_Move")[0]);
             }
             finally
             {
@@ -266,7 +259,6 @@ public class MainWindowTests
 
             try
             {
-                window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 window.AddMotionFromForm("", "character", "0.6", MotionEnd.Restore);
                 window.AddMotionFromForm("  ", "character", "0.6", MotionEnd.Restore);
 
@@ -293,7 +285,6 @@ public class MainWindowTests
 
             try
             {
-                window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 window.AddMotionFromForm("nod", "character", "0.6", MotionEnd.Restore);
                 var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
                 window.AddChannelFromForm(y.Node, y.Kind);
@@ -409,7 +400,7 @@ public class MainWindowTests
 
             try
             {
-                Assert.Equal(4, window.InspectorTabCount); // 채널 박스 · 씬 · 모션 · 연출
+                Assert.Equal(4, window.InspectorTabCount); // 채널 박스 · 세트 · 모션 · 연출
                 Assert.Equal(0, window.InspectorTab);
                 window.InspectorTab = 2;
                 Assert.Equal(2, window.Settings.InspectorTab);
@@ -423,58 +414,6 @@ public class MainWindowTests
     }
 
     // 설정 창·단축키 창은 헤드리스 세션(창 하나 전제)에서 두 번째 창을 열면 UI 스레드가 멈춰 여기서 열지 않는다 — 데스크톱에서 확인한다.
-
-    [Fact]
-    public void 하이어아키는_덤프의_부모자식_계층_그대로이고_메뉴로_만들며_이름바꾸기_복제가_된다()
-    {
-        HeadlessUi.Run(() =>
-        {
-            MainWindow window = NewWindow();
-            window.Show();
-
-            try
-            {
-                window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
-                window.ShowStageSkeleton = true; // 기본은 Scene › 무대 › 층만 — 이 테스트는 뼈대 전체
-
-                // 리그 노드는 연기/배치 폴더가 아니라 덤프의 parent 사슬이다. 오브젝트 항목이 곧 __root.
-                IReadOnlyList<string> path = window.HierarchyPathOf("s1", "CharacterPortrait_Track_Move_Y");
-                Assert.Equal(new[] { "Scene  scene  ·  PresentataionUIRoot", "StageViewportLayer", "StageShot_Root", "StagePan_Root", "StageZoom_Root", "Stage00_Root", "Stage00Mask_Root", "Stage00DepthSystem_Root", "Stage00Depth_Mid_Root", "Stage00Depth_Mid_FramingTransform", "Stage00Depth_Mid_FramingScale", "Stage00Depth_Mid_Content", "s1  ·  character", "CharSlot_Track_Focus", "CharSlot_DepthY", "CharSlot_DepthScale", "CharSlot_Track_Idle", "CharSlot_Track", "CharSlot_Track_X", "CharSlot_Track_Y", "CharSlot_Rotation", "CharSlot_SwayPivot", "CharSlot_Scale", "CharacterPortrait_VisualOffset", "CharacterPortrait_Track", "CharacterPortrait_Rotation", "CharacterPortrait_Track_Move", "CharacterPortrait_Track_Move_X", "CharacterPortrait_Track_Move_Y" }, path);
-                Assert.DoesNotContain("연기 축", window.HierarchyPathOf("s1", "CharacterPortrait_SwayPivot"));
-
-                // 노드 위에서 "만들기" = 그 오브젝트와 같은 무대·층(오브젝트끼리 부모·자식은 없다). 트리에서는 같은 Content 밑.
-                string prop = window.CreateObjectFromMenu("character", "s1", "CharacterPortrait_Track_Move");
-                Assert.Equal("s2", prop);
-                Assert.Equal(prop, window.Viewport.SelectedObjectId);
-                IReadOnlyList<string> propPath = window.HierarchyPathOf("s2", null);
-                Assert.Equal("Stage00Depth_Mid_Content", propPath[^2]);
-                Assert.StartsWith("s2  ·  character", propPath[^1], StringComparison.Ordinal);
-
-                // 빈자리에서 만들면 선택 오브젝트의 무대·층의 최상위. 리그 없는 오브젝트는 없다.
-                string s3 = window.CreateObjectFromMenu("character", null, null);
-                Assert.Equal("s3", s3);
-                window.SelectInHierarchy("s3", null);
-                Assert.Equal("stage00", window.Viewport.SelectedObject!.Stage);
-                Assert.Throws<InvalidOperationException>(() => window.AddObjectFromForm("x1", "", "mid"));
-                window.Session.Editor.RemoveSceneObject(null, "s3");
-
-                // 이름 바꾸기(채널 박스 id) — 선택이 따라간다.
-                window.SelectInHierarchy("s2", null);
-                window.RenameSelectedFromForm("hand");
-                Assert.Equal("hand", window.Viewport.SelectedObjectId);
-
-                // 복제 — 새 것이 선택된다.
-                window.SelectInHierarchy("s1", null);
-                window.DuplicateSelectedFromMenu();
-                Assert.Equal("s2", window.Viewport.SelectedObjectId);
-                Assert.Equal(3, window.HierarchyObjectCount);
-            }
-            finally
-            {
-                window.Close();
-            }
-        });
-    }
 
     [Fact]
     public void Ctrl_Z_Y는_창_어디에_포커스가_있든_한_번만_돌고_글_입력_칸에서는_문서를_안_건드린다()
@@ -600,13 +539,12 @@ public class MainWindowTests
 
             try
             {
-                window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
                 window.AddMotionFromForm("step", "character", "0.6", MotionEnd.Commit);
                 var editor = window.Session.Editor;
                 MotionAsset Step() => editor.Document.Find("step")!;
                 window.AutoKeyChecked = false;
                 window.Viewport.ScrubTo(0.25);
-                window.SelectInHierarchy("s1", "CharacterPortrait_Track_Move");
+                window.SelectInHierarchy(Mt.App.Views.ViewportView.SetObjectId, "CharacterPortrait_Track_Move");
 
                 // 좌우·상하 두 성분을 키 없는 포즈로 두고 S — 키 확정은 한 칸이고, 되돌리면 둘 다 키 없는 포즈로 돌아온다.
                 window.SetChannelBoxValue(MotionChannelKind.Position, Axis.X, "10");
@@ -625,69 +563,6 @@ public class MainWindowTests
                 editor.Redo();
                 Assert.False(window.Viewport.HasPending);
                 Assert.Equal(10f, Step().FindChannel("CharacterPortrait_Track_Move", MotionChannelKind.Position)!.X!.Keys.Single().V, 3);
-            }
-            finally
-            {
-                window.Close();
-            }
-        });
-    }
-
-    [Fact]
-    public void 초상과_리그_참조를_되돌리면_실은_자산도_따라오고_키_편집은_자산을_다시_읽지_않는다()
-    {
-        HeadlessUi.Run(() =>
-        {
-            MainWindow window = NewWindow();
-            window.Show();
-
-            try
-            {
-                var editor = window.Session.Editor;
-                string dir = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", Guid.NewGuid().ToString("N"));
-                Directory.CreateDirectory(dir);
-                string a = Path.Combine(dir, "a.png");
-                string b = Path.Combine(dir, "b.png");
-                File.WriteAllBytes(a, new byte[] { 1 }); // 헤드리스는 PNG를 못 읽는다 — 참조와 다시 싣기만 본다
-                File.WriteAllBytes(b, new byte[] { 2 });
-
-                // 초상 A → B → Undo: 문서도 세션도 뷰포트 다시 싣기도 A로. Redo면 B.
-                window.Session.SetPortrait("s1", a);
-                window.Session.SetPortrait("s1", b);
-                SceneObject S1() => editor.Document.ActiveSceneAsset!.Find("s1")!;
-                Assert.Equal(Path.GetFullPath(b), Path.GetFullPath(window.Session.PortraitPathOf(S1())!));
-                int refreshes = window.AssetRefreshCount;
-                int syncs = window.Session.AssetSyncCount;
-                editor.Undo();
-                Assert.Equal(Path.GetFullPath(a), Path.GetFullPath(window.Session.PortraitPathOf(S1())!));
-                Assert.Equal(refreshes + 1, window.AssetRefreshCount);
-                Assert.Equal(syncs + 1, window.Session.AssetSyncCount);
-                editor.Redo();
-                Assert.Equal(Path.GetFullPath(b), Path.GetFullPath(window.Session.PortraitPathOf(S1())!));
-                Assert.Equal(refreshes + 2, window.AssetRefreshCount);
-
-                // 키·메타 편집과 그 되돌리기는 자산을 다시 읽지 않는다.
-                window.AddMotionFromForm("nod", "character", "0.6", MotionEnd.Restore);
-                refreshes = window.AssetRefreshCount;
-                syncs = window.Session.AssetSyncCount;
-                editor.SetDuration("nod", 1f);
-                editor.Undo();
-                editor.Redo();
-                Assert.Equal(refreshes, window.AssetRefreshCount);
-                Assert.Equal(syncs, window.Session.AssetSyncCount);
-
-                // 리그 덤프 참조: 실었다가 되돌리면 내장 리그로, 다시하면 그 덤프로 — 한 칸.
-                string rig = TestDocuments.FixturePath("rig-schemas.json");
-                window.Session.LoadRig(rig);
-                Assert.False(window.Session.IsBuiltinRig);
-                long revision = editor.Revision;
-                editor.Undo();
-                Assert.Equal(revision + 1, editor.Revision);
-                Assert.Null(editor.Document.RigSchemas);
-                Assert.True(window.Session.IsBuiltinRig);
-                editor.Redo();
-                Assert.False(window.Session.IsBuiltinRig);
-                Assert.Equal(Path.GetFullPath(rig), Path.GetFullPath(window.Session.RigPath!));
             }
             finally
             {

@@ -8,7 +8,7 @@ using Mt.Authoring.Rig;
 
 namespace Mt.App;
 
-// 스킨의 셸(PLAN-parts.md P1) — "씬" 탭 아래, 조각 노드가 있는 리그의 오브젝트를 골랐을 때만 보인다.
+// 스킨의 셸(PLAN-parts.md P1) — 세트 탭 아래, 조각 노드가 있는 세트를 보일 때만 선다.
 // 스킨 = 조각마다 붙일 그림의 묶음에 이름을 붙인 것. 오브젝트는 스킨을 고르고, 스킨의 조각 줄에서 그림을 정한다.
 public partial class MainWindow
 {
@@ -53,15 +53,9 @@ public partial class MainWindow
                 return;
             }
 
-            // 세트 보기의 오브젝트는 문서에 없다 — 입혀 보는 스킨은 보기 상태다(문서를 안 바꾼다).
-            if (_viewport.SetView is not null)
-            {
-                _viewport.SetSkin = choice == NoSkin ? null : choice;
-                RefreshSkinPanel();
-                return;
-            }
-
-            Guard("스킨 입히기", () => _session.Editor.SetObjectSkin(null, o.Id, choice == NoSkin ? null : choice));
+            // 입혀 보는 스킨은 보기 상태다(문서를 안 바꾼다).
+            _viewport.SetSkin = choice == NoSkin ? null : choice;
+            RefreshSkinPanel();
         };
         OnCommit(_skinName, text =>
         {
@@ -73,7 +67,7 @@ public partial class MainWindow
         return _skinPanel;
     }
 
-    /// <summary>고른 오브젝트의 리그에 조각 노드가 있을 때만 보인다 — 캐릭터(초상 한 장)에는 스킨이 없다.</summary>
+    /// <summary>고른 오브젝트의 세트에 조각 노드가 있을 때만 보인다.</summary>
     private void RefreshSkinPanel()
     {
         _refreshDepth++;
@@ -255,22 +249,9 @@ public partial class MainWindow
             name = $"skin_{n}";
         }
 
-        string id = o.Id;
-        string rig = o.Rig;
-
-        if (_viewport.SetView is not null)
-        {
-            editor.AddSkin(name, rig);
-            _viewport.SetSkin = name;
-            RefreshSkinPanel();
-            return name;
-        }
-
-        editor.Batch(MotionChangeKind.Scene, () =>
-        {
-            editor.AddSkin(name, rig);
-            editor.SetObjectSkin(null, id, name);
-        });
+        editor.AddSkin(name, o.Rig);
+        _viewport.SetSkin = name;
+        RefreshSkinPanel();
         return name;
     }
 

@@ -9,10 +9,10 @@ namespace Mt.Authoring.Tests;
 
 public class MotionValidatorTests
 {
-    private static readonly RigSchemaFile RigFile = RigSchemaFile.Load(Fixtures.PathOf("rig-schemas.json"));
+    private static readonly RigSchemaFile RigFile = RigTemplates.File();
 
     [Fact]
-    public void nod_bow는_리그_덤프로_검증해도_문제가_0건이다()
+    public void nod_bow는_발판_세트로_검증하면_문제가_0건이다()
     {
         Assert.Empty(MotionValidator.Validate(Fixtures.NodBowDocument(), RigFile.NodeIds));
     }
@@ -31,7 +31,7 @@ public class MotionValidatorTests
     }
 
     [Fact]
-    public void 리그_덤프에_없는_노드는_거부하고_덤프가_없으면_노드_검사는_생략한다()
+    public void 세트에_없는_노드는_거부하고_노드_표가_없으면_노드_검사는_생략한다()
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddMotion("a", "character", 1f);
@@ -44,13 +44,13 @@ public class MotionValidatorTests
     }
 
     [Fact]
-    public void 모르는_rigKind는_문서_수준_문제다()
+    public void 모르는_세트는_문서_수준_문제다()
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddMotion("a", "robot", 1f);
 
         MotionProblem problem = Assert.Single(MotionValidator.Validate(editor.Document, RigFile.NodeIds));
-        Assert.Contains("rigKind 'robot'", problem.Message, StringComparison.Ordinal);
+        Assert.Contains("세트 'robot'", problem.Message, StringComparison.Ordinal);
         Assert.Contains("character", problem.Message, StringComparison.Ordinal);
     }
 }

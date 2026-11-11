@@ -13,9 +13,8 @@ public class AlphaChannelTests
 {
     private const string Part = "Emoji_Part1";
     private const string Body = "Emoji_Body";
-    private const string SpriteRoot = "CharacterPortraitSprite_Root";
 
-    private static readonly RigSchemaFile RigFile = RigSchemaFile.Load(EmojiRigFixture.WriteDump(Fixtures.PathOf("rig-schemas.json")));
+    private static readonly RigSchemaFile RigFile = RigTemplates.File();
 
     private static KeyAsset Linear(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Linear };
 
@@ -23,19 +22,18 @@ public class AlphaChannelTests
     private static MotionEditor NewEditor()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddSceneObject(null, "e1", EmojiRigFixture.RigKind);
 
-        editor.AddMotion("fade", EmojiRigFixture.RigKind, 1f, MotionEnd.Commit);
+        editor.AddMotion("fade", RigTemplates.EmojiKind, 1f, MotionEnd.Commit);
         editor.AddChannel("fade", Part, MotionChannelKind.Alpha);
         editor.SetKeys("fade", Part, MotionChannelKind.Alpha, Axis.X, new[] { Linear(0f, 1f), Linear(1f, 0f) });
 
-        editor.AddMotion("dim", EmojiRigFixture.RigKind, 1f, MotionEnd.Commit);
+        editor.AddMotion("dim", RigTemplates.EmojiKind, 1f, MotionEnd.Commit);
         editor.AddChannel("dim", Body, MotionChannelKind.Alpha);
         editor.SetKeys("dim", Body, MotionChannelKind.Alpha, Axis.X, new[] { Linear(0f, 1f), Linear(1f, 0.5f) });
         return editor;
     }
 
-    private static RectNodeTree Template(MotionEditor editor) => ScenePreview.Build(RigFile, editor.Document.ActiveSceneAsset!);
+    private static RectNodeTree Template(MotionEditor editor) => ScenePreview.Build(RigFile, RigTemplates.SceneOf(RigTemplates.EmojiKind));
 
     private static void Near(float expected, float actual) => Assert.InRange(actual, expected - 1e-3f, expected + 1e-3f);
 

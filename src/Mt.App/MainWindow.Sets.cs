@@ -12,7 +12,6 @@ namespace Mt.App;
 
 // 세트(PLAN-set.md S1) — 오브젝트들의 계층 + 그림 + 애니메이션들의 한 덩어리. 데이터는 툴이 정의한 리그(RigAsset)다.
 // 왼쪽 목록에서 세트를 열면 뷰포트·하이어아키가 그 세트만 보이고, 하이어아키에서 오브젝트를 더하고 지우고 옮긴다.
-// 캐릭터 리그(덤프가 원본)는 세트 목록에 없다 — 구조를 여기서 못 고친다.
 public partial class MainWindow
 {
     private const string RootParentChoice = "(맨 위)";
@@ -91,7 +90,7 @@ public partial class MainWindow
 
     private string? _rigNodeSelected;
 
-    /// <summary>연 세트(rigKind). 없으면 null — 뷰포트는 문서의 씬을 보인다.</summary>
+    /// <summary>연 세트(rigKind). 없으면 null — 뷰포트는 고른 연출·애니메이션의 세트를 보인다.</summary>
     internal string? SelectedSet => _setList.SelectedItem as string;
 
     /// <summary>테스트 손잡이 — 세트 목록에서 고른 것과 같다.</summary>
@@ -149,7 +148,7 @@ public partial class MainWindow
         }
 
         float start = (float)Math.Clamp(_graph.CurrentTime, 0, Math.Max(0, motion.Duration - 0.05));
-        float distance = _session.Editor.SlideFromOutside(motion.Name, node, side, start, SlideSeconds, _session.StageSize, leaving);
+        float distance = _session.Editor.SlideFromOutside(motion.Name, node, side, start, SlideSeconds, Mt.Authoring.Rig.RigAssets.Stage, leaving);
         _session.SetStatus($"{node}: {start:0.##}초부터 {SlideSeconds:0.##}초 동안 무대 {SideName(side)} {(leaving ? "밖으로 나간다" : "밖에서 들어온다")}({Math.Abs(distance):0}px).");
         return distance;
     }
@@ -211,10 +210,10 @@ public partial class MainWindow
         ToolTip.SetTip(import, "PNG를 연 세트의 그림 오브젝트로 — 이름은 파일 이름에서, 크기는 그림의 크기, 지금 입혀 보는 스킨에 그림이 들어간다(스킨이 없으면 만든다). 되돌리기 한 번. 뷰포트에 파일을 끌어다 놓아도 된다");
         ToolTip.SetTip(add, "빈 세트(오브젝트 Body 하나)를 만들어 연다 — 이름 set, set_2…. 하이어아키에서 우클릭해 오브젝트를 더한다");
         ToolTip.SetTip(remove, "연 세트를 지운다. 그 세트의 애니메이션·스킨·연출은 남고 문제 목록이 알린다(되돌리기 한 번)");
-        ToolTip.SetTip(close, "세트를 닫고 씬으로 돌아간다");
+        ToolTip.SetTip(close, "세트를 닫는다");
         LeftPanel.Children.Insert(2, new WrapPanel { Orientation = Orientation.Horizontal, Children = { add, remove, close, import, importLayers } });
         LeftPanel.Children.Insert(3, Labeled("세트 이름", _setName));
-        ToolTip.SetTip(_setName, "연 세트의 이름 — 고치고 Enter. 그 세트의 애니메이션·스킨·연출, 씬의 오브젝트가 따라온다(되돌리기 한 번). 영문자로 시작하는 영문·숫자·_");
+        ToolTip.SetTip(_setName, "연 세트의 이름 — 고치고 Enter. 그 세트의 애니메이션·스킨·연출이 따라온다(되돌리기 한 번). 영문자로 시작하는 영문·숫자·_");
         OnCommit(_setName, text =>
         {
             if (!_refreshing && SelectedSet is { } kind && text.Trim() != kind)
@@ -230,7 +229,7 @@ public partial class MainWindow
         });
     }
 
-    /// <summary>"씬" 탭에 서는 칸 — 세트를 열고 그 오브젝트(노드)를 골랐을 때의 이름·부모·자리·크기.</summary>
+    /// <summary>세트 탭에 서는 칸 — 세트를 열고 그 오브젝트(노드)를 골랐을 때의 이름·부모·자리·크기.</summary>
     private Control BuildSetNodePanel()
     {
         _setNodePanel.Children.Add(Header("세트의 오브젝트"));
@@ -366,7 +365,7 @@ public partial class MainWindow
 
         _rigNodeSelected = null;
         _viewport.SetView = SelectedSet;
-        BindMotion(SelectedMotion); // 뷰포트의 씬이 바뀌었다 — 묶인 것을 그 씬에서 다시 본다
+        BindMotion(SelectedMotion); // 뷰포트의 무대가 바뀌었다 — 묶인 것을 그 무대에서 다시 본다
         RefreshAssets();
         RefreshObjects();
         RefreshSetNodePanel();

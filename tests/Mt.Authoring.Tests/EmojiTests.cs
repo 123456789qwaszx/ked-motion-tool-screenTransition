@@ -15,7 +15,7 @@ public class EmojiTests
     private const string Body = "Emoji_Body";
     private const string Part = "Emoji_Part1";
 
-    private static readonly RigSchemaFile RigFile = RigSchemaFile.Load(EmojiRigFixture.WriteDump(Fixtures.PathOf("rig-schemas.json")));
+    private static readonly RigSchemaFile RigFile = RigTemplates.File();
 
     private static KeyAsset Linear(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Linear };
 
@@ -27,32 +27,31 @@ public class EmojiTests
     private static MotionEditor NewEditor()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddSceneObject(null, "e1", EmojiRigFixture.RigKind);
-        editor.AddSkin("땀", EmojiRigFixture.RigKind);
+        editor.AddSkin("땀", RigTemplates.EmojiKind);
         editor.SetSkinPart("땀", Part, "art/sweat.png");
 
-        editor.AddMotion("pop", EmojiRigFixture.RigKind, 0.2f, MotionEnd.Commit, MotionChannelMode.Absolute);
+        editor.AddMotion("pop", RigTemplates.EmojiKind, 0.2f, MotionEnd.Commit, MotionChannelMode.Absolute);
         editor.AddChannel("pop", Body, MotionChannelKind.Position);
         editor.SetKeys("pop", Body, MotionChannelKind.Position, Axis.Y, new[] { Linear(0f, 0f), Linear(0.2f, 40f) });
 
-        editor.AddMotion("bob", EmojiRigFixture.RigKind, 0.4f);
+        editor.AddMotion("bob", RigTemplates.EmojiKind, 0.4f);
         editor.AddChannel("bob", Body, MotionChannelKind.Position);
         editor.SetKeys("bob", Body, MotionChannelKind.Position, Axis.Y, new[] { Linear(0f, 0f), Linear(0.2f, 10f), Linear(0.4f, 0f) });
 
-        editor.AddMotion("fade", EmojiRigFixture.RigKind, 0.3f, MotionEnd.Commit);
+        editor.AddMotion("fade", RigTemplates.EmojiKind, 0.3f, MotionEnd.Commit);
         editor.AddChannel("fade", Part, MotionChannelKind.Alpha);
         editor.SetKeys("fade", Part, MotionChannelKind.Alpha, Axis.X, new[] { Linear(0f, 1f), Linear(0.3f, 0f) });
 
-        editor.AddEmoji("sweat", EmojiRigFixture.RigKind);
+        editor.AddEmoji("sweat", RigTemplates.EmojiKind);
         editor.UpdateEmoji("sweat", new EmojiAsset { Skin = "땀", Enter = "pop", Hold = "bob", Exit = "fade", HoldSeconds = 1f, OffsetX = 120f, OffsetY = 300f });
         return editor;
     }
 
     private static EmojiAsset Sweat(MotionEditor editor) => editor.Document.FindEmoji("sweat")!;
 
-    private static SceneObject Actor(MotionEditor editor) => editor.Document.ActiveSceneAsset!.Find("e1")!;
+    private static SceneObject Actor(MotionEditor editor) => RigTemplates.SceneOf(RigTemplates.EmojiKind).Objects[0];
 
-    private static RectNodeTree Template(MotionEditor editor) => ScenePreview.Build(RigFile, editor.Document.ActiveSceneAsset!);
+    private static RectNodeTree Template(MotionEditor editor) => ScenePreview.Build(RigFile, RigTemplates.SceneOf(RigTemplates.EmojiKind));
 
     private static float BodyY(MotionEditor editor, double t, IDictionary<string, float>? alphas = null)
         => EmojiPreview.Pose(Template(editor), editor.Document, Sweat(editor), Actor(editor), t, alphas).GetState("e1/" + Body).AnchoredPosition.Y;
@@ -127,8 +126,8 @@ public class EmojiTests
         MotionEditor editor = NewEditor();
         long revision = editor.Revision;
 
-        Assert.Throws<InvalidOperationException>(() => editor.AddEmoji("sweat", EmojiRigFixture.RigKind));
-        Assert.Throws<InvalidOperationException>(() => editor.AddEmoji("땀 방울", EmojiRigFixture.RigKind)); // 빈칸
+        Assert.Throws<InvalidOperationException>(() => editor.AddEmoji("sweat", RigTemplates.EmojiKind));
+        Assert.Throws<InvalidOperationException>(() => editor.AddEmoji("땀 방울", RigTemplates.EmojiKind)); // 빈칸
         Assert.Throws<InvalidOperationException>(() => editor.AddEmoji("x", ""));
         Assert.Throws<InvalidOperationException>(() => editor.UpdateEmoji("sweat", new EmojiAsset { HoldSeconds = -1f }));
         Assert.Throws<KeyNotFoundException>(() => editor.RemoveEmoji("nope"));
@@ -190,7 +189,7 @@ public class EmojiTests
         Near(50f, Before(EmojiPhase.Exit));
 
         // 이 이모지만의 모션으로 — 복제해 꽂는다, 한 칸. 다른 이모지는 원래 것을 쓴다.
-        editor.AddEmoji("other", EmojiRigFixture.RigKind);
+        editor.AddEmoji("other", RigTemplates.EmojiKind);
         editor.UpdateEmoji("other", new EmojiAsset { Hold = "bob", HoldSeconds = 1f });
         Assert.Equal(2, EmojiPreview.UsesOf(editor.Document, "bob"));
         long revision = editor.Revision;

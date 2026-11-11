@@ -12,19 +12,13 @@ public class MotionDocumentJsonTests
     public void 저작_원본은_쓰고_읽으면_같은_문서다()
     {
         MotionDocument document = Fixtures.NodBowDocument();
-        var editor = new MotionEditor(document);
-        editor.SetRigSchemas("../ExportedTuning/rig-schemas.json", "abc123");
-        editor.SetPreviewPortrait("assets/harin_a_01.png");
-
-        string first = MotionDocumentJson.Write(editor.Document);
+        string first = MotionDocumentJson.Write(document);
         MotionDocument read = MotionDocumentJson.Read(first);
         string second = MotionDocumentJson.Write(read);
 
         Assert.Equal(first, second);
         Assert.Equal(AuthoringFormat.AuthoringSchema, read.Schema);
-        Assert.Equal("abc123", read.RigSchemas!.Sha256);
-        Assert.Null(read.Preview); // 예전 Preview.Portrait는 기본 씬 c1의 초상이 된다
-        Assert.Equal("assets/harin_a_01.png", read.ActiveSceneAsset!.Objects[0].Portrait);
+        Assert.Equal(document.Rigs.Select(r => r.Kind), read.Rigs.Select(r => r.Kind));
         Assert.DoesNotContain("\"notes\"", first, StringComparison.Ordinal); // 메모는 없다(소유자, 2026-10-28)
     }
 

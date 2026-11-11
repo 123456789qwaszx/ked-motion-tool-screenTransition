@@ -9,25 +9,7 @@ namespace Mt.Authoring.Tests;
 
 public class PoseEditTests
 {
-    private static readonly RigSchemaFile RigFile = RigSchemaFile.Load(Fixtures.PathOf("rig-schemas.json"));
-
-    [Fact]
-    public void 이동은_부모_공간_변위다_부모가_배율되면_화면_변위와_다르다()
-    {
-        RectNodeTree tree = RigFile.BuildTree("character");
-        const string node = "CharacterPortrait_Track_Move_Y";
-
-        Vec2 plain = PoseEdit.RootDeltaToLocal(tree, node, new Vec2(0f, 0f), new Vec2(10f, -18f));
-        Assert.Equal(10f, plain.X, 3);
-        Assert.Equal(-18f, plain.Y, 3);
-
-        // 조상(CharSlot_Scale)을 2배로 — 화면 20px가 로컬 10이다.
-        tree.SetState("CharSlot_Scale", tree.GetState("CharSlot_Scale").WithLocalScale(new Vec3(2f, 2f, 1f)));
-        Vec2 scaled = PoseEdit.RootDeltaToLocal(tree, node, new Vec2(0f, 0f), new Vec2(20f, 0f));
-        Assert.Equal(10f, scaled.X, 3);
-
-        Assert.Equal(new Vec2(3f, 4f), PoseEdit.RootDeltaToLocal(tree, "__root", new Vec2(1f, 1f), new Vec2(4f, 5f)));
-    }
+    private static readonly RigSchemaFile RigFile = RigTemplates.File();
 
     [Fact]
     public void 회전은_반시계_양수이고_감긴다_배율은_팔_방향_투영이라_가운데를_넘어도_뒤집히지_않는다()
