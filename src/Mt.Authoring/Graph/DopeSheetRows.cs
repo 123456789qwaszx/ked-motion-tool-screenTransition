@@ -5,10 +5,10 @@ namespace Mt.Authoring.Graph;
 
 public enum DopeRowLevel
 {
-    /// <summary>노드 — 그 노드의 모든 채널·성분 키를 요약한다.</summary>
+    /// <summary>층 — 그 층의 모든 채널·성분 키를 요약한다.</summary>
     Node,
 
-    /// <summary>채널(노드 × 종류) — 성분 키를 요약한다.</summary>
+    /// <summary>채널(층 × 종류) — 성분 키를 요약한다.</summary>
     Channel,
 
     /// <summary>성분(x·y·z) — 키 그 자체.</summary>
@@ -35,7 +35,7 @@ public sealed record DopeRow(
 }
 
 /// <summary>
-/// 모션 → 도프시트 행들. 노드 › 채널 › 성분 트리를 평평하게 편 것이고, 접힌 노드는 요약 행만 남긴다.
+/// 타임라인 → 도프시트 행들. 층 › 채널 › 성분 트리를 평평하게 편 것이고, 접힌 층은 요약 행만 남긴다.
 /// 블록은 허용 오차 안의 같은 시각끼리 묶는다 — 요약 행의 블록 하나를 끌면 그 밑의 키가 전부 간다.
 /// </summary>
 public static class DopeSheetRows

@@ -6,8 +6,8 @@ using Mt.Authoring.Import;
 namespace Mt.Authoring.Tests;
 
 /// <summary>
-/// 예시 문서 <c>examples/transitions/station/station.transition-authoring.json</c> — 화면 전환 하나를 세트와 타임라인 하나로 지은 것.
-/// 층 표(<c>art/layers.tsv</c>)를 세트로 들이고, 등장·머묾·퇴장을 사본 세트에서 따로 짓고(<see cref="Section"/>) 한 타임라인으로 잇는다(<see cref="Join"/>). 편집기의 명령으로만 짓는다.
+/// 예시 문서 <c>examples/transitions/station/station.transition-authoring.json</c> — 화면 전환 하나를 전환과 타임라인 하나로 지은 것.
+/// 층 표(<c>art/layers.tsv</c>)를 전환으로 들이고, 등장·머묾·퇴장을 사본 전환에서 따로 짓고(<see cref="Section"/>) 한 타임라인으로 잇는다(<see cref="Join"/>). 편집기의 명령으로만 짓는다.
 /// </summary>
 internal static class TransitionExamples
 {
@@ -58,7 +58,7 @@ internal static class TransitionExamples
     }
 
     /// <summary>
-    /// 작은 움직임(0초부터 적은 키)을 길이 <paramref name="duration"/>짜리 애니메이션의 <paramref name="at"/>초에 놓는다 —
+    /// 작은 움직임(0초부터 적은 키)을 길이 <paramref name="duration"/>짜리 타임라인의 <paramref name="at"/>초에 놓는다 —
     /// 그 앞에는 첫 값이, 뒤에는 끝 값이 이어진다(모든 커브는 0초와 길이의 끝에 키가 있어야 한다).
     /// </summary>
     private static KeyAsset[] At(float duration, float at, params KeyAsset[] keys)
@@ -106,7 +106,7 @@ internal static class TransitionExamples
         const string In = "station_in";
         const float D = 1.2f;
         Section(editor, Station, In, D);
-        Curve(editor, In, MotionEditor.BackdropNode, MotionChannelKind.Alpha, Axis.X, L(0f, 0f), L(0.25f, 1f), L(D, 1f));
+        Curve(editor, In, MotionEditor.BackdropLayer, MotionChannelKind.Alpha, Axis.X, L(0f, 0f), L(0.25f, 1f), L(D, 1f));
         editor.AddMotionEvent(In, 0.25f, "covered");
 
         Scale(editor, In, "arches", Ramp(D, 0.15f, 0.75f, 0.55f, 1f));
@@ -164,7 +164,7 @@ internal static class TransitionExamples
         Curve(editor, Out, "arches", MotionChannelKind.Alpha, Axis.X, Ramp(E, 0.45f, 0.8f, 1f, 0f));
         Scale(editor, Out, "light", Ramp(E, 0.2f, 0.8f, 1f, 2.4f));
         Curve(editor, Out, "light", MotionChannelKind.Alpha, Axis.X, Ramp(E, 0.5f, 0.85f, 1f, 0f));
-        Curve(editor, Out, MotionEditor.BackdropNode, MotionChannelKind.Alpha, Axis.X, L(0f, 1f), L(0.5f, 1f), L(E, 0f));
+        Curve(editor, Out, MotionEditor.BackdropLayer, MotionChannelKind.Alpha, Axis.X, L(0f, 1f), L(0.5f, 1f), L(E, 0f));
 
         // ── 연출 — 화면에 선다. 1초 머물고 걷힌다.
         Join(editor, Station, In, Hold, Out);
@@ -174,7 +174,7 @@ internal static class TransitionExamples
     public const string Pillar = "pillar";
 
     /// <summary>
-    /// 기울어진 기둥과 노을 — station과 다른 결로 짓는다: 층들을 **같은 타이밍으로 놓은 뒤 시차(<see cref="MotionEditor.StaggerNodes"/>)로 민다**.
+    /// 기울어진 기둥과 노을 — station과 다른 결로 짓는다: 층들을 **같은 타이밍으로 놓은 뒤 시차(<see cref="MotionEditor.StaggerLayers"/>)로 민다**.
     /// 지평선의 것들(노을 · 도시 둘 · 언덕)이 아래에서 차례로 솟고, 해가 떠오르고, 기둥이 넘어지듯 들어와 선다.
     /// </summary>
     public static MotionEditor BuildPillar(string layersPath)
@@ -188,7 +188,7 @@ internal static class TransitionExamples
         const string In = "pillar_in";
         const float D = 1.5f;
         Section(editor, Pillar, In, D);
-        Curve(editor, In, MotionEditor.BackdropNode, MotionChannelKind.Alpha, Axis.X, L(0f, 0f), L(0.25f, 1f), L(D, 1f));
+        Curve(editor, In, MotionEditor.BackdropLayer, MotionChannelKind.Alpha, Axis.X, L(0f, 0f), L(0.25f, 1f), L(D, 1f));
         editor.AddMotionEvent(In, 0.25f, "covered");
 
         // 지평선의 층 넷 — 전부 0.2~0.7초에 아래에서 솟게 놓고, 시차로 0.12초씩 민다(하나씩 키를 옮기지 않는다).
@@ -197,7 +197,7 @@ internal static class TransitionExamples
             Curve(editor, In, layer, MotionChannelKind.Position, Axis.Y, Ramp(D, 0.2f, 0.7f, -620f, 0f));
         }
 
-        editor.StaggerNodes(In, horizon, 0.12f);
+        editor.StaggerLayers(In, horizon, 0.12f);
 
         Curve(editor, In, "clouds_far", MotionChannelKind.Position, Axis.X, Ramp(D, 0.15f, 1.0f, 520f, 0f));
         Curve(editor, In, "clouds_far", MotionChannelKind.Alpha, Axis.X, Ramp(D, 0.15f, 0.5f, 0f, 1f));
@@ -221,7 +221,7 @@ internal static class TransitionExamples
             Curve(editor, In, petal, MotionChannelKind.Position, Axis.X, Ramp(D, 1.0f, 1.3f, 180f, 0f));
         }
 
-        editor.StaggerNodes(In, petals, 0.08f);
+        editor.StaggerLayers(In, petals, 0.08f);
 
         // ── 머묾(3초, 되풀이) — 꽃잎이 흔들리고 구름이 천천히 숨쉰다.
         const string Hold = "pillar_hold";
@@ -261,10 +261,10 @@ internal static class TransitionExamples
             Curve(editor, Out, layer, MotionChannelKind.Position, Axis.Y, Ramp(E, 0.15f, 0.55f, 0f, -620f));
         }
 
-        editor.StaggerNodes(Out, sinking, 0.08f);
+        editor.StaggerLayers(Out, sinking, 0.08f);
         Curve(editor, Out, "clouds_far", MotionChannelKind.Alpha, Axis.X, Ramp(E, 0.3f, 0.7f, 1f, 0f));
         Curve(editor, Out, "clouds_near", MotionChannelKind.Alpha, Axis.X, Ramp(E, 0.3f, 0.7f, 1f, 0f));
-        Curve(editor, Out, MotionEditor.BackdropNode, MotionChannelKind.Alpha, Axis.X, L(0f, 1f), L(0.55f, 1f), L(E, 0f));
+        Curve(editor, Out, MotionEditor.BackdropLayer, MotionChannelKind.Alpha, Axis.X, L(0f, 1f), L(0.55f, 1f), L(E, 0f));
 
         Join(editor, Pillar, In, Hold, Out);
         return editor;
@@ -287,13 +287,13 @@ internal static class TransitionExamples
     /// <summary>등장의 머리 — 바탕색이 0.25초에 화면을 덮고 거기서 <c>covered</c>가 울린다.</summary>
     private static void Cover(MotionEditor editor, string motion, float duration)
     {
-        Curve(editor, motion, MotionEditor.BackdropNode, MotionChannelKind.Alpha, Axis.X, L(0f, 0f), L(0.25f, 1f), L(duration, 1f));
+        Curve(editor, motion, MotionEditor.BackdropLayer, MotionChannelKind.Alpha, Axis.X, L(0f, 0f), L(0.25f, 1f), L(duration, 1f));
         editor.AddMotionEvent(motion, 0.25f, "covered");
     }
 
     /// <summary>퇴장의 꼬리 — 바탕색이 끝에서 걷힌다.</summary>
     private static void Uncover(MotionEditor editor, string motion, float duration)
-        => Curve(editor, motion, MotionEditor.BackdropNode, MotionChannelKind.Alpha, Axis.X, L(0f, 1f), L(duration * 0.55f, 1f), L(duration, 0f));
+        => Curve(editor, motion, MotionEditor.BackdropLayer, MotionChannelKind.Alpha, Axis.X, L(0f, 1f), L(duration * 0.55f, 1f), L(duration, 0f));
 
     private static void Fade(MotionEditor editor, string motion, string node, float duration, float from, float to, float a, float b)
         => Curve(editor, motion, node, MotionChannelKind.Alpha, Axis.X, Ramp(duration, from, to, a, b));
@@ -302,8 +302,8 @@ internal static class TransitionExamples
         => Curve(editor, motion, node, MotionChannelKind.Position, axis, Ramp(duration, from, to, a, b));
 
     /// <summary>
-    /// 구간 하나(등장 · 머묾 · 퇴장)를 지을 자리 — 그 세트의 사본(<paramref name="section"/>)을 만들어 거기 타임라인에 짓는다.
-    /// 세트마다 타임라인은 하나라, 구간은 사본에서 짓고 <see cref="Join"/>이 본 세트의 타임라인으로 잇고 사본을 지운다.
+    /// 구간 하나(등장 · 머묾 · 퇴장)를 지을 자리 — 그 전환의 사본(<paramref name="section"/>)을 만들어 거기 타임라인에 짓는다.
+    /// 전환마다 타임라인은 하나라, 구간은 사본에서 짓고 <see cref="Join"/>이 본 전환의 타임라인으로 잇고 사본을 지운다.
     /// </summary>
     private static void Section(MotionEditor editor, string kind, string section, float duration)
     {
@@ -312,7 +312,7 @@ internal static class TransitionExamples
     }
 
     /// <summary>
-    /// 등장 › 머묾(한 바퀴) › 퇴장을 그 세트의 타임라인 하나로 잇는다 — 셋 다 상대값이고, 머묾은 등장이 끝난 자세에서, 퇴장은 머묾이 끝난 자세에서 시작한다.
+    /// 등장 › 머묾(한 바퀴) › 퇴장을 그 전환의 타임라인 하나로 잇는다 — 셋 다 상대값이고, 머묾은 등장이 끝난 자세에서, 퇴장은 머묾이 끝난 자세에서 시작한다.
     /// 키를 굽지 않는다: 구간마다 시작값을 얹는다(위치·회전은 더하고 배율·불투명도는 곱한다 — 탄젠트도 같이). 구간이 만나는 키는 양쪽 탄젠트를 그대로 지닌다.
     /// 표지 — 등장의 <c>covered</c>(덮였다)는 그대로, 머묾의 끝에 <c>release</c>(걷기 시작)를 둔다.
     /// </summary>
@@ -411,7 +411,7 @@ internal static class TransitionExamples
             editor.SlideFromOutside(In, layer, StageSide.Bottom, 0.2f, 0.55f, Stage);
         }
 
-        editor.StaggerNodes(In, rising, 0.1f);
+        editor.StaggerLayers(In, rising, 0.1f);
         editor.SlideFromOutside(In, "trunk_left", StageSide.Left, 0.5f, 0.5f, Stage);
         editor.SlideFromOutside(In, "trunk_right", StageSide.Right, 0.55f, 0.5f, Stage);
         editor.SlideFromOutside(In, "fish_school", StageSide.Right, 0.6f, 0.7f, Stage);
@@ -447,7 +447,7 @@ internal static class TransitionExamples
             Slide(editor, Out, layer, Axis.Y, E, 0.15f, 0.55f, 0f, -760f);
         }
 
-        editor.StaggerNodes(Out, sinking, 0.07f);
+        editor.StaggerLayers(Out, sinking, 0.07f);
         Fade(editor, Out, "light_band", E, 0.3f, 0.7f, 1f, 0f);
         Uncover(editor, Out, E);
         Join(editor, Lapis, In, Hold, Out);
@@ -478,7 +478,7 @@ internal static class TransitionExamples
             Slide(editor, In, layer, Axis.Y, D, 0.35f, 0.9f, -760f, 0f);
         }
 
-        editor.StaggerNodes(In, islands, 0.15f);
+        editor.StaggerLayers(In, islands, 0.15f);
         Slide(editor, In, "canopy", Axis.Y, D, 0.5f, 1.0f, 520f, 0f);
         // 수정 — 0.65초에 아래에서 솟고 빛이 켜진다.
         Slide(editor, In, "crystals", Axis.Y, D, 0.65f, 1.1f, -260f, 0f);
@@ -505,7 +505,7 @@ internal static class TransitionExamples
             Slide(editor, In, leaf, Axis.Y, D, 1.0f, 1.3f, 120f, 0f);
         }
 
-        editor.StaggerNodes(In, leaves, 0.07f);
+        editor.StaggerLayers(In, leaves, 0.07f);
 
         // ── 머묾(3초, 되풀이) — 씨앗의 소용돌이가 두 바퀴 돌고 수정이 두 번 반짝인다.
         const string Hold = "heredity_hold";
@@ -572,7 +572,7 @@ internal static class TransitionExamples
             Scale(editor, In, layer, Ramp(D, 0.2f, 0.9f, 1.2f, 1f));
         }
 
-        editor.StaggerNodes(In, air, 0.12f);
+        editor.StaggerLayers(In, air, 0.12f);
         Slide(editor, In, "planet", Axis.Y, D, 0.3f, 0.95f, -820f, 0f);
         Slide(editor, In, "planet_bands", Axis.Y, D, 0.3f, 0.95f, -820f, 0f);
         Slide(editor, In, "clouds", Axis.X, D, 0.45f, 1.15f, -620f, 0f);

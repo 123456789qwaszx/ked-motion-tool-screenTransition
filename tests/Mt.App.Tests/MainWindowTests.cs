@@ -49,7 +49,7 @@ public class MainWindowTests
     }
 
     [Fact]
-    public void 뷰포트와_그래프의_현재_시각은_하나이고_뷰포트에_모션의_세트가_선다()
+    public void 뷰포트와_그래프의_현재_시각은_하나이고_뷰포트에_타임라인의_전환이_선다()
     {
         HeadlessUi.Run(() =>
         {
@@ -62,7 +62,7 @@ public class MainWindowTests
 
                 Assert.Equal("nod", window.Viewport.MotionName);
                 Assert.True(window.Viewport.HasStage);
-                Assert.NotNull(window.Viewport.SetQuad());
+                Assert.NotNull(window.Viewport.TransitionQuad());
 
                 window.Viewport.ScrubTo(0.25);
                 Assert.Equal(0.25, window.Graph.CurrentTime, 9);
@@ -129,7 +129,7 @@ public class MainWindowTests
     }
 
     [Fact]
-    public void 뷰포트_드래그만으로_키가_생기고_노드_목록이_선다()
+    public void 뷰포트_드래그만으로_키가_생기고_층_목록이_선다()
     {
         HeadlessUi.Run(() =>
         {
@@ -212,7 +212,7 @@ public class MainWindowTests
     }
 
     [Fact]
-    public void 세트를_고르면_그_세트가_하이어아키에_서고_다른_세트를_고르면_바뀐다()
+    public void 전환을_고르면_그_전환이_하이어아키에_서고_다른_전환을_고르면_바뀐다()
     {
         HeadlessUi.Run(() =>
         {
@@ -225,15 +225,15 @@ public class MainWindowTests
                 editor.AddTimeline("pop", 0.5f, TransitionTemplates.Emoji());
                 editor.AddTimeline("nod", 0.5f, TransitionTemplates.Figure());
 
-                window.SelectSet("pop");
+                window.SelectTransition("pop");
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Assert.Equal(new[] { "세트  pop", "Emoji_Anchor", "Emoji_Body" }, window.HierarchyPathOf("Emoji_Body"));
+                Assert.Equal(new[] { "전환  pop", "Emoji_Anchor", "Emoji_Body" }, window.HierarchyPathOf("Emoji_Body"));
 
-                // 다른 세트를 고르면 하이어아키가 그 세트로 바뀐다.
-                window.SelectSet("nod");
+                // 다른 전환을 고르면 하이어아키가 그 전환으로 바뀐다.
+                window.SelectTransition("nod");
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 Assert.Empty(window.HierarchyPathOf("Emoji_Body"));
-                Assert.Equal("세트  nod", window.HierarchyPathOf("Mover")[0]);
+                Assert.Equal("전환  nod", window.HierarchyPathOf("Mover")[0]);
             }
             finally
             {
@@ -340,7 +340,7 @@ public class MainWindowTests
                 window.AddFigureTimeline("a", 1f);
                 Assert.NotNull(window.Session.Editor.Document.Find("a"));
 
-                // 채널이 없는 모션은 유효하다(채널은 첫 키에서 생긴다) — 문제 칸에 아무것도 없다. 길이를 0으로 하면 보인다.
+                // 채널이 없는 타임라인은 유효하다(채널은 첫 키에서 생긴다) — 문제 칸에 아무것도 없다. 길이를 0으로 하면 보인다.
                 Assert.DoesNotContain(window.ProblemsShown, p => p.MotionName == "a");
                 window.Session.Editor.SetDuration("a", 0f);
                 Assert.Contains(window.ProblemsShown, p => p.MotionName == "a");
@@ -367,7 +367,7 @@ public class MainWindowTests
 
             try
             {
-                Assert.Equal(3, window.InspectorTabCount); // 채널 박스 · 세트 · 모션
+                Assert.Equal(3, window.InspectorTabCount); // 채널 박스 · 전환 · 타임라인
                 Assert.Equal(0, window.InspectorTab);
                 window.InspectorTab = 2;
                 Assert.Equal(2, window.Settings.InspectorTab);

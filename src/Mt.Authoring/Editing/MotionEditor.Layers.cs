@@ -4,23 +4,23 @@ using Mt.Authoring.Import;
 
 namespace Mt.Authoring.Editing;
 
-// 층 표를 세트로 들인다 — 그림 한 묶음이 그림 오브젝트 여럿으로, 한 칸에.
+// 층 표를 전환으로 들인다 — 그림 한 묶음이 그림 층 여럿으로, 한 칸에.
 public sealed partial class MotionEditor
 {
-    /// <summary>바탕색 오브젝트의 이름 — 층 표에 바탕색이 있으면 맨 뒤에 무대 크기의 색 사각형으로 선다.</summary>
-    public const string BackdropNode = "Backdrop";
+    /// <summary>바탕색 층의 이름 — 층 표에 바탕색이 있으면 맨 뒤에 무대 크기의 색 사각형으로 선다.</summary>
+    public const string BackdropLayer = "Backdrop";
 
     /// <summary>
-    /// 층 표의 층들을 세트의 그림 오브젝트로 — 층마다 오브젝트 하나(이름은 파일 이름에서, 앞의 번호는 뗀다), 자리는 무대 가운데 기준(y는 위가 +),
-    /// 크기는 표의 것. 바탕색이 있으면 맨 뒤에 <see cref="BackdropNode"/>가 선다. 통째로 되돌리기 한 칸.
+    /// 층 표의 층들을 전환의 그림 층으로 — 층마다 층 하나(이름은 파일 이름에서, 앞의 번호는 뗀다), 자리는 무대 가운데 기준(y는 위가 +),
+    /// 크기는 표의 것. 바탕색이 있으면 맨 뒤에 <see cref="BackdropLayer"/>가 선다. 통째로 되돌리기 한 칸.
     /// </summary>
-    /// <param name="imageFolder">그림들이 있는 폴더(문서 기준 상대 경로) — 오브젝트의 그림이 <c>폴더/파일</c>로 적힌다.</param>
-    /// <returns>만든 오브젝트의 이름들(표의 순서).</returns>
-    public IReadOnlyList<string> ImportLayers(string kind, LayerSheet sheet, string imageFolder, Vec2 stageSize, string? parent = null)
+    /// <param name="imageFolder">그림들이 있는 폴더(문서 기준 상대 경로) — 층의 그림이 <c>폴더/파일</c>로 적힌다.</param>
+    /// <returns>만든 층의 이름들(표의 순서).</returns>
+    public IReadOnlyList<string> ImportLayers(string transition, LayerSheet sheet, string imageFolder, Vec2 stageSize, string? parent = null)
     {
         ArgumentNullException.ThrowIfNull(sheet);
         ArgumentNullException.ThrowIfNull(imageFolder);
-        TransitionAsset rig = RequireTransition(kind);
+        TransitionAsset asset = RequireTransition(transition);
 
         if (sheet.Layers.Count == 0)
         {
@@ -32,19 +32,19 @@ public sealed partial class MotionEditor
 
         Batch(MotionChangeKind.Document, () =>
         {
-            if (sheet.Background is { } background && rig.Find(BackdropNode) is null)
+            if (sheet.Background is { } background && asset.Find(BackdropLayer) is null)
             {
-                AddLayer(kind, BackdropNode, parent);
-                UpdateLayer(kind, BackdropNode, new LayerAsset { Width = stageSize.X, Height = stageSize.Y, Color = background, Alpha = true });
+                AddLayer(transition, BackdropLayer, parent);
+                UpdateLayer(transition, BackdropLayer, new LayerAsset { Width = stageSize.X, Height = stageSize.Y, Color = background, Alpha = true });
             }
 
             foreach (LayerEntry layer in sheet.Layers)
             {
-                string id = UniqueNodeId(rig, NodeIdFrom(layer.File));
-                AddLayer(kind, id, parent);
-                UpdateLayer(kind, id, new LayerAsset
+                string id = UniqueLayerId(asset, LayerIdFrom(layer.File));
+                AddLayer(transition, id, parent);
+                UpdateLayer(transition, id, new LayerAsset
                 {
-                    // 표는 왼쪽 위 기준(y 아래가 +), 세트는 가운데 기준(y 위가 +).
+                    // 표는 왼쪽 위 기준(y 아래가 +), 전환은 가운데 기준(y 위가 +).
                     X = layer.Left + layer.Width / 2f - stageSize.X / 2f,
                     Y = stageSize.Y / 2f - (layer.Top + layer.Height / 2f),
                     Width = layer.Width,
@@ -59,19 +59,19 @@ public sealed partial class MotionEditor
         return created;
     }
 
-    /// <summary>파일 이름에서 오브젝트 이름을 — 확장자와 앞의 번호(<c>01_</c>)를 떼고, 영문·숫자·_만 남긴다. 영문자로 시작하지 않으면 Layer.</summary>
-    private static string NodeIdFrom(string file)
+    /// <summary>파일 이름에서 층 이름을 — 확장자와 앞의 번호(<c>01_</c>)를 떼고, 영문·숫자·_만 남긴다. 영문자로 시작하지 않으면 Layer.</summary>
+    private static string LayerIdFrom(string file)
     {
         string stem = Path.GetFileNameWithoutExtension(file.Replace('\\', '/'));
         stem = new string(stem.Select(c => char.IsAsciiLetterOrDigit(c) ? c : '_').ToArray()).TrimStart('0', '1', '2', '3', '4', '5', '6', '7', '8', '9').Trim('_');
         return stem.Length > 0 && char.IsAsciiLetter(stem[0]) ? stem : "Layer";
     }
 
-    private static string UniqueNodeId(TransitionAsset rig, string stem)
+    private static string UniqueLayerId(TransitionAsset asset, string stem)
     {
         string id = stem;
 
-        for (int i = 2; rig.Find(id) is not null; i++)
+        for (int i = 2; asset.Find(id) is not null; i++)
         {
             id = $"{stem}_{i}";
         }

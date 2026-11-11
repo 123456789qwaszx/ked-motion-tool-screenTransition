@@ -7,7 +7,7 @@ namespace Mt.Authoring.Tests;
 internal static class Fixtures
 {
     /// <summary>
-    /// 인형 세트 둘(<see cref="TransitionTemplates.Figure"/>) — 각각의 타임라인.
+    /// 인형 전환 둘(<see cref="TransitionTemplates.Figure"/>) — 각각의 타임라인.
     /// nod: MoverY 위치, y 0 → -18 → 0 (0.6s). bow: Pivot 회전, z 0 → 8 (0.4s).
     /// bow의 x·y는 상수 0이다 — 세 성분이 묶여 있어도 그대로 남는지 본다.
     /// </summary>

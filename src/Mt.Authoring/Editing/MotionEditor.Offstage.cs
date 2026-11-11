@@ -16,27 +16,27 @@ public enum StageSide
 public sealed partial class MotionEditor
 {
     /// <summary>
-    /// 그 오브젝트가 무대의 <paramref name="side"/> 밖에서 제자리로 **들어오게**(또는 <paramref name="leaving"/>이면 제자리에서 밖으로 **나가게**) 자리 커브를 놓는다 —
+    /// 그 층이 무대의 <paramref name="side"/> 밖에서 제자리로 **들어오게**(또는 <paramref name="leaving"/>이면 제자리에서 밖으로 **나가게**) 자리 커브를 놓는다 —
     /// <paramref name="start"/>초부터 <paramref name="seconds"/>초 동안, 그 앞뒤로는 가만히. 그 축의 자리 커브를 갈아 치운다(한 칸). 옮기는 거리를 돌려준다.
-    /// 거리는 가만히 선 자세의 사각형이 무대 밖으로 다 나가는 만큼이다(돌았거나 커진 오브젝트는 넉넉히 — 감싸는 원으로 친다).
+    /// 거리는 가만히 선 자세의 사각형이 무대 밖으로 다 나가는 만큼이다(돌았거나 커진 층은 넉넉히 — 감싸는 원으로 친다).
     /// 부모들이 돌거나 커지지 않았다고 본다(자리는 부모 안의 값이다).
     /// </summary>
     public float SlideFromOutside(string motionName, string node, StageSide side, float start, float seconds, Vec2 stageSize, bool leaving = false)
     {
         TimelineAsset motion = Require(motionName);
-        TransitionAsset rig = Document.FindTransition(motion.Name) ?? throw new InvalidOperationException($"'{motion.Name}'는 툴에서 정의한 세트가 아니다 — 가만히 선 자리를 알 수 없다.");
-        LayerAsset target = rig.Find(node) ?? throw new KeyNotFoundException($"오브젝트 '{node}'가 세트 '{rig.Name}'에 없다.");
+        TransitionAsset asset = Document.FindTransition(motion.Name) ?? throw new InvalidOperationException($"'{motion.Name}'는 툴에서 정의한 전환이 아니다 — 가만히 선 자리를 알 수 없다.");
+        LayerAsset target = asset.Find(node) ?? throw new KeyNotFoundException($"층 '{node}'가 전환 '{asset.Name}'에 없다.");
 
         if (!float.IsFinite(start) || !float.IsFinite(seconds) || seconds <= 0f || start < 0f || start >= motion.Duration - MotionRules.Tolerance)
         {
-            throw new InvalidOperationException($"시작은 이 애니메이션의 길이({motion.Duration:0.###}초) 안, 걸리는 시간은 0보다 큰 수다.");
+            throw new InvalidOperationException($"시작은 타임라인의 길이({motion.Duration:0.###}초) 안, 걸리는 시간은 0보다 큰 수다.");
         }
 
         // 무대 가운데에서 본 자리 — 부모들의 자리를 더한다.
         float x = 0f;
         float y = 0f;
 
-        for (LayerAsset? at = target; at is not null; at = at.Parent.Length > 0 ? rig.Find(at.Parent) : null)
+        for (LayerAsset? at = target; at is not null; at = at.Parent.Length > 0 ? asset.Find(at.Parent) : null)
         {
             x += at.X;
             y += at.Y;

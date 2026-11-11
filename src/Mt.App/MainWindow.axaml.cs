@@ -24,7 +24,7 @@ using Avalonia.VisualTree;
 namespace Mt.App;
 
 /// <summary>
-/// 셸 — 왼쪽 모션·채널 목록, 가운데 그래프, 오른쪽 인스펙터, 아래 상태·문제.
+/// 셸 — 왼쪽 전환 목록 · 하이어아키, 가운데 그래프, 오른쪽 인스펙터, 아래 상태·문제.
 /// 모든 편집은 <see cref="MotionEditor"/> 명령이고, 화면은 <see cref="MotionEditor.Changed"/>를 듣고 다시 읽는다.
 /// 파일은 <see cref="DocumentSession"/>을 지난다.
 /// </summary>
@@ -82,7 +82,7 @@ public partial class MainWindow : Window
     private static readonly IBrush AutoKeyOnBrush = new SolidColorBrush(Color.FromRgb(0xE8, 0x3C, 0x3C));
     private bool _syncingTime;
 
-    // 채널 박스(마야) — 선택 노드의 Translate/Rotate/Scale. 칸에 값을 넣으면 매니퓰레이터를 놓은 것과 같다.
+    // 채널 박스(마야) — 선택 층의 Translate/Rotate/Scale. 칸에 값을 넣으면 매니퓰레이터를 놓은 것과 같다.
     private readonly TextBlock _channelBoxTitle = new() { FontSize = 11, FontWeight = FontWeight.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis, Margin = new Avalonia.Thickness(0, 2) };
     private readonly StackPanel _channelBoxPanel = new() { Spacing = 1 };
     private readonly Dictionary<(MotionChannelKind Kind, Axis Axis), (Border Row, TextBox Box)> _channelBoxRows = new();
@@ -99,7 +99,7 @@ public partial class MainWindow : Window
     private static readonly IBrush ChannelBoxKeyedHere = new SolidColorBrush(Color.FromArgb(150, 0xC8, 0x3C, 0x3C)); // 이 시각에 키(마야 빨강)
     private static readonly IBrush ChannelBoxKeyed = new SolidColorBrush(Color.FromArgb(110, 0xB4, 0x5A, 0x5A)); // 어딘가에 키(마야 연한 빨강)
     private static readonly IBrush ChannelBoxPending = new SolidColorBrush(Color.FromArgb(120, 0xD0, 0x8A, 0x28)); // 키 없는 포즈
-    /// <summary>선택 키의 노드 따라가기 — 하이어아키·아웃라이너에서 고르면 꺼지고, 모션을 바꾸면 켜진다(설정 아님).</summary>
+    /// <summary>선택 키의 층 따라가기 — 하이어아키·아웃라이너에서 고르면 꺼지고, 타임라인을 바꾸면 켜진다(설정 아님).</summary>
     private bool _followSelection = true;
     private readonly TabControl _inspectorTabs = new() { Padding = new Avalonia.Thickness(0) };
     private Window? _settingsWindow;
@@ -118,11 +118,11 @@ public partial class MainWindow : Window
     /// <summary>새 키(뷰포트 키·성분 토글)의 탄젠트 — 설정. 곡선 위에 끼우는 I·더블클릭은 모양을 지키는 free다.</summary>
     private TangentMode DefaultTangent => NewKeyTangentChoices[Math.Max(0, _newKeyTangent.SelectedIndex)];
 
-    // 왼쪽 — 세트·모션
-    // 높이 제한 없음 — 왼쪽 패널이 스크롤한다. 오브젝트가 없는 가지는 기본 접힘이라 길지 않다.
+    // 왼쪽 — 전환 · 하이어아키
+    // 높이 제한 없음 — 왼쪽 패널이 스크롤한다. 층이 없는 가지는 기본 접힘이라 길지 않다.
     private readonly TreeView _hierarchy = new() { MinHeight = 160, FontSize = 11 };
 
-    /// <summary>펼침 상태 기억 — 기본이 펼침인 항목(폴더·노드)의 접힘, 기본이 접힘인 항목(오브젝트)의 펼침.</summary>
+    /// <summary>펼침 상태 기억 — 기본이 펼침인 항목(폴더·층)의 접힘, 기본이 접힘인 항목(층)의 펼침.</summary>
     private readonly HashSet<string> _collapsedHierarchy = new();
     private readonly HashSet<string> _expandedHierarchy = new();
     private readonly Dictionary<TreeViewItem, TreeViewItem?> _hierarchyParents = new();
@@ -130,7 +130,7 @@ public partial class MainWindow : Window
     private object? _menuTarget;
     private static readonly IBrush ActingNodeBrush = new SolidColorBrush(Color.FromRgb(0xC8, 0xE0, 0xFF));
 
-    // 오른쪽 — 오브젝트(채널 박스)
+    // 오른쪽 — 층(채널 박스)
 
 
 
@@ -146,7 +146,7 @@ public partial class MainWindow : Window
     /// <summary>시간 글자 단위(설정) — 마야처럼 프레임이 기본.</summary>
     private TimeDisplay Display => _settings.TimeDisplay;
 
-    // 오른쪽 — 모션
+    // 오른쪽 — 타임라인 탭
     private readonly TextBox _motionDuration = new() { FontSize = 11 };
 
     // 오른쪽 — 키
@@ -321,7 +321,7 @@ public partial class MainWindow : Window
             case PhysicalKey.Q when none && !InsideGraph(e.Source):
                 SetManipulator(ManipulatorMode.Select);
                 break;
-            // S = Set Key(마야): 키 없는 포즈가 있으면 그것을, 없으면 고른 노드의 지금 값을 현재 시각에.
+            // S = Set Key(마야): 키 없는 포즈가 있으면 그것을, 없으면 고른 층의 지금 값을 현재 시각에.
             case PhysicalKey.S when none:
                 SetKeySelected();
                 break;
@@ -617,7 +617,7 @@ public partial class MainWindow : Window
     /// <summary>테스트 손잡이 — 채널을 바로 더한다(UI에는 "채널 추가"가 없다: 채널 박스·매니퓰레이터가 첫 키에서 만든다).</summary>
     internal void AddChannelFromForm(string node, MotionChannelKind kind)
     {
-        TimelineAsset motion = _graph.Motion ?? throw new InvalidOperationException("먼저 모션을 고른다.");
+        TimelineAsset motion = _graph.Motion ?? throw new InvalidOperationException("먼저 전환을 고른다.");
         _session.Editor.AddChannel(motion.Name, node, kind);
     }
 
@@ -633,7 +633,7 @@ public partial class MainWindow : Window
     /// <summary>채널 행의 성분 토글과 같은 길 — 없는 성분을 현재 시각의 중립값 키 하나로 만든다.</summary>
     internal void EnsureComponent(string node, MotionChannelKind kind, Axis axis)
     {
-        TimelineAsset motion = _graph.Motion ?? throw new InvalidOperationException("먼저 모션을 고른다.");
+        TimelineAsset motion = _graph.Motion ?? throw new InvalidOperationException("먼저 전환을 고른다.");
 
         if (motion.FindChannel(node, kind)?.Get(axis) is not null)
         {
@@ -730,7 +730,7 @@ public partial class MainWindow : Window
         ToolTip.SetTip(_currentTime, "현재 프레임 — 숫자를 넣으면 그 시각으로(초는 0.5s처럼)");
         ToolTip.SetTip(_rangeStart, "재생 범위 시작");
         ToolTip.SetTip(_rangeEnd, "재생 범위 끝");
-        ToolTip.SetTip(_animEnd, "모션 길이(애니메이션 끝) — 바꾸면 길이가 바뀐다");
+        ToolTip.SetTip(_animEnd, "타임라인 길이(끝) — 바꾸면 길이가 바뀐다");
         (string Label, string Tip, EventHandler<RoutedEventArgs> Click)[] transportSpec =
         {
             ("⏮", "범위 처음으로 (`)", (_, _) => _viewport.Stop()),
@@ -971,17 +971,17 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// 채널 박스 — 고른 **노드**의 성분을 보인다.
+    /// 채널 박스 — 고른 **층**의 성분을 보인다.
     /// 칸 색: 이 시각에 키 = 빨강, 어딘가에 키 = 연한 빨강, 키 없는 포즈 = 주황.
     /// </summary>
     private void RefreshChannelBox()
     {
-        RefreshAlphaPanel(); // 고른 노드가 바뀌면 불투명도 칸도
+        RefreshAlphaPanel(); // 고른 층이 바뀌면 불투명도 칸도
         _refreshDepth++;
 
         try
         {
-            string? shown = _viewport.ShownSet;
+            string? shown = _viewport.ShownTransitionName;
             TimelineAsset? motion = _graph.Motion;
             EnsureChannelBoxRows();
             float time = (float)(_viewport.SnapEnabled ? TimeSnap.Snap(_viewport.Time, _viewport.SnapStep) : _viewport.Time);
@@ -1015,7 +1015,7 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>채널 박스의 줄을 세운다(한 번) — 노드 성분 일곱 줄.</summary>
+    /// <summary>채널 박스의 줄을 세운다(한 번) — 층 성분 일곱 줄.</summary>
     private void EnsureChannelBoxRows()
     {
         if (_channelBoxRows.Count > 0)
@@ -1064,7 +1064,7 @@ public partial class MainWindow : Window
         return (row, box);
     }
 
-    /// <summary>노드 칸 입력: 숫자는 절대값, <c>+=</c>·<c>-=</c>·<c>*=</c>·<c>/=</c>는 지금 값에 상대.</summary>
+    /// <summary>층 칸 입력: 숫자는 절대값, <c>+=</c>·<c>-=</c>·<c>*=</c>·<c>/=</c>는 지금 값에 상대.</summary>
     private void CommitChannelBox(MotionChannelKind kind, Axis axis, string text)
     {
         if (_refreshing || _viewport.SelectedNode is not { } node || _graph.Motion is null || !RelativeInput.TryParse(text, out Func<float, float> apply))
@@ -1138,7 +1138,7 @@ public partial class MainWindow : Window
 
     private void BindMotion(string? name)
     {
-        _followSelection = true; // 모션을 바꾸면 다시 따라간다
+        _followSelection = true; // 타임라인을 바꾸면 다시 따라간다
         _graph.Bind(_session.Editor, name);
         _dope.Bind(_session.Editor, name);
 
@@ -1148,7 +1148,7 @@ public partial class MainWindow : Window
         RefreshSelectedNode();
     }
 
-    /// <summary>뷰포트가 축을 그릴 노드 — 선택한 키의 노드, 없으면 첫 채널의 노드.</summary>
+    /// <summary>뷰포트가 축을 그릴 층 — 선택한 키의 층, 없으면 첫 채널의 층.</summary>
     private void RefreshSelectedNode()
     {
         TimelineAsset? motion = _graph.Motion;
@@ -1166,13 +1166,13 @@ public partial class MainWindow : Window
         RefreshChannels();
     }
 
-    /// <summary>테스트 손잡이 — 자산(세트·그림)을 뷰포트에 다시 실은 횟수. 키 편집에서는 오르지 않아야 한다.</summary>
+    /// <summary>테스트 손잡이 — 자산(전환·그림)을 뷰포트에 다시 실은 횟수. 키 편집에서는 오르지 않아야 한다.</summary>
     internal int AssetRefreshCount { get; private set; }
 
     private void RefreshAssets()
     {
         AssetRefreshCount++;
-        _viewport.ClearImages(); // 세트의 모양도 다시 세운다
+        _viewport.ClearImages(); // 전환의 모양도 다시 세운다
 
         // 층의 그림 — 파일이 없거나 못 읽으면 null을 넣는다(자리표시로 그려진다).
         foreach ((string image, string? imagePath) in _session.LayerImages())
@@ -1215,7 +1215,7 @@ public partial class MainWindow : Window
     {
         LeftPanel.Children.Add(Header("층"));
         _hierarchy.SelectionChanged += (_, _) => OnHierarchySelected();
-        // 더블클릭은 노드 선택과 같다(채널 박스가 그 노드를 보인다). "채널 추가"는 없다.
+        // 더블클릭은 층 선택과 같다(채널 박스가 그 층을 보인다). "채널 추가"는 없다.
         _hierarchy.DoubleTapped += (_, _) =>
         {
             switch (_hierarchy.SelectedItem)
@@ -1229,13 +1229,13 @@ public partial class MainWindow : Window
         _hierarchyMenu.Opening += (_, _) => RebuildHierarchyMenu();
         _hierarchy.AddHandler(PointerPressedEvent, OnHierarchyPointerPressed, RoutingStrategies.Tunnel);
         LeftPanel.Children.Add(_hierarchy);
-        ToolTip.SetTip(_hierarchy, "무대에 선 세트의 층. 클릭 = 고르기(채널 박스·매니퓰레이터가 그 층을 잡는다). 세트를 열었으면 우클릭으로 층을 짓고 고친다");
+        ToolTip.SetTip(_hierarchy, "무대에 선 전환의 층. 클릭 = 고르기(채널 박스·매니퓰레이터가 그 층을 잡는다). 전환을 열었으면 우클릭으로 층을 짓고 고친다");
 
-        BuildSetLeft();
+        BuildTransitionLeft();
     }
 
     /// <summary>
-    /// 오른쪽 = 탭: 채널 박스(기본) · 세트(층) · 모션(속성). 설정·단축키는 툴바의 창으로,
+    /// 오른쪽 = 탭: 채널 박스(기본) · 전환(층) · 타임라인(속성). 설정·단축키는 툴바의 창으로,
     /// 단축키의 그림자 버튼(Q/W/E/R·S·Esc·복사·붙여넣기…)은 없다. 마지막 탭·접힌 묶음은 설정에 남는다.
     /// </summary>
     private void BuildRight()
@@ -1243,7 +1243,7 @@ public partial class MainWindow : Window
         _inspectorTabs.ItemsSource = new[]
         {
             new TabItem { Header = "채널 박스", Content = BuildChannelBoxTab(), FontSize = 12 },
-            new TabItem { Header = "세트", Content = BuildSetTab(), FontSize = 12 },
+            new TabItem { Header = "전환", Content = BuildTransitionTab(), FontSize = 12 },
             new TabItem { Header = "타임라인", Content = BuildMotionTab(), FontSize = 12 },
         };
         _inspectorTabs.SelectionChanged += (_, _) =>
@@ -1261,7 +1261,7 @@ public partial class MainWindow : Window
     {
         var panel = new StackPanel { Spacing = 4, Margin = new Avalonia.Thickness(0, 6, 0, 0) };
         panel.Children.Add(_channelBoxTitle);
-        ToolTip.SetTip(_channelBoxTitle, "고른 노드의 Translate·Rotate·Scale. 칸에 값을 넣으면(+=·-=·*=·/= 는 지금 값에 상대) 매니퓰레이터를 놓은 것과 같다: Auto Key거나 그 시각에 키가 있으면 키, 아니면 키 없는 포즈(S로 키·Esc로 버림). 묶음 제목 클릭 = 접기/펼치기 · 글자 클릭 = 그 커브를 그래프에(Shift/Ctrl: 더하기) · ● = 이 성분을 지금 키");
+        ToolTip.SetTip(_channelBoxTitle, "고른 층의 Translate·Rotate·Scale. 칸에 값을 넣으면(+=·-=·*=·/= 는 지금 값에 상대) 매니퓰레이터를 놓은 것과 같다: Auto Key거나 그 시각에 키가 있으면 키, 아니면 키 없는 포즈(S로 키·Esc로 버림). 묶음 제목 클릭 = 접기/펼치기 · 글자 클릭 = 그 커브를 그래프에(Shift/Ctrl: 더하기) · ● = 이 성분을 지금 키");
         panel.Children.Add(_channelBoxPanel);
         panel.Children.Add(_pendingText);
 
@@ -1287,12 +1287,12 @@ public partial class MainWindow : Window
         return panel;
     }
 
-    /// <summary>세트 탭 — 연 세트의 층 칸.</summary>
-    private Control BuildSetTab()
+    /// <summary>전환 탭 — 연 전환의 층 칸.</summary>
+    private Control BuildTransitionTab()
     {
         var panel = new StackPanel { Spacing = 4, Margin = new Avalonia.Thickness(0, 6, 0, 0) };
         _viewport.StageChanged += (_, _) => RefreshObjects();
-        panel.Children.Add(BuildSetNodePanel());
+        panel.Children.Add(BuildLayerPanel());
         return panel;
     }
 
@@ -1425,7 +1425,7 @@ public partial class MainWindow : Window
         "전역 (창 어디서나 · 글 입력 칸 제외)\n" +
         "  1 / 2  이전·다음 키        Alt+1 / Alt+2  이전·다음 프레임\n" +
         "  `  첫 프레임               Alt+`  처음부터 재생        Alt+Q  재생/일시정지\n" +
-        "  S  키 놓기 — 키 없는 포즈가 있으면 그것을, 없으면 고른 노드의 지금 값을 현재 시각에\n" +
+        "  S  키 놓기 — 키 없는 포즈가 있으면 그것을, 없으면 고른 층의 지금 값을 현재 시각에\n" +
         "  Esc  키 없는 포즈 버리기\n" +
         "  Q / W / E / R  뷰포트 선택·이동·회전·배율\n" +
         "  Shift+W / E / F  현재 시각의 키 복사·붙여넣기·지우기      Shift+1 / 2  인비트윈 빼기·넣기\n" +
@@ -1433,7 +1433,7 @@ public partial class MainWindow : Window
         "  F1  이 창\n\n" +
         "뷰포트\n" +
         "  휠  커서 축으로 확대·축소      MMB 드래그  보기 이동      F  보기 맞춤\n" +
-        "  배치 토글을 켰을 때 — 오브젝트 드래그  자리      Shift+드래그  배율      Ctrl+드래그  회전   (가만히 선 자세다)\n" +
+        "  배치 토글을 켰을 때 — 층 드래그  자리      Shift+드래그  배율      Ctrl+드래그  회전   (가만히 선 자세다)\n" +
         "  LMB  기즈모 끌기(Auto Key면 놓는 순간 키)      Home / End  처음·끝      ← / →  한 프레임\n\n" +
         "그래프 에디터 (마야)\n" +
         "  LMB  키 선택 · 빈 자리 드래그 박스 선택(키가 들면 키만, 커브만 지나면 커브) · Ctrl+드래그 라소\n" +
@@ -1443,13 +1443,13 @@ public partial class MainWindow : Window
         "  Q / W / R  선택·이동·스케일 툴(그래프 안)      Ctrl+1…6  탄젠트 auto·flat·linear·free·spline·plateau\n" +
         "  Ctrl+B / Ctrl+Shift+B  버퍼 커브 찍기·바꾸기\n\n" +
         "도프 시트\n" +
-        "  블록 드래그  시간 이동      Alt+드래그  복제      범위 띠 양끝  시간 스케일      더블클릭  키      노드 행 클릭  접기\n\n" +
+        "  블록 드래그  시간 이동      Alt+드래그  복제      범위 띠 양끝  시간 스케일      더블클릭  키      층 행 클릭  접기\n\n" +
         "타임 슬라이더\n" +
         "  클릭·드래그  스크럽      Shift+드래그  프레임 범위 선택      범위 안 MMB  범위의 키 이동      범위 밖 MMB  포즈 들고 스크럽(S로 키)\n" +
         "  우클릭  복사·붙여넣기·삭제·스냅 · 재생 범위 · 재생 모드 메뉴\n\n" +
         "하이어아키 (층)\n" +
-        "  클릭  세트의 오브젝트 고르기\n" +
-        "  우클릭(세트를 열었을 때)  오브젝트 더하기 · 부모 바꾸기 · 앞뒤 순서 · 숨기기 · 시차 · 화면 밖에서 들어온다/나간다";
+        "  클릭  전환의 층 고르기\n" +
+        "  우클릭(전환을 열었을 때)  층 더하기 · 부모 바꾸기 · 앞뒤 순서 · 숨기기 · 시차 · 화면 밖에서 들어온다/나간다";
 
     /// <summary>테스트 손잡이.</summary>
     internal int InspectorTabCount => _inspectorTabs.ItemCount;
@@ -1476,8 +1476,8 @@ public partial class MainWindow : Window
 
     private void OnEditorChanged()
     {
-        RefreshSets();
-        ApplySetView(); // 세트가 지워지거나(되돌리기) 이름이 바뀌었으면 무대와 타임라인이 따라온다
+        RefreshTransitions();
+        ApplyOpenTransition(); // 전환이 지워지거나(되돌리기) 이름이 바뀌었으면 무대와 타임라인이 따라온다
         RefreshMotionInspector();
         RefreshKeyInspector();
         RefreshProblems();
@@ -1485,7 +1485,7 @@ public partial class MainWindow : Window
         RefreshChannelBox();
     }
 
-    /// <summary>하이어아키를 무대의 세트에 맞춘다.</summary>
+    /// <summary>하이어아키를 무대의 전환에 맞춘다.</summary>
     private void RefreshObjects()
     {
         _refreshDepth++;
@@ -1504,36 +1504,36 @@ public partial class MainWindow : Window
 
     // ── 하이어아키 ─────────────────────────────────────────────────────
 
-    /// <summary>트리 항목의 꼬리표 — 세트의 층(노드).</summary>
+    /// <summary>트리 항목의 꼬리표 — 전환의 층.</summary>
     private sealed record HierarchyNode(string NodeId);
 
-    /// <summary>세트 항목의 꼬리표 — 하이어아키의 맨 위.</summary>
+    /// <summary>전환 항목의 꼬리표 — 하이어아키의 맨 위.</summary>
     private sealed record HierarchyFolder;
 
-    /// <summary>무대에 선 세트 하나와 그 층들(부모 › 자식). 펼침 상태는 키로 기억한다.</summary>
+    /// <summary>무대에 선 전환 하나와 그 층들(부모 › 자식). 펼침 상태는 키로 기억한다.</summary>
     private void RebuildHierarchy()
     {
         bool nodeWasSelected = _hierarchy.SelectedItem is TreeViewItem { Tag: HierarchyNode };
         _hierarchy.Items.Clear();
         _hierarchyParents.Clear();
 
-        if (_viewport.ShownSet is not { } kind || _session.Editor.Document.FindTransition(kind) is not { } set)
+        if (_viewport.ShownTransitionName is not { } kind || _session.Editor.Document.FindTransition(kind) is not { } set)
         {
             return;
         }
 
         TreeViewItem? selectedItem = null;
-        var setRoot = Folder($"세트  {kind}", "set:" + kind);
-        setRoot.Tag = new HierarchyFolder();
-        Attach(setRoot, null);
+        var root = Folder($"전환  {kind}", "transition:" + kind);
+        root.Tag = new HierarchyFolder();
+        Attach(root, null);
         var itemsByNode = new Dictionary<string, TreeViewItem>(StringComparer.Ordinal);
 
         foreach (LayerAsset node in set.Layers)
         {
-            TreeViewItem nodeParent = string.IsNullOrEmpty(node.Parent) || !itemsByNode.TryGetValue(node.Parent, out TreeViewItem? found) ? setRoot : found;
+            TreeViewItem nodeParent = string.IsNullOrEmpty(node.Parent) || !itemsByNode.TryGetValue(node.Parent, out TreeViewItem? found) ? root : found;
             // 따로 보기(숨김 · 솔로)의 표시.
-            bool shown = _viewport.IsSetNodeShown(node.Id);
-            string mark = _viewport.SetView is null ? "" : _viewport.SoloSetNode == node.Id ? "   ◉ 이것만" : _viewport.IsSetNodeHidden(node.Id) ? "   (숨김)" : "";
+            bool shown = _viewport.IsLayerShown(node.Id);
+            string mark = _viewport.OpenTransition is null ? "" : _viewport.SoloLayer == node.Id ? "   ◉ 이것만" : _viewport.IsLayerHidden(node.Id) ? "   (숨김)" : "";
             TreeViewItem nodeItem = Folder(node.Id + mark, $"node:{kind}/{node.Id}");
             nodeItem.Opacity = shown ? 1 : 0.45;
             nodeItem.Tag = new HierarchyNode(node.Id);
@@ -1549,7 +1549,7 @@ public partial class MainWindow : Window
             }
         }
 
-        _hierarchy.Items.Add(setRoot);
+        _hierarchy.Items.Add(root);
 
         // 고른 항목이 보이도록 조상을 펼친다.
         for (TreeViewItem? up = selectedItem is null ? null : _hierarchyParents.GetValueOrDefault(selectedItem); up is not null; up = _hierarchyParents.GetValueOrDefault(up))
@@ -1592,8 +1592,8 @@ public partial class MainWindow : Window
         return item;
     }
 
-    /// <summary>세트의 층 항목을 전부 펼치거나 접는다.</summary>
-    private void ExpandSetNodes(bool expand)
+    /// <summary>전환의 층 항목을 전부 펼치거나 접는다.</summary>
+    private void ExpandLayers(bool expand)
     {
         foreach (TreeViewItem item in _hierarchyParents.Keys.Where(i => i.Tag is HierarchyNode or HierarchyFolder).ToList())
         {
@@ -1629,10 +1629,10 @@ public partial class MainWindow : Window
     {
         _hierarchyMenu.Items.Clear();
 
-        // 세트를 열었으면 층을 짓는 메뉴.
-        if (_viewport.SetView is not null)
+        // 전환을 열었으면 층을 짓는 메뉴.
+        if (_viewport.OpenTransition is not null)
         {
-            AddSetMenu(_menuTarget);
+            AddLayerMenu(_menuTarget);
         }
     }
 
@@ -1651,14 +1651,14 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>노드 항목: 채널 박스·매니퓰레이터의 노드를 그 노드로. 키 따라가기는 끈다(사용자가 직접 골랐다).</summary>
+    /// <summary>층 항목: 채널 박스·매니퓰레이터의 층을 그 층으로. 키 따라가기는 끈다(사용자가 직접 골랐다).</summary>
     private void SelectNodeInHierarchy(HierarchyNode node)
     {
-        // 세트 보기에서는 그 오브젝트가 세트 탭의 세트 칸에 뜬다.
-        if (_viewport.SetView is not null)
+        // 전환 보기에서는 그 층이 전환 탭의 전환 칸에 뜬다.
+        if (_viewport.OpenTransition is not null)
         {
-            _rigNodeSelected = node.NodeId;
-            RefreshSetNodePanel();
+            _layerSelected = node.NodeId;
+            RefreshLayerPanel();
         }
 
         _followSelection = false;
@@ -1672,7 +1672,7 @@ public partial class MainWindow : Window
     /// <summary>테스트 손잡이 — 하이어아키에서 층을 고른 것과 같다.</summary>
     internal void SelectInHierarchy(string nodeId) => SelectNodeInHierarchy(new HierarchyNode(nodeId));
 
-    /// <summary>테스트 손잡이 — 하이어아키 항목의 경로(세트부터 헤더 순). 없으면 빈 목록.</summary>
+    /// <summary>테스트 손잡이 — 하이어아키 항목의 경로(전환부터 헤더 순). 없으면 빈 목록.</summary>
     internal IReadOnlyList<string> HierarchyPathOf(string nodeId)
         => PathOf(_hierarchyParents.Keys.FirstOrDefault(i => i.Tag is HierarchyNode n && n.NodeId == nodeId));
 
@@ -1692,7 +1692,7 @@ public partial class MainWindow : Window
 
     private void RefreshAll()
     {
-        RefreshSets();
+        RefreshTransitions();
         RefreshChannels();
         RefreshMotionInspector();
         RefreshKeyInspector();
@@ -1701,11 +1701,11 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// 마야 그래프 에디터 아웃라이너 — 노드 › 채널 › 성분. 행 클릭 = 그 커브만 보인다, Shift/Ctrl+클릭 = 더하기/빼기.
+    /// 마야 그래프 에디터 아웃라이너 — 층 › 채널 › 성분. 행 클릭 = 그 커브만 보인다, Shift/Ctrl+클릭 = 더하기/빼기.
     /// 없는 성분은 흐리고, 클릭하면 현재 시각의 중립값 키 하나로 생긴다.
     /// </summary>
     /// <summary>
-    /// 아웃라이너(그래프 왼쪽) — 모션의 채널을 노드로 보인다. 흐린 성분을 클릭해도 성분을 만들지 않는다(마야식) — 성분은 키를 놓을 때만 생긴다.
+    /// 아웃라이너(그래프 왼쪽) — 타임라인의 채널을 층으로 보인다. 흐린 성분을 클릭해도 성분을 만들지 않는다(마야식) — 성분은 키를 놓을 때만 생긴다.
     /// </summary>
     private void RefreshChannels()
     {
@@ -1714,7 +1714,7 @@ public partial class MainWindow : Window
 
         if (motion is null)
         {
-            _channelRows.Children.Add(new TextBlock { Text = "(모션 없음)", FontSize = 11, Opacity = 0.6, Margin = new Avalonia.Thickness(6, 4) });
+            _channelRows.Children.Add(new TextBlock { Text = "(타임라인 없음)", FontSize = 11, Opacity = 0.6, Margin = new Avalonia.Thickness(6, 4) });
             return;
         }
 
@@ -1722,7 +1722,7 @@ public partial class MainWindow : Window
         RefreshChannelsByNode(motion, query);
     }
 
-    /// <summary>모션의 채널을 노드 · 종류로, 성분은 종류의 축 전부(없는 것은 흐리게).</summary>
+    /// <summary>타임라인의 채널을 층 · 종류로, 성분은 종류의 축 전부(없는 것은 흐리게).</summary>
     private void RefreshChannelsByNode(TimelineAsset motion, string query)
     {
         foreach (ChannelAsset channel in motion.Channels)
@@ -1790,14 +1790,14 @@ public partial class MainWindow : Window
 
         if (motion.Channels.Count == 0)
         {
-            _channelRows.Children.Add(new TextBlock { Text = "(채널 없음 — 하이어아키에서 노드를 고르고 채널 박스에 값을 넣거나 매니퓰레이터로 끌면 생긴다)", FontSize = 11, Opacity = 0.6, TextWrapping = TextWrapping.Wrap, Margin = new Avalonia.Thickness(6, 4) });
+            _channelRows.Children.Add(new TextBlock { Text = "(채널 없음 — 하이어아키에서 층을 고르고 채널 박스에 값을 넣거나 매니퓰레이터로 끌면 생긴다)", FontSize = 11, Opacity = 0.6, TextWrapping = TextWrapping.Wrap, Margin = new Avalonia.Thickness(6, 4) });
         }
     }
 
-    /// <summary>노드가 적은 세트에서만 키 없는 채널을 늘어놓는다 — 노드가 많으면 목록이 묻힌다.</summary>
+    /// <summary>층이 적은 전환에서만 키 없는 채널을 늘어놓는다 — 층이 많으면 목록이 묻힌다.</summary>
     private const int UnkeyedRowsMaxNodes = 16;
 
-    /// <summary>테스트 손잡이 — 그래프 목록의 "키 없음" 줄들(노드 · 종류).</summary>
+    /// <summary>테스트 손잡이 — 그래프 목록의 "키 없음" 줄들(층 · 종류).</summary>
     internal IReadOnlyList<(string Node, MotionChannelKind Kind)> UnkeyedRows => _unkeyedRows;
 
     internal void KeyUnkeyedRow(string node, MotionChannelKind kind) => KeyUnkeyed(node, kind);
@@ -1805,8 +1805,8 @@ public partial class MainWindow : Window
     private readonly List<(string Node, MotionChannelKind Kind)> _unkeyedRows = new();
 
     /// <summary>
-    /// 아직 키가 없는 채널들을 흐리게 — 이 모션이 안 건드리는 노드·종류(위치·배율·회전·불투명도)도 보이고, 눌러서 그 노드를 고르거나 ＋로 지금 값에 키를 놓는다.
-    /// "배율만 있는 모션에 살짝 위치도" 같은 손을 목록에서 바로 간다.
+    /// 아직 키가 없는 채널들을 흐리게 — 이 타임라인이 안 건드리는 층·종류(위치·배율·회전·불투명도)도 보이고, 눌러서 그 층을 고르거나 ＋로 지금 값에 키를 놓는다.
+    /// "배율만 있는 타임라인에 살짝 위치도" 같은 손을 목록에서 바로 간다.
     /// </summary>
     private void AddUnkeyedRows(TimelineAsset motion, string query)
     {
@@ -1857,7 +1857,7 @@ public partial class MainWindow : Window
                     TextTrimming = TextTrimming.CharacterEllipsis,
                     Cursor = new Cursor(StandardCursorType.Hand),
                 };
-                ToolTip.SetTip(title, $"{node}\n{kind} — 이 모션에 아직 키가 없다\n클릭: 이 노드를 고른다(뷰포트의 손잡이·채널 박스가 이 노드를 본다) · ＋: 지금 값에 키");
+                ToolTip.SetTip(title, $"{node}\n{kind} — 이 타임라인에 아직 키가 없다\n클릭: 이 층을 고른다(뷰포트의 손잡이·채널 박스가 이 층을 본다) · ＋: 지금 값에 키");
                 title.PointerPressed += (_, e) =>
                 {
                     _viewport.SelectedNode = capturedNode;
@@ -1980,7 +1980,7 @@ public partial class MainWindow : Window
         _graph.SetVisibleAll(c => c == curve);
     }
 
-    /// <summary>S(Set Key) — 키 없는 포즈(드래그·채널 박스·MMB 스크럽)가 있으면 그것을, 없으면 뷰포트의 선택 노드를 지금 값으로 현재 시각에 키.</summary>
+    /// <summary>S(Set Key) — 키 없는 포즈(드래그·채널 박스·MMB 스크럽)가 있으면 그것을, 없으면 뷰포트의 선택 층을 지금 값으로 현재 시각에 키.</summary>
     private void SetKeySelected()
     {
         Guard("키 놓기", () => _session.Editor.Batch(MotionChangeKind.Keys, _viewport.SetKey)); // 키 없는 포즈 전부가 되돌리기 한 칸
@@ -2128,7 +2128,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        Guard("모션 편집", () => action(motion));
+        Guard("타임라인 편집", () => action(motion));
     }
 
     private void WithSingleKey(Action<KeyRef, KeyAsset> action)
@@ -2165,7 +2165,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            string? path = await PickOpenAsync("저작 원본 열기", new FilePickerFileType("모션 저작 원본") { Patterns = new[] { "*" + AuthoringFormat.AuthoringExtension, "*.json" } });
+            string? path = await PickOpenAsync("저작 원본 열기", new FilePickerFileType("전환 저작 원본") { Patterns = new[] { "*" + AuthoringFormat.AuthoringExtension, "*.json" } });
 
             if (path is not null)
             {
@@ -2211,7 +2211,7 @@ public partial class MainWindow : Window
     private async Task SaveAsAsync()
     {
         string? path = await PickSaveAsync("저작 원본 저장", "motions" + AuthoringFormat.AuthoringExtension,
-            new FilePickerFileType("모션 저작 원본") { Patterns = new[] { "*" + AuthoringFormat.AuthoringExtension } });
+            new FilePickerFileType("전환 저작 원본") { Patterns = new[] { "*" + AuthoringFormat.AuthoringExtension } });
 
         if (path is not null)
         {

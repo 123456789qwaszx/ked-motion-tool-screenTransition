@@ -15,7 +15,7 @@ using Mt.Authoring.Preview;
 namespace Mt.App.Views;
 
 /// <summary>
-/// 뷰포트 — 세트 하나를 무대에 세우고 모션을 재생한다.
+/// 뷰포트 — 전환 하나를 무대에 세우고 타임라인을 재생한다.
 ///
 /// 포즈는 <see cref="MotionPreview"/>(코어 수학), 기하는 <see cref="StageGeometry"/>다 —
 /// 여기에는 그리기·시계·입력만 있다. 무대는 기준 화면(1920×1080) 크기이고 컨트롤 안에 레터박스로 맞춘다.
@@ -56,7 +56,7 @@ public sealed class ViewportView : Control
 
     private MotionEditor? _editor;
     private string? _motionName;
-    // 무대의 시작 상태 — 무대에 선 세트의 층들(StageTree). 타임라인은 그 위에 얹는다.
+    // 무대의 시작 상태 — 무대에 선 전환의 층들(StageTree). 타임라인은 그 위에 얹는다.
     private RectNodeTree? _template;
 
     /// <summary>층의 그림 — 문서 기준 경로 → 비트맵(파일을 못 읽었으면 null — 자리표시).</summary>
@@ -209,7 +209,7 @@ public sealed class ViewportView : Control
     /// <summary>포즈를 들고 있는가(MMB 스크럽 뒤). S가 모든 채널에 그 포즈를 키한다.</summary>
     public bool IsHoldingPose => _held is not null;
 
-    /// <summary>매니퓰레이터를 둘 수 있는 노드들 — 무대에 선 세트의 층.</summary>
+    /// <summary>매니퓰레이터를 둘 수 있는 층들 — 무대에 선 전환의 층.</summary>
     public IReadOnlyList<string> NodeChoices
     {
         get
@@ -220,29 +220,29 @@ public sealed class ViewportView : Control
 
     // ── 무대 ───────────────────────────────────────────────────
 
-    /// <summary>무대에 선 세트 — 연 세트, 아니면 묶인 타임라인의 세트. 없으면 null(빈 무대).</summary>
-    public string? ShownSet => _setView ?? Motion?.Name;
+    /// <summary>무대에 선 전환 — 연 전환, 아니면 묶인 타임라인의 전환. 없으면 null(빈 무대).</summary>
+    public string? ShownTransitionName => _openTransition ?? Motion?.Name;
 
-    private TransitionAsset? ShownTransition => ShownSet is { } kind ? _editor?.Document.FindTransition(kind) : null;
+    private TransitionAsset? ShownTransition => ShownTransitionName is { } transition ? _editor?.Document.FindTransition(transition) : null;
 
-    /// <summary>그림을 든 층(조각) — 세트에 적힌 순서(= 그리는 순서).</summary>
-    private IReadOnlyList<string> PartsOf(string kind)
-        => _editor?.Document.FindTransition(kind) is { } set ? set.Layers.Where(n => n.Image is not null).Select(n => n.Id).ToList() : Array.Empty<string>();
+    /// <summary>그림을 든 층(조각) — 전환에 적힌 순서(= 그리는 순서).</summary>
+    private IReadOnlyList<string> PartsOf(string transition)
+        => _editor?.Document.FindTransition(transition) is { } set ? set.Layers.Where(n => n.Image is not null).Select(n => n.Id).ToList() : Array.Empty<string>();
 
-    /// <summary>색 사각형 층 — 노드 id → 색.</summary>
-    private IReadOnlyDictionary<string, string> ColorsOf(string kind)
-        => _editor?.Document.FindTransition(kind) is { } set
+    /// <summary>색 사각형 층 — 층 id → 색.</summary>
+    private IReadOnlyDictionary<string, string> ColorsOf(string transition)
+        => _editor?.Document.FindTransition(transition) is { } set
             ? set.Layers.Where(n => !string.IsNullOrEmpty(n.Color)).ToDictionary(n => n.Id, n => n.Color!, StringComparer.Ordinal)
             : new Dictionary<string, string>(StringComparer.Ordinal);
 
-    // ── 세트 보기 ────────────────────────────────────
+    // ── 전환 보기 ────────────────────────────────────
 
-    private string? _setView;
+    private string? _openTransition;
 
     private bool _layoutMode;
 
     /// <summary>
-    /// 배치 모드 토글(스파인의 Setup) — 켜면 무대는 움직임 없이 가만히 선 자세를 보이고, 끌기가 오브젝트의 **가만히 선 자세**를 바꾼다.
+    /// 배치 모드 토글(스파인의 Setup) — 켜면 무대는 움직임 없이 가만히 선 자세를 보이고, 끌기가 층의 **가만히 선 자세**를 바꾼다.
     /// 끄면 애니메이션 모드다(끌기 = 키). 무대 보기 상태다 — 문서에 없다.
     /// </summary>
     public bool LayoutMode
@@ -261,27 +261,27 @@ public sealed class ViewportView : Control
         }
     }
 
-    /// <summary>배치 모드인가 — 세트를 열었고 <see cref="LayoutMode"/>가 켜져 있다.</summary>
-    public bool IsLayoutMode => _setView is not null && _layoutMode;
+    /// <summary>배치 모드인가 — 전환을 열었고 <see cref="LayoutMode"/>가 켜져 있다.</summary>
+    public bool IsLayoutMode => _openTransition is not null && _layoutMode;
 
     /// <summary>
-    /// 연 세트(rigKind) — 뷰포트와 하이어아키가 **그 세트만** 보이고, 그 세트의 타임라인이 묶인다.
-    /// null이면 고른 애니메이션의 세트가 선다.
+    /// 연 전환 — 뷰포트와 하이어아키가 **그 전환만** 보이고, 그 전환의 타임라인이 묶인다.
+    /// null이면 묶인 타임라인의 전환이 선다.
     /// </summary>
-    public string? SetView
+    public string? OpenTransition
     {
-        get => _setView;
+        get => _openTransition;
         set
         {
-            if (_setView == value)
+            if (_openTransition == value)
             {
                 return;
             }
 
             DiscardPending();
-            _setView = value;
-            _hiddenSetNodes.Clear();
-            _soloSetNode = null;
+            _openTransition = value;
+            _hiddenLayers.Clear();
+            _soloLayer = null;
             RebuildTemplate();
 
 
@@ -289,89 +289,89 @@ public sealed class ViewportView : Control
         }
     }
 
-    // 세트 안에서 오브젝트를 하나씩 따로 본다 — 보기 상태다: 문서·되돌리기·산출물에 없고 세트를 닫으면 풀린다.
-    private readonly HashSet<string> _hiddenSetNodes = new(StringComparer.Ordinal);
-    private string? _soloSetNode;
+    // 전환 안에서 층을 하나씩 따로 본다 — 보기 상태다: 문서·되돌리기·산출물에 없고 전환을 닫으면 풀린다.
+    private readonly HashSet<string> _hiddenLayers = new(StringComparer.Ordinal);
+    private string? _soloLayer;
 
-    /// <summary>이것만 본다 — 그 오브젝트와 그 밑의 것만 그려진다. null이면 솔로가 없다.</summary>
-    public string? SoloSetNode
+    /// <summary>이것만 본다 — 그 층과 그 밑의 것만 그려진다. null이면 솔로가 없다.</summary>
+    public string? SoloLayer
     {
-        get => _soloSetNode;
+        get => _soloLayer;
         set
         {
-            _soloSetNode = value;
+            _soloLayer = value;
             InvalidateVisual();
         }
     }
 
-    /// <summary>그 오브젝트를 숨겼는가(제 것만 — 부모가 숨겨져 안 보이는 것은 <see cref="IsSetNodeShown"/>).</summary>
-    public bool IsSetNodeHidden(string node) => _hiddenSetNodes.Contains(node);
+    /// <summary>그 층을 숨겼는가(제 것만 — 부모가 숨겨져 안 보이는 것은 <see cref="IsLayerShown"/>).</summary>
+    public bool IsLayerHidden(string node) => _hiddenLayers.Contains(node);
 
-    public void SetSetNodeHidden(string node, bool hidden)
+    public void SetLayerHidden(string node, bool hidden)
     {
-        if (hidden ? _hiddenSetNodes.Add(node) : _hiddenSetNodes.Remove(node))
+        if (hidden ? _hiddenLayers.Add(node) : _hiddenLayers.Remove(node))
         {
             InvalidateVisual();
         }
     }
 
     /// <summary>숨김·솔로를 다 푼다.</summary>
-    public void ShowAllSetNodes()
+    public void ShowAllLayers()
     {
-        _hiddenSetNodes.Clear();
-        _soloSetNode = null;
+        _hiddenLayers.Clear();
+        _soloLayer = null;
         InvalidateVisual();
     }
 
-    /// <summary>세트 보기에서 그 오브젝트가 그려지는가 — 저나 조상이 숨겨지지 않았고, 솔로가 있으면 저나 조상이 그 솔로다. 세트 보기가 아니면 늘 참.</summary>
-    public bool IsSetNodeShown(string node)
+    /// <summary>전환 보기에서 그 층이 그려지는가 — 저나 조상이 숨겨지지 않았고, 솔로가 있으면 저나 조상이 그 솔로다. 전환 보기가 아니면 늘 참.</summary>
+    public bool IsLayerShown(string node)
     {
-        if (_setView is null || _editor?.Document.FindTransition(_setView) is not { } rig || (_hiddenSetNodes.Count == 0 && _soloSetNode is null))
+        if (_openTransition is null || _editor?.Document.FindTransition(_openTransition) is not { } asset || (_hiddenLayers.Count == 0 && _soloLayer is null))
         {
             return true;
         }
 
-        bool underSolo = _soloSetNode is null;
+        bool underSolo = _soloLayer is null;
 
-        for (LayerAsset? at = rig.Find(node); at is not null; at = at.Parent.Length > 0 ? rig.Find(at.Parent) : null)
+        for (LayerAsset? at = asset.Find(node); at is not null; at = at.Parent.Length > 0 ? asset.Find(at.Parent) : null)
         {
-            if (_hiddenSetNodes.Contains(at.Id))
+            if (_hiddenLayers.Contains(at.Id))
             {
                 return false;
             }
 
-            underSolo |= at.Id == _soloSetNode;
+            underSolo |= at.Id == _soloLayer;
         }
 
         return underSolo;
     }
 
-    /// <summary>키 값의 시작값 — 세트로 세운 트리.</summary>
+    /// <summary>키 값의 시작값 — 전환으로 세운 트리.</summary>
     private RectNodeState StartStateOf(string key) => _template!.GetState(key);
 
-    /// <summary>선택 노드의 트리 키.</summary>
+    /// <summary>선택 층의 트리 키.</summary>
     private string? SelectedKey => SelectedNode;
 
-    /// <summary>무대에 선 세트가 바뀌었다.</summary>
+    /// <summary>무대에 선 전환이 바뀌었다.</summary>
     public event EventHandler? StageChanged;
 
-    /// <summary>세트의 사각형 — 루트 공간(<see cref="QuadOf"/>). 무대가 비었으면 null.</summary>
-    public Quad? SetQuad()
+    /// <summary>전환의 사각형 — 루트 공간(<see cref="QuadOf"/>). 무대가 비었으면 null.</summary>
+    public Quad? TransitionQuad()
     {
         RectNodeTree? pose = PoseAt(_clock.Time);
-        return pose is not null && ShownSet is { } kind ? QuadOf(pose, kind) : null;
+        return pose is not null && ShownTransitionName is { } transition ? QuadOf(pose, transition) : null;
     }
 
-    /// <summary>포즈 위의 세트 사각형(루트 공간) — 첫 조각, 없으면 첫 색 사각형, 둘 다 없으면 루트 rect.</summary>
+    /// <summary>포즈 위의 전환 사각형(루트 공간) — 첫 조각, 없으면 첫 색 사각형, 둘 다 없으면 루트 rect.</summary>
     private Quad? QuadOf(RectNodeTree pose, string o)
     {
-        // 조각으로 그려지는 오브젝트는 첫 조각의 사각형이 고르는 자리다.
+        // 조각으로 그려지는 층은 첫 조각의 사각형이 고르는 자리다.
         if (DrawnParts(o) is { Count: > 0 } parts && PartQuadOf(pose, o, parts[0]) is { } first)
         {
             return first;
         }
 
-        // 색 오브젝트뿐인 세트 — 첫 색 사각형.
+        // 색 층뿐인 전환 — 첫 색 사각형.
         if (ColorsOf(o).Keys.FirstOrDefault(pose.Contains) is { } colored)
         {
             return StageGeometry.RectQuad(pose, colored);
@@ -385,7 +385,7 @@ public sealed class ViewportView : Control
     /// <summary>지금 보이는 포즈 — 시각의 포즈에 키 없는 포즈를 얹은 것.</summary>
     public RectNodeTree? CurrentPose() => CurrentPose(null);
 
-    /// <param name="alphas">노드 키 → 불투명도(알파 채널이 얹힌 것만 든다, 없는 키는 1). 받은 표에 채워 준다.</param>
+    /// <param name="alphas">층 키 → 불투명도(알파 채널이 얹힌 것만 든다, 없는 키는 1). 받은 표에 채워 준다.</param>
     private RectNodeTree? CurrentPose(IDictionary<string, float>? alphas)
     {
         if (_held is not null)
@@ -435,14 +435,14 @@ public sealed class ViewportView : Control
     }
 
     /// <summary>
-    /// 매니퓰레이터가 서는 점(루트 공간) — 노드의 원점. 원점이 오브젝트 그림 밖이면(화면 크기 스트레치 노드의 pivot —
+    /// 매니퓰레이터가 서는 점(루트 공간) — 층의 원점. 원점이 층 그림 밖이면(화면 크기 스트레치 층의 pivot —
     /// 발 기준 회전의 SwayPivot은 rect 아래 끝이라 무대 밖으로 나간다) 그림 가운데에 둔다. 손잡이는 늘 보이는 곳에 있어야 한다.
     /// </summary>
     private Vec2 GizmoAnchor(RectNodeTree pose, string key)
     {
         Vec2 origin = pose.TransformPoint(key, Vec3.Zero).XY;
 
-        if (ShownSet is not { } o || QuadOf(pose, o) is not { } quad)
+        if (ShownTransitionName is not { } o || QuadOf(pose, o) is not { } quad)
         {
             return origin;
         }
@@ -578,7 +578,7 @@ public sealed class ViewportView : Control
     }
 
     /// <summary>
-    /// Set Key(S). 키 없는 포즈가 있으면 그것을 키로. 없으면 선택 노드의 있는 채널·성분을 지금 포즈 값으로 키(홀드 키).
+    /// Set Key(S). 키 없는 포즈가 있으면 그것을 키로. 없으면 선택 층의 있는 채널·성분을 지금 포즈 값으로 키(홀드 키).
     /// </summary>
     public void SetKey()
     {
@@ -589,7 +589,7 @@ public sealed class ViewportView : Control
             return;
         }
 
-        // 조작 하나 — 되돌리기 한 칸(성분·노드가 여럿이어도). 되돌리면 키 확정 직전의 키 없는 포즈로.
+        // 조작 하나 — 되돌리기 한 칸(성분·층이 여럿이어도). 되돌리면 키 확정 직전의 키 없는 포즈로.
         AsOneEdit(() => SetKeyCore(motion));
     }
 
@@ -713,7 +713,7 @@ public sealed class ViewportView : Control
 
     public void EndHoldScrub() => _holdScrub = false;
 
-    /// <summary>지금 포즈의 값으로 키를 놓는다 — 시작값은 세트(템플릿), 키 값은 가만히 선 자세에 대한 값이다.</summary>
+    /// <summary>지금 포즈의 값으로 키를 놓는다 — 시작값은 전환(템플릿), 키 값은 가만히 선 자세에 대한 값이다.</summary>
     private void KeyNow(string node, MotionChannelKind kind, IReadOnlyList<Axis> axes)
     {
         TimelineAsset? motion = Motion;
@@ -863,7 +863,7 @@ public sealed class ViewportView : Control
         set => _clock.Loop = value;
     }
 
-    /// <summary>축을 그릴 노드. null이면 안 그린다.</summary>
+    /// <summary>축을 그릴 층. null이면 안 그린다.</summary>
     public string? SelectedNode { get; set; }
 
     public string? MotionName => _motionName;
@@ -878,7 +878,7 @@ public sealed class ViewportView : Control
     {
         if (ReferenceEquals(_editor, editor))
         {
-            DiscardPending(); // 같은 문서에서 모션을 바꾸는 것 — 버린 포즈도 이력에
+            DiscardPending(); // 같은 문서에서 타임라인을 바꾸는 것 — 버린 포즈도 이력에
         }
         else
         {
@@ -919,7 +919,7 @@ public sealed class ViewportView : Control
         InvalidateVisual();
     }
 
-    /// <summary>그 세트의 층이 든 그림(문서 기준 경로). 그림 층이 아니면 null.</summary>
+    /// <summary>그 전환의 층이 든 그림(문서 기준 경로). 그림 층이 아니면 null.</summary>
     private string? ImagePathOf(string o, string node) => _editor?.Document.FindTransition(o)?.Find(node)?.Image;
 
     private Bitmap? ImageOf(string o, string node)
@@ -927,16 +927,16 @@ public sealed class ViewportView : Control
 
     /// <summary>테스트 손잡이 — 그 조각에 지금 그려지는 그림(문서 기준 경로). 안 그려지면 null.</summary>
     public string? PartImage(string node)
-        => ShownSet is { } o && DrawnParts(o).Contains(node) ? ImagePathOf(o, node) : null;
+        => ShownTransitionName is { } o && DrawnParts(o).Contains(node) ? ImagePathOf(o, node) : null;
 
-    /// <summary>무대에 선 세트에서 그려지는 조각 노드들(그리는 순서) — 그림을 든 층 가운데 보이는 것. 없으면 빈 목록.</summary>
-    public IReadOnlyList<string> DrawnParts() => ShownSet is { } o ? DrawnParts(o) : Array.Empty<string>();
+    /// <summary>무대에 선 전환에서 그려지는 조각 층들(그리는 순서) — 그림을 든 층 가운데 보이는 것. 없으면 빈 목록.</summary>
+    public IReadOnlyList<string> DrawnParts() => ShownTransitionName is { } o ? DrawnParts(o) : Array.Empty<string>();
 
-    private IReadOnlyList<string> DrawnParts(string o) => PartsOf(o).Where(IsSetNodeShown).ToList();
+    private IReadOnlyList<string> DrawnParts(string o) => PartsOf(o).Where(IsLayerShown).ToList();
 
-    /// <summary>조각이 지금 그려지는 사각형(루트 공간) — 노드의 rect 안에 그림의 종횡비로 맞춘 것. 없으면 null.</summary>
+    /// <summary>조각이 지금 그려지는 사각형(루트 공간) — 층의 rect 안에 그림의 종횡비로 맞춘 것. 없으면 null.</summary>
     public Quad? PartQuad(string node)
-        => CurrentPose() is { } pose && ShownSet is { } o ? PartQuadOf(pose, o, node) : null;
+        => CurrentPose() is { } pose && ShownTransitionName is { } o ? PartQuadOf(pose, o, node) : null;
 
     private Quad? PartQuadOf(RectNodeTree pose, string o, string node)
     {
@@ -965,7 +965,7 @@ public sealed class ViewportView : Control
         float fitW = w;
         float fitH = h;
 
-        // 노드 rect 안에 그림을 찌그러뜨리지 않고 넣는다(가운데, contain) — rect의 두 변을 따라 줄인다.
+        // 층 rect 안에 그림을 찌그러뜨리지 않고 넣는다(가운데, contain) — rect의 두 변을 따라 줄인다.
         if (image is { PixelSize: { Width: > 0, Height: > 0 } })
         {
             float aspect = image.PixelSize.Width / (float)image.PixelSize.Height;
@@ -1010,8 +1010,8 @@ public sealed class ViewportView : Control
     {
         _template = ShownTransition is { } set ? StageTree.Build(set) : null;
 
-        // 무대에 선 세트가 바뀌면 하이어아키가 따라오도록 알린다.
-        string? shown = ShownSet;
+        // 무대에 선 전환이 바뀌면 하이어아키가 따라오도록 알린다.
+        string? shown = ShownTransitionName;
 
         if (shown != _shownStage)
         {
@@ -1131,7 +1131,7 @@ public sealed class ViewportView : Control
             return null;
         }
 
-        return motion is not null && !IsLayoutMode && motion.Name == ShownSet
+        return motion is not null && !IsLayoutMode && motion.Name == ShownTransitionName
             ? MotionPreview.Pose(_template, motion, seconds, _flags.IsMuted, alphas)
             : _template.Clone();
     }
@@ -1167,7 +1167,7 @@ public sealed class ViewportView : Control
     /// <summary>그리는 중인 프레임의 불투명도 표 — Render가 포즈와 함께 채운다.</summary>
     private readonly Dictionary<string, float> _drawAlphas = new(StringComparer.Ordinal);
 
-    /// <summary>노드에서 무대 루트까지 불투명도를 곱한 값 — CanvasGroup이 겹치는 방식 그대로.</summary>
+    /// <summary>층에서 무대 루트까지 불투명도를 곱한 값 — CanvasGroup이 겹치는 방식 그대로.</summary>
     private static float EffectiveAlpha(RectNodeTree pose, string key, IDictionary<string, float> alphas)
     {
         float alpha = 1f;
@@ -1183,19 +1183,19 @@ public sealed class ViewportView : Control
         return Math.Clamp(alpha, 0f, 1f);
     }
 
-    /// <summary>지금 시각에 그 노드가 그려지는 불투명도(부모들의 것까지 곱한 값). 노드가 없으면 null.</summary>
-    public float? NodeOpacity(string node)
+    /// <summary>지금 시각에 그 층이 그려지는 불투명도(부모들의 것까지 곱한 값). 층이 없으면 null.</summary>
+    public float? LayerOpacity(string node)
     {
         var alphas = new Dictionary<string, float>(StringComparer.Ordinal);
         return CurrentPose(alphas) is { } pose && pose.Contains(node) ? EffectiveAlpha(pose, node, alphas) : null;
     }
 
-    /// <summary>그 노드가 불투명도를 받을 수 있나 — 세트에서 불투명도를 받는다고 표시한 노드만.</summary>
+    /// <summary>그 층이 불투명도를 받을 수 있나 — 전환에서 불투명도를 받는다고 표시한 층만.</summary>
     public bool CanTakeAlpha(string? node)
         => node is not null && ShownTransition?.Find(node) is { Alpha: true };
 
     /// <summary>
-    /// 고른 노드의 **제** 불투명도(부모 것은 안 곱한다) — 지금 시각. 불투명도를 받을 수 없는 노드거나 키를 놓을 모션이 없으면 null.
+    /// 고른 층의 **제** 불투명도(부모 것은 안 곱한다) — 지금 시각. 불투명도를 받을 수 없는 층이거나 키를 놓을 타임라인이 없으면 null.
     /// </summary>
     public float? AlphaValue(string? node)
     {
@@ -1277,11 +1277,11 @@ public sealed class ViewportView : Control
 
         if (_template is null)
         {
-            DrawLabel(context, _editor is null ? "" : "세트를 열거나 애니메이션을 고르면 그 세트가 선다.", new Point(stage.X + 10, stage.Y + 10));
+            DrawLabel(context, _editor is null ? "" : "전환을 고르면 그 전환이 선다.", new Point(stage.X + 10, stage.Y + 10));
             return;
         }
 
-        // 오브젝트는 무대 밖도 그대로 그리고, 무대 바깥을 회색으로 덮어 가른다. 축·손잡이는 그 위에.
+        // 층은 무대 밖도 그대로 그리고, 무대 바깥을 회색으로 덮어 가른다. 축·손잡이는 그 위에.
         _drawAlphas.Clear();
         RectNodeTree pose = CurrentPose(_drawAlphas) ?? _template;
         DrawObjects(context, pose);
@@ -1289,18 +1289,18 @@ public sealed class ViewportView : Control
         context.DrawRectangle(StagePen, stage);
         DrawRecentEvents(context, stage);
 
-        // 배치 모드 — 키를 놓는 손잡이가 아니라 고른 오브젝트의 사각형과 원점.
+        // 배치 모드 — 키를 놓는 손잡이가 아니라 고른 층의 사각형과 원점.
         if (IsLayoutMode)
         {
             DrawLayout(context, pose);
-            DrawLabel(context, $"세트 {_setView} · 배치 — 끌기: 자리 · Shift+끌기: 배율 · Ctrl+끌기: 회전 (가만히 선 자세다. 배치를 끄면 끌기가 키가 된다)", new Point(stage.X + 8, stage.Y + 6));
+            DrawLabel(context, $"전환 {_openTransition} · 배치 — 끌기: 자리 · Shift+끌기: 배율 · Ctrl+끌기: 회전 (가만히 선 자세다. 배치를 끄면 끌기가 키가 된다)", new Point(stage.X + 8, stage.Y + 6));
             return;
         }
 
         DrawAxes(context, pose);
         DrawGizmo(context, pose);
 
-        DrawLabel(context, $"세트 {ShownSet}", new Point(stage.X + 8, stage.Y + 6));
+        DrawLabel(context, $"전환 {ShownTransitionName}", new Point(stage.X + 8, stage.Y + 6));
     }
 
     /// <summary>무대 프레임 바깥을 회색으로 덮는다 — 네 띠.</summary>
@@ -1362,7 +1362,7 @@ public sealed class ViewportView : Control
 
     private void DrawObjects(DrawingContext context, RectNodeTree pose)
     {
-        if (ShownSet is { } o)
+        if (ShownTransitionName is { } o)
         {
             DrawObject(context, pose, o);
         }
@@ -1399,7 +1399,7 @@ public sealed class ViewportView : Control
 
     private void DrawObject(DrawingContext context, RectNodeTree pose, string o)
     {
-        // 조각·색이 있는 세트 — 세트의 노드 순서로(뒤의 것이 위): 색 오브젝트는 사각형을 채우고, 조각은 그 층의 그림을 그린다.
+        // 조각·색이 있는 전환 — 전환의 층 순서로(뒤의 것이 위): 색 층은 사각형을 채우고, 조각은 그 층의 그림을 그린다.
         // 그릴 것이 하나도 없으면(그림도 색도 없다) 아래의 윤곽으로 떨어진다.
         IReadOnlyDictionary<string, string> colors = ColorsOf(o);
         IReadOnlyList<string> parts = DrawnParts(o);
@@ -1422,7 +1422,7 @@ public sealed class ViewportView : Control
                     continue;
                 }
 
-                if (colors.TryGetValue(node, out string? fill) && IsSetNodeShown(node) && Color.TryParse(fill, out Color color))
+                if (colors.TryGetValue(node, out string? fill) && IsLayerShown(node) && Color.TryParse(fill, out Color color))
                 {
                     Quad rect = StageGeometry.RectQuad(pose, key);
 
@@ -1447,7 +1447,7 @@ public sealed class ViewportView : Control
                 return;
             }
 
-            if (_setView is null && PartQuadOf(pose, o, parts[0]) is { } outline) // 세트를 열면 고른 층만 윤곽이 선다(DrawLayout)
+            if (_openTransition is null && PartQuadOf(pose, o, parts[0]) is { } outline) // 전환을 열면 고른 층만 윤곽이 선다(DrawLayout)
             {
                 context.DrawGeometry(null, SelectedObjectPen, new PolylineGeometry(
                     new[] { ToControl(outline.TopLeft), ToControl(outline.TopRight), ToControl(outline.BottomRight), ToControl(outline.BottomLeft), ToControl(outline.TopLeft) }, true));
@@ -1456,7 +1456,7 @@ public sealed class ViewportView : Control
             return;
         }
 
-        // 그릴 것이 없는 세트: 루트 rect 윤곽과 이름.
+        // 그릴 것이 없는 전환: 루트 rect 윤곽과 이름.
         string rootKey = StageTree.RootKey;
 
         if (!pose.Contains(rootKey))
@@ -1549,7 +1549,7 @@ public sealed class ViewportView : Control
         return new PolylineGeometry(new[] { tip, left, right, tip }, true);
     }
 
-    /// <summary>매니퓰레이터의 중심과 x·y 팔 끝(컨트롤 좌표, 팔 길이는 화면 고정). 팔 방향은 노드의 축, 중심은 <see cref="GizmoAnchor"/>.</summary>
+    /// <summary>매니퓰레이터의 중심과 x·y 팔 끝(컨트롤 좌표, 팔 길이는 화면 고정). 팔 방향은 층의 축, 중심은 <see cref="GizmoAnchor"/>.</summary>
     private (Point Center, Point XEnd, Point YEnd) GizmoPoints(RectNodeTree pose)
     {
         (Vec2 origin, Vec2 xAxis, Vec2 yAxis) = StageGeometry.Axes(pose, SelectedKey!, 100f);
@@ -1604,7 +1604,7 @@ public sealed class ViewportView : Control
             return;
         }
 
-        // 배치 모드 — 오브젝트를 집어 가만히 선 자세를 잡는다(키가 아니다).
+        // 배치 모드 — 층을 집어 가만히 선 자세를 잡는다(키가 아니다).
         if (IsLayoutMode)
         {
             if (TryStartLayoutDrag(position, e.KeyModifiers))
@@ -1777,7 +1777,7 @@ public sealed class ViewportView : Control
 
     // ── 채널 박스(마야) ───────────────────────────────────────────────
 
-    /// <summary>선택 오브젝트의 노드 성분의 지금 포즈 값(키 없는 포즈 포함). 노드·리그가 없으면 null.</summary>
+    /// <summary>선택 층의 층 성분의 지금 포즈 값(키 없는 포즈 포함). 층·전환이 없으면 null.</summary>
     public float? ComponentValue(string node, MotionChannelKind kind, Axis axis)
     {
         RectNodeTree? pose = CurrentPose();
@@ -1796,7 +1796,7 @@ public sealed class ViewportView : Control
         => _pending.TryGetValue((node, kind), out HashSet<Axis>? axes) && axes.Contains(axis);
 
     /// <summary>
-    /// 채널 박스 입력 — 노드 성분 하나를 이 값으로. 매니퓰레이터를 놓은 것과 같다:
+    /// 채널 박스 입력 — 층 성분 하나를 이 값으로. 매니퓰레이터를 놓은 것과 같다:
     /// Auto Key거나 그 시각에 키가 있으면 키로, 아니면 키 없는 포즈(S로 키·Esc로 버림). 값이 같으면 아무것도 안 한다.
     /// </summary>
     public void SetComponent(string node, MotionChannelKind kind, Axis axis, float value)
@@ -1916,7 +1916,7 @@ public sealed class ViewportView : Control
         }
     }
 
-    // ── 배치 모드 — 세트의 오브젝트를 끌어 가만히 선 자세(자리 · 배율 · 회전)를 잡는다 ──
+    // ── 배치 모드 — 전환의 층을 끌어 가만히 선 자세(자리 · 배율 · 회전)를 잡는다 ──
 
     private sealed record LayoutDrag(string Node, PlaceMode Mode, Vec2 StartRoot, Vec2 CenterRoot, LayerAsset Start)
     {
@@ -1925,20 +1925,20 @@ public sealed class ViewportView : Control
 
     private LayoutDrag? _layout;
 
-    /// <summary>배치 모드에서 오브젝트를 집었다 — 하이어아키·칸이 그것을 따라 고른다.</summary>
-    public event EventHandler<string>? LayoutNodePicked;
+    /// <summary>배치 모드에서 층을 집었다 — 하이어아키·칸이 그것을 따라 고른다.</summary>
+    public event EventHandler<string>? LayoutLayerPicked;
 
     private static LayerAsset CopyOf(LayerAsset n) => n.Clone();
 
-    /// <summary>그 자리의 오브젝트(위에 그려진 것 먼저) — 사각형이 있는 것만 집힌다. 없으면, 고른 오브젝트의 원점 가까이를 눌렀을 때 그것(묶기만 하는 오브젝트를 옮기는 길).</summary>
-    private string? LayoutNodeAt(RectNodeTree pose, string o, TransitionAsset rig, Point position)
+    /// <summary>그 자리의 층(위에 그려진 것 먼저) — 사각형이 있는 것만 집힌다. 없으면, 고른 층의 원점 가까이를 눌렀을 때 그것(묶기만 하는 층을 옮기는 길).</summary>
+    private string? LayoutLayerAt(RectNodeTree pose, string o, TransitionAsset asset, Point position)
     {
         var at = new Pixel(position.X, position.Y);
 
-        // 세트의 층 순서로(위에 그려진 것 먼저).
-        foreach (LayerAsset node in Enumerable.Reverse(rig.Layers))
+        // 전환의 층 순서로(위에 그려진 것 먼저).
+        foreach (LayerAsset node in Enumerable.Reverse(asset.Layers))
         {
-            if (!pose.Contains(node.Id) || node.Width <= 0f || node.Height <= 0f || !IsSetNodeShown(node.Id))
+            if (!pose.Contains(node.Id) || node.Width <= 0f || node.Height <= 0f || !IsLayerShown(node.Id))
             {
                 continue;
             }
@@ -1952,7 +1952,7 @@ public sealed class ViewportView : Control
             }
         }
 
-        if (SelectedNode is { } selected && rig.Find(selected) is not null && pose.Contains(selected)
+        if (SelectedNode is { } selected && asset.Find(selected) is not null && pose.Contains(selected)
             && Distance(position, ToControl(pose.TransformPoint(selected, Vec3.Zero).XY)) <= GizmoHit + 6)
         {
             return selected;
@@ -1964,14 +1964,14 @@ public sealed class ViewportView : Control
     /// <summary>끌기 = 자리, Shift+끌기 = 배율(원점에서의 거리 비), Ctrl+끌기 = 회전(원점 둘레).</summary>
     private bool TryStartLayoutDrag(Point position, KeyModifiers modifiers)
     {
-        if (_editor?.Document.FindTransition(_setView) is not { } rig || ShownSet is not { } o || CurrentPose() is not { } pose
-            || LayoutNodeAt(pose, o, rig, position) is not { } id || rig.Find(id) is not { } node)
+        if (_editor?.Document.FindTransition(_openTransition) is not { } asset || ShownTransitionName is not { } o || CurrentPose() is not { } pose
+            || LayoutLayerAt(pose, o, asset, position) is not { } id || asset.Find(id) is not { } node)
         {
             return false;
         }
 
         SelectedNode = id;
-        LayoutNodePicked?.Invoke(this, id);
+        LayoutLayerPicked?.Invoke(this, id);
         PlaceMode mode = modifiers.HasFlag(KeyModifiers.Shift) ? PlaceMode.Scale : modifiers.HasFlag(KeyModifiers.Control) ? PlaceMode.Rotate : PlaceMode.Move;
         _layout = new LayoutDrag(id, mode, ToRoot(position), pose.TransformPoint(id, Vec3.Zero).XY, CopyOf(node));
         InvalidateVisual();
@@ -1980,7 +1980,7 @@ public sealed class ViewportView : Control
 
     private void DragLayout(Point position)
     {
-        if (_layout is not { } drag || _template is null || ShownSet is not { } o)
+        if (_layout is not { } drag || _template is null || ShownTransitionName is not { } o)
         {
             return;
         }
@@ -2060,9 +2060,9 @@ public sealed class ViewportView : Control
 
         try
         {
-            if (_setView is not null)
+            if (_openTransition is not null)
             {
-                _editor?.UpdateLayer(_setView, drag.Node, drag.Now);
+                _editor?.UpdateLayer(_openTransition, drag.Node, drag.Now);
             }
         }
         finally
@@ -2071,10 +2071,10 @@ public sealed class ViewportView : Control
         }
     }
 
-    /// <summary>루트 공간의 점을 세트의 그 오브젝트(없으면 세트의 맨 위) 안의 좌표로 — 그 밑에 새 오브젝트를 놓을 자리.</summary>
-    public Vec2 ToSetLocal(string? parentNode, Vec2 root)
+    /// <summary>루트 공간의 점을 전환의 그 층(없으면 전환의 맨 위) 안의 좌표로 — 그 밑에 새 층을 놓을 자리.</summary>
+    public Vec2 ToTransitionLocal(string? parentNode, Vec2 root)
     {
-        if (_template is null || ShownSet is not { } o)
+        if (_template is null || ShownTransitionName is not { } o)
         {
             return root;
         }
@@ -2083,10 +2083,10 @@ public sealed class ViewportView : Control
         return _template.Contains(key) ? _template.InverseTransformPoint(key, new Vec3(root, 0f)).XY : root;
     }
 
-    /// <summary>배치 모드의 표시 — 고른 오브젝트의 사각형과 원점.</summary>
+    /// <summary>배치 모드의 표시 — 고른 층의 사각형과 원점.</summary>
     private void DrawLayout(DrawingContext context, RectNodeTree pose)
     {
-        if (ShownSet is not { } o || SelectedNode is not { } id || !pose.Contains(id))
+        if (ShownTransitionName is not { } o || SelectedNode is not { } id || !pose.Contains(id))
         {
             return;
         }
@@ -2099,19 +2099,19 @@ public sealed class ViewportView : Control
         context.DrawLine(SelectedObjectPen, new Point(origin.X, origin.Y - 7), new Point(origin.X, origin.Y + 7));
     }
 
-    /// <summary>세트의 오브젝트들이 화면에 차도록 보기를 맞춘다 — 세트를 열었을 때. 사각형이 하나도 없으면 원점 둘레.</summary>
-    public void FitToSet()
+    /// <summary>전환의 층들이 화면에 차도록 보기를 맞춘다 — 전환을 열었을 때. 사각형이 하나도 없으면 원점 둘레.</summary>
+    public void FitToTransition()
     {
         ResetView();
 
-        if (_setView is null || ShownSet is not { } o || _editor?.Document.FindTransition(_setView) is not { } rig || CurrentPose() is not { } pose || Bounds.Width < 1)
+        if (_openTransition is null || ShownTransitionName is not { } o || _editor?.Document.FindTransition(_openTransition) is not { } asset || CurrentPose() is not { } pose || Bounds.Width < 1)
         {
             return;
         }
 
         var points = new List<Vec2>();
 
-        foreach (LayerAsset node in rig.Layers.Where(n => pose.Contains(n.Id)))
+        foreach (LayerAsset node in asset.Layers.Where(n => pose.Contains(n.Id)))
         {
             Quad q = StageGeometry.RectQuad(pose, node.Id);
             points.AddRange(new[] { q.BottomLeft, q.BottomRight, q.TopLeft, q.TopRight });
@@ -2127,7 +2127,7 @@ public sealed class ViewportView : Control
         float height = Math.Max(maxY - minY, 200f);
         var center = new Vec2((minX + maxX) / 2f, (minY + maxY) / 2f);
 
-        // 세트가 무대의 절반쯤을 차지하게 — 화면 전체짜리 세트는 그대로(배율 1).
+        // 전환이 무대의 절반쯤을 차지하게 — 화면 전체짜리 전환은 그대로(배율 1).
         double factor = Math.Clamp(Math.Min(_stageSize.X / (width * 2.0), _stageSize.Y / (height * 2.0)), 1.0, MaxViewZoom);
         ZoomViewAt(ToControl(center), factor);
         Point at = ToControl(center);

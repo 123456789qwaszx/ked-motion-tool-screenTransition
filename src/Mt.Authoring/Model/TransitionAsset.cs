@@ -56,7 +56,7 @@ public sealed class LayerAsset
 
     public float Height { get; set; }
 
-    /// <summary>가만히 선 자세의 회전(도, 반시계 +)과 배율 — 배치 모드에서 잡는다. 애니메이션은 이 위에 얹힌다.</summary>
+    /// <summary>가만히 선 자세의 회전(도, 반시계 +)과 배율 — 배치 모드에서 잡는다. 움직임은 이 위에 얹힌다.</summary>
     public float Rotation { get; set; }
 
     public float ScaleX { get; set; } = 1f;

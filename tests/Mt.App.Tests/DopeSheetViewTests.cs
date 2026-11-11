@@ -34,7 +34,7 @@ public class DopeSheetViewTests
     }
 
     [Fact]
-    public void 행은_노드_채널_성분이고_블록은_레인_안에_있다() => HeadlessUi.Run(() =>
+    public void 행은_층_채널_성분이고_블록은_레인_안에_있다() => HeadlessUi.Run(() =>
     {
         (Window window, DopeSheetView view, _) = Show();
 

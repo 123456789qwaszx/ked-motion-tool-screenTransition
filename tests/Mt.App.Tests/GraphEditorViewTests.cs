@@ -33,7 +33,7 @@ public class GraphEditorViewTests
         => view.ScreenPositionOf(new KeyRef(Y, index)) ?? throw new InvalidOperationException($"키 {index}가 없다");
 
     [Fact]
-    public void 모션을_묶으면_성분마다_슬롯이_서고_전체_맞춤_뒤_키가_플롯_안에_있다() => HeadlessUi.Run(() =>
+    public void 타임라인을_묶으면_성분마다_슬롯이_서고_전체_맞춤_뒤_키가_플롯_안에_있다() => HeadlessUi.Run(() =>
     {
         (Window window, GraphEditorView view, _) = Show();
 

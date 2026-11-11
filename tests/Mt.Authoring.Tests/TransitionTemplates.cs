@@ -3,7 +3,7 @@ using Mt.Authoring.Model;
 
 namespace Mt.Authoring.Tests;
 
-/// <summary>테스트의 발판 세트 — 이모지(자리 › 묶음 › 조각 그림 넷)와 인형(nod · bow가 움직이는 마디의 사슬). 세트마다 타임라인이 하나다.</summary>
+/// <summary>테스트의 발판 전환 — 이모지(자리 › 묶음 › 조각 그림 넷)와 인형(nod · bow가 움직이는 마디의 사슬). 전환마다 타임라인이 하나다.</summary>
 public static class TransitionTemplates
 {
     public const string EmojiName = "emoji";
@@ -27,7 +27,7 @@ public static class TransitionTemplates
 
     public static TransitionAsset Emoji(string kind = EmojiName, int parts = DefaultParts, float partSize = DefaultPartSize)
     {
-        var rig = new TransitionAsset
+        var asset = new TransitionAsset
         {
             Name = kind,
             Layers =
@@ -39,18 +39,18 @@ public static class TransitionTemplates
 
         for (int i = 1; i <= parts; i++)
         {
-            rig.Layers.Add(new LayerAsset { Id = $"Emoji_Part{i}", Parent = "Emoji_Body", Width = partSize, Height = partSize, Image = $"art/part{i}.png", Alpha = true });
+            asset.Layers.Add(new LayerAsset { Id = $"Emoji_Part{i}", Parent = "Emoji_Body", Width = partSize, Height = partSize, Image = $"art/part{i}.png", Alpha = true });
         }
 
-        return rig;
+        return asset;
     }
 
-    /// <summary>세트 하나(= 타임라인 하나)를 더한다 — <paramref name="layers"/>가 있으면 그 층들로, 없으면 빈 세트. 길이를 준다.</summary>
+    /// <summary>전환 하나(= 타임라인 하나)를 더한다 — <paramref name="layers"/>가 있으면 그 층들로, 없으면 빈 전환. 길이를 준다.</summary>
     public static TimelineAsset AddTimeline(this MotionEditor editor, string name, float duration, TransitionAsset? layers = null)
     {
-        TransitionAsset rig = layers ?? new TransitionAsset();
-        rig.Name = name;
-        editor.AddTransition(rig);
+        TransitionAsset asset = layers ?? new TransitionAsset();
+        asset.Name = name;
+        editor.AddTransition(asset);
         editor.SetDuration(name, duration);
         return editor.Document.Find(name)!;
     }

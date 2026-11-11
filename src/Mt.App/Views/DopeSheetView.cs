@@ -11,12 +11,12 @@ using Mt.Authoring.Model;
 namespace Mt.App.Views;
 
 /// <summary>
-/// 도프시트 — 왼쪽 트리(노드 › 채널 › 성분), 오른쪽 시간 레인에 키 블록.
+/// 도프시트 — 왼쪽 트리(층 › 채널 › 성분), 오른쪽 시간 레인에 키 블록.
 ///
 /// 선택은 그래프와 **같은 모델**(<see cref="KeySelection"/>)이다. 블록 클릭·Shift·박스 선택, 블록 드래그 = 시간 이동,
 /// Alt+드래그 = 복제, 눈금자 아래 범위 띠의 양끝 핸들 드래그 = 시간 스케일(반대쪽 끝이 기준점),
 /// 성분 행 더블클릭 = 그 시각에 키, Delete, 눈금자 클릭·드래그 = 스크럽. 휠 = 시간 줌, 가운데 버튼/Alt+드래그 = 팬.
-/// 노드 행 라벨 클릭 = 접기/펼치기. 요약 행의 블록 하나는 그 밑의 키 전부를 덮는다.
+/// 층 행 라벨 클릭 = 접기/펼치기. 요약 행의 블록 하나는 그 밑의 키 전부를 덮는다.
 ///
 /// 드래그 중간값은 렌더만이고 놓는 순간이 편집 하나다. 산수는 <see cref="KeyOps"/>·<see cref="DopeSheetRows"/>다.
 /// </summary>
@@ -439,7 +439,7 @@ public sealed class DopeSheetView : Control
 
         if (motion is null)
         {
-            DrawLabel(context, "모션을 고르면 여기에 키가 보입니다.", new Point(8, RulerHeight + RangeHeight + 6), LabelBrush);
+            DrawLabel(context, "전환을 고르면 여기에 키가 보입니다.", new Point(8, RulerHeight + RangeHeight + 6), LabelBrush);
             return;
         }
 
@@ -670,7 +670,7 @@ public sealed class DopeSheetView : Control
             }
         }
 
-        // 라벨 열: 노드 행은 접기/펼치기.
+        // 라벨 열: 층 행은 접기/펼치기.
         if (position.X < LabelWidth)
         {
             int index = RowIndexAt(position.Y);

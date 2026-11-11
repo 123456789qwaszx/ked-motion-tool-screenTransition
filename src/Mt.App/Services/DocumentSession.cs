@@ -25,12 +25,12 @@ public sealed class DocumentSession
 
     // ── 문서 ↔ 실은 그림 ──────────────────────────────────────────────
     //
-    // 세트의 모양과 층의 그림은 되돌리기·다시하기로도 바뀐다. 뷰포트의 리그·비트맵이 문서와 어긋나지 않도록 지문을 두고
+    // 전환의 모양과 층의 그림은 되돌리기·다시하기로도 바뀐다. 뷰포트의 전환·비트맵이 문서와 어긋나지 않도록 지문을 두고
     // 달라진 때만 AssetsChanged를 올린다. 키 편집(Keys·Metadata)은 보지도 않는다.
 
     private string _assetFingerprint = "";
 
-    /// <summary>테스트 손잡이 — 문서를 따라 세트·그림을 다시 실은 횟수.</summary>
+    /// <summary>테스트 손잡이 — 문서를 따라 전환·그림을 다시 실은 횟수.</summary>
     internal int AssetSyncCount { get; private set; }
 
     private void OnEditorChanged(object? sender, MotionChangedEventArgs e)
@@ -70,9 +70,9 @@ public sealed class DocumentSession
         }).ToList();
 
     /// <summary>
-    /// 층 표(<c>layers.tsv</c>)를 세트로 들인다 — 표 옆의 그림들이 그림 오브젝트 여럿으로, 한 칸에. 그림 경로는 문서 기준으로 적힌다.
+    /// 층 표(<c>layers.tsv</c>)를 전환으로 들인다 — 표 옆의 그림들이 그림 층 여럿으로, 한 칸에. 그림 경로는 문서 기준으로 적힌다.
     /// </summary>
-    public IReadOnlyList<string> ImportLayers(string kind, string sheetPath)
+    public IReadOnlyList<string> ImportLayers(string transition, string sheetPath)
     {
         ArgumentNullException.ThrowIfNull(sheetPath);
         LayerSheet sheet = LayerSheet.Load(sheetPath);
@@ -80,7 +80,7 @@ public sealed class DocumentSession
         // 표의 파일 하나를 문서 기준 경로로 바꿔 그 폴더를 얻는다(저장 전의 문서면 절대 경로로 남는다).
         string probe = RelativeToDocument(Path.Combine(folder, "x")).Replace('\\', '/');
         string relative = probe.Length > 1 ? probe[..^2] : "";
-        return Editor.ImportLayers(kind, sheet, relative, StageTree.Stage);
+        return Editor.ImportLayers(transition, sheet, relative, StageTree.Stage);
     }
 
 
@@ -91,7 +91,7 @@ public sealed class DocumentSession
 
     public event EventHandler? StatusChanged;
 
-    /// <summary>세트의 모양이나 층의 그림이 바뀌었다. 뷰포트가 다시 싣는다.</summary>
+    /// <summary>전환의 모양이나 층의 그림이 바뀌었다. 뷰포트가 다시 싣는다.</summary>
     public event EventHandler? AssetsChanged;
 
     /// <summary>문서의 문제 — 전환마다 그 층들로 검증한다.</summary>

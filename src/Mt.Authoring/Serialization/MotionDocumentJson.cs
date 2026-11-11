@@ -51,9 +51,9 @@ public static class MotionDocumentJson
         }
 
         // 역직렬화가 null을 남길 수 있는 목록은 빈 목록으로 — 모델의 불변 조건(목록은 null이 아니다)을 지킨다.
-        foreach (TransitionAsset rig in document.Transitions)
+        foreach (TransitionAsset asset in document.Transitions)
         {
-            rig.Layers ??= new List<LayerAsset>();
+            asset.Layers ??= new List<LayerAsset>();
         }
 
         foreach (TimelineAsset motion in document.Timelines)

@@ -19,7 +19,7 @@ public enum ManipulatorMode
 }
 
 /// <summary>
-/// 뷰포트 매니퓰레이터의 산수 — 화면(루트 공간) 드래그를 노드 값으로, 노드 값을 채널 키 값으로.
+/// 뷰포트 매니퓰레이터의 산수 — 화면(루트 공간) 드래그를 층 값으로, 층 값을 채널 키 값으로.
 ///
 /// 이동은 **부모 공간**의 변위다(anchoredPosition이 부모 기준이므로 부모가 회전·배율돼 있으면 화면 변위와 다르다).
 /// 회전은 피벗 둘레의 각도 차(도, 반시계 양수 — 유니티 z 회전과 같다). 배율은 피벗까지 거리 비.
@@ -27,7 +27,7 @@ public enum ManipulatorMode
 /// </summary>
 public static class PoseEdit
 {
-    /// <summary>루트 공간 두 점의 차를 노드 부모 공간의 변위로. 루트 직속이면 루트 공간 그대로.</summary>
+    /// <summary>루트 공간 두 점의 차를 층 부모 공간의 변위로. 루트 직속이면 루트 공간 그대로.</summary>
     public static Vec2 RootDeltaToLocal(RectNodeTree pose, string node, Vec2 rootFrom, Vec2 rootTo)
     {
         ArgumentNullException.ThrowIfNull(pose);
@@ -92,7 +92,7 @@ public static class PoseEdit
         return posed - start;
     }
 
-    /// <summary>채널 종류의 노드 상태 성분 — 시작값·포즈값을 같은 자리에서 읽는다.</summary>
+    /// <summary>채널 종류의 층 상태 성분 — 시작값·포즈값을 같은 자리에서 읽는다.</summary>
     public static float Component(MotionChannelKind kind, in RectNodeState state, Axis axis)
     {
         return kind switch
@@ -104,7 +104,7 @@ public static class PoseEdit
         };
     }
 
-    /// <summary>노드 상태의 성분 하나를 바꾼 상태(채널 박스 입력). <see cref="Component"/>의 반대.</summary>
+    /// <summary>층 상태의 성분 하나를 바꾼 상태(채널 박스 입력). <see cref="Component"/>의 반대.</summary>
     public static RectNodeState WithComponent(MotionChannelKind kind, in RectNodeState state, Axis axis, float value)
     {
         switch (kind)

@@ -20,7 +20,7 @@ public class MotionEditorTests
         editor.AddKey("a", "N", MotionChannelKind.Position, Axis.X, Fixtures.Key(0f, 0f));
         editor.AddKey("a", "N", MotionChannelKind.Position, Axis.X, Fixtures.Key(1f, 5f));
 
-        Assert.Equal(5, editor.Revision); // 세트 · 길이 · 채널 · 키 · 키
+        Assert.Equal(5, editor.Revision); // 전환 · 길이 · 채널 · 키 · 키
         Assert.Equal(new[] { MotionChangeKind.Document, MotionChangeKind.Metadata, MotionChangeKind.Structure, MotionChangeKind.Keys, MotionChangeKind.Keys }, kinds);
         Assert.Equal(2, editor.Document.Find("a")!.Channels[0].X!.Keys.Count);
 

@@ -22,8 +22,8 @@ namespace Ked.Presentation.Core
         public const float Tolerance = 1e-4f;
 
         /// <summary>
-        /// 클립 전체를 검증한다. rigNodeIds를 주면 노드가 그 세트에 있는지도 본다(null이면 생략 —
-        /// 세트가 없는 자리, 예: 단위 테스트).
+        /// 클립 전체를 검증한다. rigNodeIds(전환의 층 id들)를 주면 노드가 그 안에 있는지도 본다(null이면 생략 —
+        /// 전환이 없는 자리, 예: 단위 테스트).
         /// </summary>
         public static bool TryValidate(MotionClip clip, ICollection<string> rigNodeIds, out string reason)
         {
@@ -102,7 +102,7 @@ namespace Ked.Presentation.Core
 
             if (rigNodeIds != null && !rigNodeIds.Contains(channel.Node))
             {
-                reason = $"세트에 없는 노드다 ('{channel.Node}')";
+                reason = $"전환에 없는 층이다 ('{channel.Node}')";
                 return false;
             }
 

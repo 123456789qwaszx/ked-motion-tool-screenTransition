@@ -2,35 +2,35 @@ using Mt.Authoring.Model;
 
 namespace Mt.Authoring.Editing;
 
-// 세트의 이름을 바꾼다.
+// 전환의 이름을 바꾼다.
 public sealed partial class MotionEditor
 {
-    /// <summary>세트의 이름을 바꾼다 — 타임라인의 이름은 세트의 것이라 함께 바뀐다. 한 칸.</summary>
-    public void RenameTransition(string kind, string newKind)
+    /// <summary>전환의 이름을 바꾼다 — 타임라인의 이름은 전환의 것이라 함께 바뀐다. 한 칸.</summary>
+    public void RenameTransition(string transition, string newName)
     {
-        TransitionAsset rig = RequireTransition(kind);
+        TransitionAsset asset = RequireTransition(transition);
 
-        if (string.Equals(kind, newKind?.Trim(), StringComparison.Ordinal))
+        if (string.Equals(transition, newName?.Trim(), StringComparison.Ordinal))
         {
             return;
         }
 
-        string name = RequireNewTransitionName(newKind);
-        Mutate(MotionChangeKind.Document, () => rig.Name = name);
+        string name = RequireNewTransitionName(newName);
+        Mutate(MotionChangeKind.Document, () => asset.Name = name);
     }
 
-    private string RequireNewTransitionName(string? kind)
+    private string RequireNewTransitionName(string? transition)
     {
-        string name = (kind ?? "").Trim();
+        string name = (transition ?? "").Trim();
 
         if (!TransitionNameRule.IsMatch(name))
         {
-            throw new InvalidOperationException($"세트 이름은 영문 소문자로 시작하는 소문자·숫자·_ 다 ('{kind}')");
+            throw new InvalidOperationException($"전환 이름은 영문 소문자로 시작하는 소문자·숫자·_ 다 ('{transition}')");
         }
 
         if (Document.FindTransition(name) is not null)
         {
-            throw new InvalidOperationException($"세트 '{name}'가 이미 있다.");
+            throw new InvalidOperationException($"전환 '{name}'가 이미 있다.");
         }
 
         return name;

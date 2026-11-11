@@ -58,7 +58,7 @@ public sealed partial class MotionEditor
     {
         if (index < 0 || index >= motion.Events.Count)
         {
-            throw new ArgumentOutOfRangeException(nameof(index), index, $"모션 '{motion.Name}'의 이벤트가 {motion.Events.Count}개다.");
+            throw new ArgumentOutOfRangeException(nameof(index), index, $"타임라인 '{motion.Name}'의 이벤트가 {motion.Events.Count}개다.");
         }
 
         return motion.Events[index];

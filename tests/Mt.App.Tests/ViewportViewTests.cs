@@ -44,7 +44,7 @@ public class ViewportViewTests
             Assert.Equal(anchor.X, after.X, 1);
             Assert.Equal(anchor.Y, after.Y, 1);
 
-            // MMB 드래그 = 보기 이동(세트·키는 그대로).
+            // MMB 드래그 = 보기 이동(전환·키는 그대로).
             Vector panBefore = view.ViewPan;
             window.MouseDown(inWindow, MouseButton.Middle);
             window.MouseMove(new Point(inWindow.X + 30, inWindow.Y - 10), RawInputModifiers.MiddleMouseButton);
@@ -82,23 +82,23 @@ public class ViewportViewTests
     });
 
     [Fact]
-    public void 리그를_실으면_세트가_서고_포즈가_시각을_따른다() => HeadlessUi.Run(() =>
+    public void 타임라인을_묶으면_전환이_서고_포즈가_시각을_따른다() => HeadlessUi.Run(() =>
     {
         (Window window, ViewportView view, _) = Show();
 
         try
         {
             Assert.True(view.HasStage);
-            Quad rest = view.SetQuad() ?? throw new InvalidOperationException("세트가 없다");
+            Quad rest = view.TransitionQuad() ?? throw new InvalidOperationException("전환이 없다");
             Assert.Equal(0f, rest.Center.Y, 2);
 
             view.ScrubTo(0.3);
-            Quad dipped = view.SetQuad()!.Value;
+            Quad dipped = view.TransitionQuad()!.Value;
             Assert.Equal(-18f, dipped.Center.Y, 2);
 
             // 길이에서는 restore라 시작 상태.
             view.ScrubTo(0.6);
-            Assert.Equal(0f, view.SetQuad()!.Value.Center.Y, 2);
+            Assert.Equal(0f, view.TransitionQuad()!.Value.Center.Y, 2);
         }
         finally
         {
@@ -277,7 +277,7 @@ public class ViewportViewTests
             view.ScrubTo(0.3);
 
             Point centerLocal = view.GizmoCenter() ?? throw new InvalidOperationException("기즈모가 없다");
-            Point xArm = view.TranslatePoint(new Point(centerLocal.X + 60, centerLocal.Y), window)!.Value; // x 팔 끝(회전 없는 노드 = 화면 +x)
+            Point xArm = view.TranslatePoint(new Point(centerLocal.X + 60, centerLocal.Y), window)!.Value; // x 팔 끝(회전 없는 층 = 화면 +x)
             Point halfway = new(xArm.X - 30, xArm.Y);
 
             window.MouseDown(xArm, MouseButton.Left);
@@ -348,13 +348,13 @@ public class ViewportViewTests
         {
             var y = new Mt.Authoring.Graph.CurveRef("MoverY", MotionChannelKind.Position, Mt.Authoring.Model.Axis.Y);
             view.ScrubTo(0.3);
-            Assert.Equal(-18f, view.SetQuad()!.Value.Center.Y, 2);
+            Assert.Equal(-18f, view.TransitionQuad()!.Value.Center.Y, 2);
 
             view.Flags.SetMuted(y, true);
-            Assert.Equal(0f, view.SetQuad()!.Value.Center.Y, 2);
+            Assert.Equal(0f, view.TransitionQuad()!.Value.Center.Y, 2);
 
             view.Flags.SetMuted(y, false);
-            Assert.Equal(-18f, view.SetQuad()!.Value.Center.Y, 2);
+            Assert.Equal(-18f, view.TransitionQuad()!.Value.Center.Y, 2);
         }
         finally
         {
@@ -390,15 +390,15 @@ public class ViewportViewTests
         try
         {
             Assert.False(view.HasStage);
-            Assert.Null(view.SetQuad());
+            Assert.Null(view.TransitionQuad());
 
             view.Bind(editor, "nod");
             Assert.True(view.HasStage);
-            Assert.NotNull(view.SetQuad());
+            Assert.NotNull(view.TransitionQuad());
 
             // 묶인 타임라인이 없으면 무대가 빈다.
             view.Bind(editor, null);
-            Assert.Null(view.SetQuad());
+            Assert.Null(view.TransitionQuad());
             view.InvalidateVisual();
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();
         }

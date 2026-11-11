@@ -58,7 +58,7 @@ public sealed partial class MotionEditor
 
         if (motion.FindChannel(node, kind) is not null)
         {
-            throw new InvalidOperationException($"모션 '{name}'에 채널 {node}/{kind}가 이미 있다 — 같은 노드·종류는 하나뿐이다.");
+            throw new InvalidOperationException($"타임라인 '{name}'에 채널 {node}/{kind}가 이미 있다 — 같은 층·종류는 하나뿐이다.");
         }
 
         var channel = new ChannelAsset { Node = node, Kind = kind };
@@ -187,7 +187,7 @@ public sealed partial class MotionEditor
     }
 
     /// <summary>
-    /// 포즈를 키로(Set Key·Auto Key). 채널이 없으면 모션 기본 mode로 만들고, 성분이 없으면 만들고, 같은 시각의 키는 바꾼다 —
+    /// 포즈를 키로(Set Key·Auto Key). 채널 · 성분이 없으면 만들고, 같은 시각의 키는 바꾼다 —
     /// 전부 **한 번의 조작**이다. 돌려주는 것은 생긴 키들이다.
     /// </summary>
     public List<KeyRef> KeyComponents(
@@ -282,7 +282,7 @@ public sealed partial class MotionEditor
     }
 
     /// <summary>
-    /// 클립보드를 현재 시각에 붙인다(merge — 같은 시각의 키는 바뀐다). 채널·성분이 없으면 모션 기본 mode로 만든다. 한 번의 조작.
+    /// 클립보드를 현재 시각에 붙인다(merge — 같은 시각의 키는 바뀐다). 채널·성분이 없으면 만든다. 한 번의 조작.
     /// 돌려주는 것은 붙은 키들이다.
     /// targets를 주면 복사한 커브 대신 그 커브들에 붙인다(마야 paste to selected channels): 복사한 커브가 하나면 모든 대상에,
     /// 여럿이면 순서대로 짝지어(남는 쪽은 버린다). 그래서 scale X의 키를 복사해 scale Y에 붙일 수 있다.
@@ -621,7 +621,7 @@ public sealed partial class MotionEditor
     private List<(Action Undo, Action Redo)>? _batchSides;
 
     /// <summary>
-    /// 여러 명령을 되돌리기 한 번으로 묶는다(프리셋 추가처럼 모션·채널·키를 한꺼번에). 안에서 던지면 문서를 묶기 전으로 되돌리고
+    /// 여러 명령을 되돌리기 한 번으로 묶는다(층 짓기처럼 층·채널·키를 한꺼번에). 안에서 던지면 문서를 묶기 전으로 되돌리고
     /// 기록에 남기지 않는다. 아무것도 안 바뀌었으면(같은 값만 넣었으면) 기록도 다시하기 삭제도 없다. 중첩은 바깥 묶음에 든다.
     /// 묶음 안에서 <see cref="RecordExternal"/>로 올린 손은 같은 칸에 붙는다.
     /// </summary>
@@ -763,13 +763,13 @@ public sealed partial class MotionEditor
     private TimelineAsset Require(string name)
     {
         ArgumentNullException.ThrowIfNull(name);
-        return Document.Find(name) ?? throw new KeyNotFoundException($"세트 '{name}'가 없다.");
+        return Document.Find(name) ?? throw new KeyNotFoundException($"전환 '{name}'가 없다.");
     }
 
     private static ChannelAsset RequireChannel(TimelineAsset motion, string node, MotionChannelKind kind)
     {
         ArgumentNullException.ThrowIfNull(node);
-        return motion.FindChannel(node, kind) ?? throw new KeyNotFoundException($"모션 '{motion.Name}'에 채널 {node}/{kind}가 없다.");
+        return motion.FindChannel(node, kind) ?? throw new KeyNotFoundException($"타임라인 '{motion.Name}'에 채널 {node}/{kind}가 없다.");
     }
 
     private static ComponentCurve RequireCurve(ChannelAsset channel, Axis axis, int index)
@@ -798,7 +798,7 @@ public sealed partial class MotionEditor
 
 public enum MotionChangeKind
 {
-    /// <summary>모션·채널이 생기거나 사라졌다. 목록을 다시 만든다.</summary>
+    /// <summary>타임라인·채널이 생기거나 사라졌다. 목록을 다시 만든다.</summary>
     Structure,
 
     /// <summary>이름·길이·이벤트. 목록은 그대로, 글자만 다시 쓴다.</summary>
@@ -807,7 +807,7 @@ public enum MotionChangeKind
     /// <summary>키 값. 그래프·뷰포트만 다시 그린다.</summary>
     Keys,
 
-    /// <summary>세트의 모양(층의 목록·계층) — 리그를 다시 세운다.</summary>
+    /// <summary>전환의 모양(층의 목록·계층) — 전환을 다시 세운다.</summary>
     Document,
 }
 

@@ -139,13 +139,13 @@ public class KeyOpsTests
 public class DopeSheetRowsTests
 {
     [Fact]
-    public void 노드_채널_성분_트리와_요약_블록()
+    public void 층_채널_성분_트리와_요약_블록()
     {
         TimelineAsset bow = Fixtures.NodBowDocument().Find("bow")!;
 
         List<DopeRow> rows = DopeSheetRows.Build(bow);
 
-        Assert.Equal(5, rows.Count); // 노드 · 채널 · x · y · z
+        Assert.Equal(5, rows.Count); // 층 · 채널 · x · y · z
         Assert.Equal(DopeRowLevel.Node, rows[0].Level);
         Assert.Equal("Pivot", rows[0].Label);
         Assert.Equal(DopeRowLevel.Channel, rows[1].Level);
@@ -161,7 +161,7 @@ public class DopeSheetRowsTests
     }
 
     [Fact]
-    public void 접힌_노드는_요약_행만_남고_Covers는_계층대로다()
+    public void 접힌_층은_요약_행만_남고_Covers는_계층대로다()
     {
         MotionDocument document = Fixtures.NodBowDocument();
         List<DopeRow> rows = DopeSheetRows.Build(document.Find("nod")!, node => true);

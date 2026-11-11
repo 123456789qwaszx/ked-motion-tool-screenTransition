@@ -8,7 +8,7 @@ using Mt.Authoring.Validation;
 
 namespace Mt.Authoring.Tests;
 
-/// <summary>툴에서 정의한 세트 — 미리보기는 이것만으로 선다. Spine처럼 툴이 원본.</summary>
+/// <summary>툴에서 정의한 전환 — 미리보기는 이것만으로 선다. Spine처럼 툴이 원본.</summary>
 public class TransitionAssetTests
 {
     private static MotionEditor NewEditor()
@@ -18,18 +18,18 @@ public class TransitionAssetTests
         return editor;
     }
 
-    // ── 리그 편집기 ─────────────────────────────────
+    // ── 전환 편집기 ─────────────────────────────────
 
     private static string[] Ids(MotionEditor editor, string kind = TransitionTemplates.EmojiName) => editor.Document.FindTransition(kind)!.Layers.Select(n => n.Id).ToArray();
 
     [Fact]
-    public void 노드를_짓고_지우고_옮기면_부모가_늘_자식보다_먼저_온다()
+    public void 층을_짓고_지우고_옮기면_부모가_늘_자식보다_먼저_온다()
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddTransition(TransitionTemplates.Emoji(parts: 2));
         long revision = editor.Revision;
 
-        // 더하기 — 부모의 식구들 맨 뒤. 크기 0의 묶는 노드로 선다(그림 · 크기는 값으로 준다).
+        // 더하기 — 부모의 식구들 맨 뒤. 크기 0의 묶는 층으로 선다(그림 · 크기는 값으로 준다).
         LayerAsset glow = editor.AddLayer(TransitionTemplates.EmojiName, "Emoji_Glow", "Emoji_Anchor");
         Assert.Equal((0f, 0f, null, false), (glow.Width, glow.Height, glow.Image, glow.Alpha));
         editor.AddLayer(TransitionTemplates.EmojiName, "Emoji_Spark", "Emoji_Glow");
@@ -43,7 +43,7 @@ public class TransitionAssetTests
         Assert.Throws<InvalidOperationException>(() => editor.AddLayer(TransitionTemplates.EmojiName, "1bad"));
         Assert.Throws<InvalidOperationException>(() => editor.AddLayer(TransitionTemplates.EmojiName, "a/b"));
         Assert.Throws<KeyNotFoundException>(() => editor.AddLayer(TransitionTemplates.EmojiName, "X", "Nope"));
-        Assert.Throws<KeyNotFoundException>(() => editor.AddLayer("figure", "X"));                                 // 없는 세트
+        Assert.Throws<KeyNotFoundException>(() => editor.AddLayer("figure", "X"));                                 // 없는 전환
         Assert.Throws<InvalidOperationException>(() => editor.SetLayerParent(TransitionTemplates.EmojiName, "Emoji_Glow", "Emoji_Spark")); // 제 밑으로
         Assert.Throws<InvalidOperationException>(() => editor.UpdateLayer(TransitionTemplates.EmojiName, "Extra", new LayerAsset { Width = -1f }));
         Assert.Equal(revision, editor.Revision);
@@ -84,7 +84,7 @@ public class TransitionAssetTests
         Assert.Throws<InvalidOperationException>(() => editor.UpdateLayer(TransitionTemplates.EmojiName, "Emoji_Glow", new LayerAsset { ScaleX = 0f }));
         editor.Undo();
 
-        // 지우기 — 밑의 노드도 함께. 되돌리면 그 자리에 돌아온다.
+        // 지우기 — 밑의 층도 함께. 되돌리면 그 자리에 돌아온다.
         editor.RemoveLayer(TransitionTemplates.EmojiName, "Emoji_Body");
         Assert.Equal(new[] { "Extra", "Emoji_Anchor" }, Ids(editor));
         editor.Undo();
@@ -93,7 +93,7 @@ public class TransitionAssetTests
     }
 
     [Fact]
-    public void 노드의_이름을_바꾸면_자식과_채널이_따라온다()
+    public void 층의_이름을_바꾸면_자식과_채널이_따라온다()
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddTransition(TransitionTemplates.Emoji(parts: 2));
@@ -120,7 +120,7 @@ public class TransitionAssetTests
         Assert.Equal("Emoji_Anchor", Ids(editor)[0]);
     }
 
-    // ── 시차 — 오브젝트의 움직임을 통째로 민다 ─────────────────────────
+    // ── 시차 — 층의 움직임을 통째로 민다 ─────────────────────────
 
     [Fact]
     public void 움직임을_밀면_길이는_그대로이고_비는_쪽은_가만히_넘치는_쪽은_잘린다()
@@ -140,25 +140,25 @@ public class TransitionAssetTests
         long revision = editor.Revision;
 
         // 0.1초 늦게 — 안쪽 키가 밀리고 처음과 끝은 제 값으로 선다. 한 칸.
-        Assert.True(editor.ShiftNodeKeys("in", "Emoji_Part1", 0.1f));
+        Assert.True(editor.ShiftLayerKeys("in", "Emoji_Part1", 0.1f));
         Assert.Equal(revision + 1, editor.Revision);
         Assert.Equal(new[] { (0f, -100f), (0.3f, -100f), (0.7f, 0f), (1f, 0f) }, Keys("Emoji_Part1"));
 
         // 넘치게 늦추면 잘린다 — 끝의 키는 잘린 자리의 값(아직 들어오는 중).
-        editor.ShiftNodeKeys("in", "Emoji_Part2", 0.6f);
+        editor.ShiftLayerKeys("in", "Emoji_Part2", 0.6f);
         Assert.Equal(new[] { (0f, -100f), (0.8f, -100f), (1f, -50f) }, Keys("Emoji_Part2"));
 
         // 일찍 — 처음의 키는 잘린 자리의 값(이미 들어오는 중), 끝은 마지막 값으로 가만히.
-        editor.ShiftNodeKeys("in", "Emoji_Part3", -0.4f);
+        editor.ShiftLayerKeys("in", "Emoji_Part3", -0.4f);
         Assert.Equal(new[] { (0f, -50f), (0.2f, 0f), (1f, 0f) }, Keys("Emoji_Part3"));
 
         // 어느 쪽이든 규칙(처음과 끝에 키)이 그대로 선다.
         Assert.Empty(MotionValidator.Validate(editor.Document));
 
-        // 채널이 없는 오브젝트·0초는 아무 일도 없다(기록 없음).
+        // 채널이 없는 층·0초는 아무 일도 없다(기록 없음).
         revision = editor.Revision;
-        Assert.False(editor.ShiftNodeKeys("in", "Emoji_Body", 0.1f));
-        Assert.False(editor.ShiftNodeKeys("in", "Emoji_Part1", 0f));
+        Assert.False(editor.ShiftLayerKeys("in", "Emoji_Body", 0.1f));
+        Assert.False(editor.ShiftLayerKeys("in", "Emoji_Part1", 0f));
         Assert.Equal(revision, editor.Revision);
 
         // 시차 — 순서대로 0.1초씩 더: 첫째는 그대로. 통째로 한 칸.
@@ -166,7 +166,7 @@ public class TransitionAssetTests
         editor.Undo();
         editor.Undo();
         revision = editor.Revision;
-        Assert.True(editor.StaggerNodes("in", new[] { "Emoji_Part1", "Emoji_Part2", "Emoji_Part3" }, 0.1f));
+        Assert.True(editor.StaggerLayers("in", new[] { "Emoji_Part1", "Emoji_Part2", "Emoji_Part3" }, 0.1f));
         Assert.Equal(revision + 1, editor.Revision);
         Assert.Equal(0.2f, Keys("Emoji_Part1")[1].T);
         Assert.Equal(0.3f, Keys("Emoji_Part2")[1].T);
@@ -198,14 +198,14 @@ public class TransitionAssetTests
         Assert.True(editor.HideAfterTurn("in", "Emoji_Part1"));
         Assert.Equal(new[] { (0f, 1f), (0.7f, 1f), (0.8f, 0f), (1f, 0f) }, Alpha("Emoji_Part1"));
 
-        // 처음부터(끝까지) 움직이거나 움직임이 없는 오브젝트는 할 일이 없다(기록 없음).
+        // 처음부터(끝까지) 움직이거나 움직임이 없는 층은 할 일이 없다(기록 없음).
         revision = editor.Revision;
         Assert.False(editor.HideUntilTurn("in", "Emoji_Part2"));
         Assert.False(editor.HideAfterTurn("in", "Emoji_Part2"));
         Assert.False(editor.HideUntilTurn("in", "Emoji_Part3"));
         Assert.Equal(revision, editor.Revision);
 
-        // 전부 — 움직이는 오브젝트 가운데 늦게 나오는 것만, 한 칸. 규칙에 맞는다.
+        // 전부 — 움직이는 층 가운데 늦게 나오는 것만, 한 칸. 규칙에 맞는다.
         editor.Undo();
         editor.Undo();
         revision = editor.Revision;
@@ -215,12 +215,12 @@ public class TransitionAssetTests
         Assert.Empty(MotionValidator.Validate(editor.Document));
     }
 
-    // ── 세트 이름 바꾸기 ───────────────────────────────────────────────
+    // ── 전환 이름 바꾸기 ───────────────────────────────────────────────
 
     private static KeyAsset Lin(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Linear };
 
     [Fact]
-    public void 세트의_이름을_바꾸면_타임라인의_이름도_함께_바뀐다()
+    public void 전환의_이름을_바꾸면_타임라인의_이름도_함께_바뀐다()
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddTransition(new TransitionAsset { Name = "star" });
@@ -230,7 +230,7 @@ public class TransitionAssetTests
         editor.SetKeys("star", "Sun", MotionChannelKind.Position, Axis.Y, new[] { Lin(0f, -100f), Lin(1f, 0f) });
         editor.AddTransition(new TransitionAsset { Name = "town" });
 
-        // 한 칸 — 타임라인은 세트의 것이라 이름이 함께 간다.
+        // 한 칸 — 타임라인은 전환의 것이라 이름이 함께 간다.
         long revision = editor.Revision;
         editor.RenameTransition("star", "sol");
         Assert.Equal(revision + 1, editor.Revision);
@@ -255,7 +255,7 @@ public class TransitionAssetTests
     // ── 화면 밖에서 들어온다 ───────────────────────────────────────────
 
     [Fact]
-    public void 화면_밖에서_들어오는_거리는_오브젝트의_사각형이_무대_밖으로_다_나가는_만큼이다()
+    public void 화면_밖에서_들어오는_거리는_층의_사각형이_무대_밖으로_다_나가는_만큼이다()
     {
         var stage = new Vec2(1920f, 1080f);
         var editor = new MotionEditor(new MotionDocument());
@@ -276,10 +276,10 @@ public class TransitionAssetTests
         Assert.Equal(390f, editor.SlideFromOutside("town", "Sun", StageSide.Top, 0.6f, 0.5f, stage, leaving: true));
         Assert.Equal(new[] { (0f, 0f), (0.6f, 0f), (1f, 390f) }, editor.Document.Find("town")!.FindChannel("Sun", MotionChannelKind.Position)!.Y!.Keys.Select(k => (k.T, k.V)));
 
-        // 부모의 자리를 더하고, 돈 오브젝트는 감싸는 원으로 넉넉히: 960 − (100 + 10) + √(30² + 40²) = 900.
+        // 부모의 자리를 더하고, 돈 층은 감싸는 원으로 넉넉히: 960 − (100 + 10) + √(30² + 40²) = 900.
         Assert.Equal(900f, editor.SlideFromOutside("town", "Leaf", StageSide.Right, 0f, 0.5f, stage));
 
-        // 길이 밖의 시작 · 없는 오브젝트는 막힌다.
+        // 길이 밖의 시작 · 없는 층은 막힌다.
         revision = editor.Revision;
         Assert.Throws<InvalidOperationException>(() => editor.SlideFromOutside("town", "Sun", StageSide.Left, 1f, 0.5f, stage));
         Assert.Throws<KeyNotFoundException>(() => editor.SlideFromOutside("town", "Nope", StageSide.Left, 0f, 0.5f, stage));

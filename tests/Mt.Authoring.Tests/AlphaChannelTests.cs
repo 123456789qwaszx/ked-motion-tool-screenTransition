@@ -15,7 +15,7 @@ public class AlphaChannelTests
 
     private static KeyAsset Linear(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Linear };
 
-    /// <summary>이모지 세트 둘. fade(1초 commit): Part1 알파 1 → 0. dim(1초 commit): Body 알파 1 → 0.5.</summary>
+    /// <summary>이모지 전환 둘. fade(1초 commit): Part1 알파 1 → 0. dim(1초 commit): Body 알파 1 → 0.5.</summary>
     private static MotionEditor NewEditor()
     {
         var editor = new MotionEditor(new MotionDocument());

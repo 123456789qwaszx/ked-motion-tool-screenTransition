@@ -4,15 +4,15 @@ using Mt.Authoring.Model;
 
 namespace Mt.Authoring.Editing;
 
-// 시차 — 오브젝트의 움직임을 통째로 늦추거나 당긴다. 층 여럿이 차례로 들어오게 할 때 키를 하나씩 옮기지 않는다.
+// 시차 — 층의 움직임을 통째로 늦추거나 당긴다. 층 여럿이 차례로 들어오게 할 때 키를 하나씩 옮기지 않는다.
 public sealed partial class MotionEditor
 {
     /// <summary>
-    /// 그 오브젝트(노드)의 커브들을 <paramref name="delta"/>초만큼 민다(+ = 늦게, − = 일찍). 길이는 그대로다:
+    /// 그 층의 커브들을 <paramref name="delta"/>초만큼 민다(+ = 늦게, − = 일찍). 길이는 그대로다:
     /// 밀려서 비는 쪽은 그 끝의 값으로 가만히 있고(처음 값 · 마지막 값), 길이 밖으로 나가는 쪽은 잘린다(잘린 자리의 값이 끝의 키가 된다).
-    /// 그래서 "처음에 키 · 끝에 키" 규칙이 그대로 선다. 그 노드의 채널이 없거나 민 것이 없으면 기록이 없다.
+    /// 그래서 "처음에 키 · 끝에 키" 규칙이 그대로 선다. 그 층의 채널이 없거나 민 것이 없으면 기록이 없다.
     /// </summary>
-    public bool ShiftNodeKeys(string motionName, string node, float delta)
+    public bool ShiftLayerKeys(string motionName, string node, float delta)
     {
         ArgumentNullException.ThrowIfNull(node);
         TimelineAsset motion = Require(motionName);
@@ -51,9 +51,9 @@ public sealed partial class MotionEditor
     }
 
     /// <summary>
-    /// 시차 — 오브젝트들을 순서대로 <paramref name="step"/>초씩 더 민다: 첫째는 그대로, 둘째는 step, 셋째는 2·step… 한 칸.
+    /// 시차 — 층들을 순서대로 <paramref name="step"/>초씩 더 민다: 첫째는 그대로, 둘째는 step, 셋째는 2·step… 한 칸.
     /// </summary>
-    public bool StaggerNodes(string motionName, IReadOnlyList<string> nodes, float step)
+    public bool StaggerLayers(string motionName, IReadOnlyList<string> nodes, float step)
     {
         ArgumentNullException.ThrowIfNull(nodes);
         bool any = false;
@@ -61,7 +61,7 @@ public sealed partial class MotionEditor
         {
             for (int i = 1; i < nodes.Count; i++)
             {
-                any |= ShiftNodeKeys(motionName, nodes[i], step * i);
+                any |= ShiftLayerKeys(motionName, nodes[i], step * i);
             }
         });
         return any;

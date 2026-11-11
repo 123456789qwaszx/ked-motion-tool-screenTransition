@@ -5,7 +5,7 @@ namespace Mt.Authoring.Graph;
 
 /// <summary>
 /// 복사한 키들 — 커브마다 키 사본, 시각은 복사 당시 그대로이고 <see cref="Origin"/>(가장 이른 키)을 기준으로 붙인다.
-/// 붙여넣기는 현재 시각에 Origin을 맞춘다(마야 paste의 time offset). 커브가 없는 모션에 붙이면 채널·성분이 생긴다.
+/// 붙여넣기는 현재 시각에 Origin을 맞춘다(마야 paste의 time offset). 커브가 없는 타임라인에 붙이면 채널·성분이 생긴다.
 /// </summary>
 public sealed class KeyClipboard
 {

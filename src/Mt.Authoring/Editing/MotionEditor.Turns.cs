@@ -11,8 +11,8 @@ public sealed partial class MotionEditor
     public const float TurnFade = 0.1f;
 
     /// <summary>
-    /// 그 오브젝트가 **움직이기 시작할 때까지** 숨긴다 — 그 애니메이션의 불투명도 커브를 "0 … (제 차례) 0 → 1 … 1"로 놓는다(있던 불투명도 커브는 갈아 치운다).
-    /// 제 차례 = 그 오브젝트의 다른 커브들이 처음으로 값이 바뀌기 시작하는 시각.
+    /// 그 층이 **움직이기 시작할 때까지** 숨긴다 — 타임라인의 불투명도 커브를 "0 … (제 차례) 0 → 1 … 1"로 놓는다(있던 불투명도 커브는 갈아 치운다).
+    /// 제 차례 = 그 층의 다른 커브들이 처음으로 값이 바뀌기 시작하는 시각.
     /// 처음부터 움직이거나 움직임이 없으면 할 일이 없다(false).
     /// </summary>
     public bool HideUntilTurn(string motionName, string node)
@@ -37,7 +37,7 @@ public sealed partial class MotionEditor
     }
 
     /// <summary>
-    /// 그 오브젝트가 **움직임을 마치면** 숨긴다 — 불투명도 커브를 "1 … (끝나기 직전) 1 → 0 … 0"으로. 퇴장에서 화면 밖으로 못 나가는 층을 치운다.
+    /// 그 층이 **움직임을 마치면** 숨긴다 — 불투명도 커브를 "1 … (끝나기 직전) 1 → 0 … 0"으로. 퇴장에서 화면 밖으로 못 나가는 층을 치운다.
     /// 끝까지 움직이거나 움직임이 없으면 할 일이 없다(false).
     /// </summary>
     public bool HideAfterTurn(string motionName, string node)
@@ -64,7 +64,7 @@ public sealed partial class MotionEditor
         return true;
     }
 
-    /// <summary>그 애니메이션이 움직이는 오브젝트 전부에 <see cref="HideUntilTurn"/> — 한 칸. 숨긴 오브젝트의 수.</summary>
+    /// <summary>타임라인이 움직이는 층 전부에 <see cref="HideUntilTurn"/> — 한 칸. 숨긴 층의 수.</summary>
     public int HideAllUntilTurn(string motionName)
     {
         TimelineAsset motion = Require(motionName);
@@ -73,7 +73,7 @@ public sealed partial class MotionEditor
         {
             foreach (string node in motion.Channels.Where(c => c.Kind != MotionChannelKind.Alpha).Select(c => c.Node).Distinct().ToList())
             {
-                // 불투명도를 받을 수 있는 오브젝트만(세트의 표시를 본다).
+                // 불투명도를 받을 수 있는 층만(전환의 표시를 본다).
                 if (Document.FindTransition(motion.Name)?.Find(node) is { Alpha: false })
                 {
                     continue;
@@ -109,7 +109,7 @@ public sealed partial class MotionEditor
             .Where(curve => curve is { Keys.Count: > 1 })
             .Select(curve => curve!.Keys);
 
-    /// <summary>그 오브젝트의 커브들이 처음으로 값이 바뀌기 시작하는 시각 — 움직임이 없으면 null.</summary>
+    /// <summary>그 층의 커브들이 처음으로 값이 바뀌기 시작하는 시각 — 움직임이 없으면 null.</summary>
     private static float? FirstChange(TimelineAsset motion, string node)
     {
         float? first = null;
@@ -129,7 +129,7 @@ public sealed partial class MotionEditor
         return first;
     }
 
-    /// <summary>그 오브젝트의 커브들이 마지막으로 값이 바뀌기를 마치는 시각 — 움직임이 없으면 null.</summary>
+    /// <summary>그 층의 커브들이 마지막으로 값이 바뀌기를 마치는 시각 — 움직임이 없으면 null.</summary>
     private float? LastChange(TimelineAsset motion, string node)
     {
         float? last = null;

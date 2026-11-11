@@ -37,7 +37,7 @@ public sealed class CurveSlot
 }
 
 /// <summary>
-/// 그래프 에디터 — 마야 그래프 에디터의 감각으로 모션의 키를 만진다 (VnTool <c>EaseCurveEditor</c>에서 자람).
+/// 그래프 에디터 — 마야 그래프 에디터의 감각으로 타임라인의 키를 만진다 (VnTool <c>EaseCurveEditor</c>에서 자람).
 ///
 /// - 좌표는 초 × 값. 팬(가운데 버튼·Alt+드래그) · 줌(휠, Ctrl=시간만·Shift=값만) · F(선택 맞춤) · A(전체 맞춤)
 /// - 키: 클릭 선택 · Shift 추가 · 박스 선택 · 드래그(Shift=축 잠금) · 더블클릭=그 커브 위에 키 · I=현재 시각에 키 · Delete
@@ -482,7 +482,7 @@ public sealed class GraphEditorView : Control
 
     // ── 바인딩 ────────────────────────────────────────────────────────
 
-    /// <summary>편집기와 모션을 싣는다. 모션이 null이면 빈 그래프다. 커브 목록·선택이 새로 선다.</summary>
+    /// <summary>편집기와 타임라인을 싣는다. 타임라인이 null이면 빈 그래프다. 커브 목록·선택이 새로 선다.</summary>
     public void Bind(MotionEditor? editor, string? motionName)
     {
         if (_editor is not null)
@@ -557,7 +557,7 @@ public sealed class GraphEditorView : Control
         InvalidateVisual();
     }
 
-    /// <summary>모션의 성분마다 슬롯 하나. 있던 슬롯의 보이기 상태는 지킨다.</summary>
+    /// <summary>타임라인의 성분마다 슬롯 하나. 있던 슬롯의 보이기 상태는 지킨다.</summary>
     private void ReloadCurves()
     {
         var visible = new Dictionary<CurveRef, bool>();
@@ -963,7 +963,7 @@ public sealed class GraphEditorView : Control
 
         if (motion is null)
         {
-            DrawLabel(context, "모션을 고르면 여기에 커브가 보입니다.", new Point(plot.X + 12, plot.Y + 12), LabelBrush, 12);
+            DrawLabel(context, "전환을 고르면 여기에 커브가 보입니다.", new Point(plot.X + 12, plot.Y + 12), LabelBrush, 12);
             return;
         }
 

@@ -5,7 +5,7 @@ using Mt.Authoring.Model;
 namespace Mt.App;
 
 // 이벤트 키의 셸 — "타임라인" 탭 아래. 재생이 그 시각을 지나는 순간 런타임이 이름과 값으로 알리는 표시다(예: <c>covered</c> — 화면이 다 덮였다).
-// 그래프가 묶은 모션의 것을 보인다.
+// 그래프가 묶은 타임라인의 것을 보인다.
 public partial class MainWindow
 {
     private readonly StackPanel _eventRows = new() { Spacing = 3 };
@@ -78,7 +78,7 @@ public partial class MainWindow
         var time = new TextBox { FontSize = 11, Width = 52, Text = e.T.ToString("0.###", CultureInfo.InvariantCulture) };
         var name = new TextBox { FontSize = 11, Width = 70, Text = e.Name };
         var value = new TextBox { FontSize = 11, Text = e.Value ?? "", PlaceholderText = "(값)" };
-        ToolTip.SetTip(time, "시각(초, 모션 기준)");
+        ToolTip.SetTip(time, "시각(초, 타임라인 기준)");
         ToolTip.SetTip(name, "이름 — 영문 소문자·숫자·_");
         ToolTip.SetTip(value, "딸린 값 — 자유(한글도 된다). 비워도 된다");
 

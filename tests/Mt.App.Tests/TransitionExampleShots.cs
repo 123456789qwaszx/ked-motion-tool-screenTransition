@@ -45,8 +45,8 @@ public class TransitionExampleShots
                     window.CaptureRenderedFrame()?.Save(stream, new Avalonia.Media.Imaging.PngBitmapEncoderOptions());
                 }
 
-                // 타임라인을 본다 — 그 세트가 무대에 선다.
-                window.SelectSet("station");
+                // 타임라인을 본다 — 그 전환이 무대에 선다.
+                window.SelectTransition("station");
 
                 foreach (double t in new[] { 0.1, 0.3, 0.6, 0.9, 1.2, 2.2, 3.4, 3.7, 4.0 })
                 {
@@ -63,7 +63,7 @@ public class TransitionExampleShots
 
                 // 기둥과 노을.
                 window.Session.Open(Path.Combine(root!.FullName, "examples", "transitions", "pillar", "pillar.transition-authoring.json"));
-                window.SelectSet("pillar");
+                window.SelectTransition("pillar");
                 window.StageOnlyChecked = true;
 
                 foreach (double t in new[] { 0.3, 0.6, 0.9, 1.2, 1.5, 3.0, 4.7, 5.1, 5.45 })
@@ -75,22 +75,22 @@ public class TransitionExampleShots
 
                 window.StageOnlyChecked = false;
 
-                // 세트를 열고 타임라인을 고른다 — 하이어아키의 층, 그래프의 커브.
-                window.SelectSet("pillar");
+                // 전환을 열고 타임라인을 고른다 — 하이어아키의 층, 그래프의 커브.
+                window.SelectTransition("pillar");
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                window.SelectSet("pillar");
-                window.SelectSetNode("sun");
+                window.SelectTransition("pillar");
+                window.SelectLayer("sun");
                 window.InspectorTab = 2;
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 window.Viewport.ScrubTo(1.2);
                 Shot("pillar-set");
-                window.SelectSet(null);
+                window.SelectTransition(null);
 
                 // 나머지 세 장면 — 타임라인을 따라.
                 foreach (string name in new[] { "lapis", "heredity", "mercury" })
                 {
                     window.Session.Open(Path.Combine(root!.FullName, "examples", "transitions", name, name + ".transition-authoring.json"));
-                    window.SelectSet(name);
+                    window.SelectTransition(name);
                     window.StageOnlyChecked = true;
 
                     foreach (double t in new[] { 0.5, 0.9, 1.5, 2.4, window.Session.Editor.Document.Find(name)!.Duration - 0.4 })
@@ -105,8 +105,8 @@ public class TransitionExampleShots
 
                 window.Session.Open(Path.Combine(root!.FullName, "examples", "transitions", "station", "station.transition-authoring.json"));
 
-                // 세트를 연다 — 배치 모드.
-                window.SelectSet("station");
+                // 전환을 연다 — 배치 모드.
+                window.SelectTransition("station");
                 window.InspectorTab = 1;
                 Shot("station-set");
             }

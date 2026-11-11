@@ -9,7 +9,7 @@ using Mt.Authoring.Preview;
 namespace Mt.App.Views;
 
 /// <summary>
-/// 마야 레인지 슬라이더 — 바깥은 모션 전체(0~길이), 안쪽 바는 재생 범위.
+/// 마야 레인지 슬라이더 — 바깥은 타임라인 전체(0~길이), 안쪽 바는 재생 범위.
 /// 바를 끌면 범위가 통째로 옮겨지고, 양끝을 끌면 크기가 바뀌고, 더블클릭은 전체 ↔ 직전 범위다.
 /// </summary>
 public sealed class RangeSliderView : Control

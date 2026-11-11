@@ -7,7 +7,7 @@ public sealed record LayerEntry(string File, float Left, float Top, float Width,
 
 /// <summary>
 /// 층 표(<c>layers.tsv</c>) — 포토샵의 레이어처럼 "어느 그림이 무대의 어디에 놓이는가"를 적은 글.
-/// 그림 한 묶음을 세트로 들일 때 오브젝트를 하나씩 놓지 않게 한다. 줄마다 <c>파일 ⇥ 왼쪽 ⇥ 위 ⇥ 너비 ⇥ 높이</c>(뒤에서 앞으로 — 뒤의 줄이 위에 그려진다),
+/// 그림 한 묶음을 전환으로 들일 때 층을 하나씩 놓지 않게 한다. 줄마다 <c>파일 ⇥ 왼쪽 ⇥ 위 ⇥ 너비 ⇥ 높이</c>(뒤에서 앞으로 — 뒤의 줄이 위에 그려진다),
 /// <c>#</c>로 시작하는 줄은 설명이고 그 안에 <c>#RRGGBB</c>가 있으면 바탕색이다.
 /// </summary>
 public sealed class LayerSheet

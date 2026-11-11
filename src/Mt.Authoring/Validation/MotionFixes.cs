@@ -55,7 +55,7 @@ public static class MotionFixes
     public static bool Apply(MotionEditor editor, string motionName, MotionFix fix)
     {
         ArgumentNullException.ThrowIfNull(editor);
-        TimelineAsset motion = editor.Document.Find(motionName) ?? throw new KeyNotFoundException($"세트 '{motionName}'가 없다.");
+        TimelineAsset motion = editor.Document.Find(motionName) ?? throw new KeyNotFoundException($"전환 '{motionName}'가 없다.");
 
         switch (fix)
         {

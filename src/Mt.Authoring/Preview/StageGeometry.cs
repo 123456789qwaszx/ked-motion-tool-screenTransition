@@ -8,10 +8,10 @@ public readonly record struct Quad(Vec2 BottomLeft, Vec2 BottomRight, Vec2 TopRi
     public Vec2 Center => (BottomLeft + TopRight) * 0.5f;
 }
 
-/// <summary>무대 위 노드의 기하 — 노드 rect의 네 모서리, 축, 루트 공간 ↔ 무대 캔버스.</summary>
+/// <summary>무대 위 층의 기하 — 층 rect의 네 모서리, 축, 루트 공간 ↔ 무대 캔버스.</summary>
 public static class StageGeometry
 {
-    /// <summary>노드 rect의 네 모서리(루트 공간). 원점은 pivot.</summary>
+    /// <summary>층 rect의 네 모서리(루트 공간). 원점은 pivot.</summary>
     public static Quad RectQuad(RectNodeTree tree, string key)
     {
         ArgumentNullException.ThrowIfNull(tree);
@@ -22,7 +22,7 @@ public static class StageGeometry
         return Transform(tree, key, left, bottom, size.X, size.Y);
     }
 
-    /// <summary>노드의 pivot(루트 공간)과 그 로컬 x·y 축 끝 — 선택 노드의 축 표시에 쓴다.</summary>
+    /// <summary>층의 pivot(루트 공간)과 그 로컬 x·y 축 끝 — 선택 층의 축 표시에 쓴다.</summary>
     public static (Vec2 Origin, Vec2 XEnd, Vec2 YEnd) Axes(RectNodeTree tree, string key, float length)
     {
         ArgumentNullException.ThrowIfNull(tree);

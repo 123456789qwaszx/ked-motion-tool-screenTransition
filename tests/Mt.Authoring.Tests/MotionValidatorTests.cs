@@ -9,22 +9,22 @@ namespace Mt.Authoring.Tests;
 public class MotionValidatorTests
 {
     [Fact]
-    public void nod_bow는_발판_세트로_검증하면_문제가_0건이다()
+    public void nod_bow는_발판_전환으로_검증하면_문제가_0건이다()
     {
         MotionDocument document = Fixtures.NodBowDocument();
         Assert.Empty(MotionValidator.Validate(document));
     }
 
     [Fact]
-    public void 세트에_없는_노드의_채널은_거부한다()
+    public void 전환에_없는_층의_채널은_거부한다()
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddTimeline("a", 1f, TransitionTemplates.Figure());
         editor.AddChannel("a", "NoSuchNode", MotionChannelKind.Position);
-        // relative 전 구간 중립값이면 성분이 내보내기에서 빠지므로 가운데 키를 둔다 — 보려는 것은 노드 검사뿐이다.
+        // relative 전 구간 중립값이면 성분이 내보내기에서 빠지므로 가운데 키를 둔다 — 보려는 것은 층 검사뿐이다.
         editor.SetKeys("a", "NoSuchNode", MotionChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.5f, 5f), Fixtures.Key(1f, 0f) });
 
-        Assert.Contains("세트에 없는 노드", Assert.Single(MotionValidator.Validate(editor.Document)).Message, StringComparison.Ordinal);
+        Assert.Contains("전환에 없는 층", Assert.Single(MotionValidator.Validate(editor.Document)).Message, StringComparison.Ordinal);
     }
 }
 

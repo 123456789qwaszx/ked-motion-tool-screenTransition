@@ -29,13 +29,13 @@ public class TransitionExampleTests
         => MotionPreview.Pose(template, timeline, seconds, null, alphas);
 
     [Fact]
-    public void 화면_이동_예시는_층_표에서_세트가_서고_문제_없이_돌고_저장된_파일과_같다()
+    public void 화면_이동_예시는_층_표에서_전환이_서고_문제_없이_돌고_저장된_파일과_같다()
     {
         string directory = ExampleDirectory("station");
         MotionEditor editor = TransitionExamples.BuildStation(Path.Combine(directory, "art", "layers.tsv"));
         MotionDocument document = editor.Document;
 
-        // 층 표: 바탕색 + 층 열 장이 오브젝트 열하나로 — 뒤에서 앞으로.
+        // 층 표: 바탕색 + 층 열 장이 층 열하나로 — 뒤에서 앞으로.
         TransitionAsset set = document.FindTransition(TransitionExamples.Station)!;
         Assert.Equal(new[] { "Backdrop", "arches", "floor", "pillars_left", "pillars_right", "train", "sign", "light", "microbe_sun", "microbe_leaf", "microbe_cell" }, set.Layers.Select(n => n.Id));
         Assert.Equal(("#10262B", 1920f, 1080f), (set.Find("Backdrop")!.Color, set.Find("Backdrop")!.Width, set.Find("Backdrop")!.Height));
