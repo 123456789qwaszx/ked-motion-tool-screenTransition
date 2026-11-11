@@ -123,27 +123,6 @@ public class MotionEditorTests
     }
 
     [Fact]
-    public void 가져오기는_이름이_겹치면_replace일_때만_바꾼다_그리고_한_번에_되돌린다()
-    {
-        var editor = new MotionEditor(Fixtures.NodBowDocument());
-        editor.SetDuration("nod", 9f);
-
-        Assert.True(MotionsJson.TryRead(Fixtures.TextOf("motions.nod-bow.json"), out List<MotionClip> clips, out _));
-
-        long before = editor.Revision;
-        Assert.Empty(editor.ImportClips(clips, replace: false));
-        Assert.Equal(9f, editor.Document.Find("nod")!.Duration);
-        Assert.Equal(before, editor.Revision);
-
-        Assert.Equal(new[] { "nod", "bow" }, editor.ImportClips(clips, replace: true));
-        Assert.Equal(before + 1, editor.Revision);
-        Assert.Equal(0.6f, editor.Document.Find("nod")!.Duration);
-
-        editor.Undo();
-        Assert.Equal(9f, editor.Document.Find("nod")!.Duration);
-    }
-
-    [Fact]
     public void Replace는_기록을_버린다()
     {
         var editor = new MotionEditor(new MotionDocument());

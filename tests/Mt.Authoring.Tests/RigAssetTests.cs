@@ -6,7 +6,6 @@ using Mt.Authoring.Preview;
 using Mt.Authoring.Rig;
 using Mt.Authoring.Serialization;
 using Mt.Authoring.Validation;
-using Mt.Cli;
 
 namespace Mt.Authoring.Tests;
 
@@ -99,58 +98,6 @@ public class RigAssetTests
         var missing = new List<SceneObject>();
         ScenePreview.Build(RigAssets.Compose(Dump, editor.Document), editor.Document.ActiveSceneAsset!, null, missing);
         Assert.Equal("e1", Assert.Single(missing).Id);
-    }
-
-    [Fact]
-    public void 내보낸_리그는_덤프와_같은_모양이라_같은_로더로_읽힌다()
-    {
-        MotionEditor editor = NewEditor();
-        string json = RigAssets.WriteSchemas(editor.Document, new Vec2(1920f, 1080f));
-        Assert.Equal(json, RigAssets.WriteSchemas(editor.Document, new Vec2(1920f, 1080f))); // 결정적
-
-        RigSchemaFile read = RigSchemaFile.Parse(System.Text.Encoding.UTF8.GetBytes(json)); // 캐릭터 덤프를 읽는 그 길
-        Assert.Equal(new[] { RigTemplates.EmojiKind }, read.RigKinds);
-        Assert.Equal(4, RigParts.Of(read, RigTemplates.EmojiKind).Count);
-        Assert.Equal(5, read.AlphaNodeIds[RigTemplates.EmojiKind].Count);
-        Assert.Equal(RigTemplates.DefaultPartSize, read.BuildTree(RigTemplates.EmojiKind).GetRectSize("Emoji_Part1").X, 3);
-
-        JsonNode root = JsonNode.Parse(json)!;
-        JsonNode part = root["rigs"]![0]!["nodes"]!.AsArray().First(n => n!["id"]!.GetValue<string>() == "Emoji_Part1")!;
-        Assert.True(part["hasImage"]!.GetValue<bool>());
-        Assert.True(part["hasCanvasGroup"]!.GetValue<bool>());
-        Assert.Equal("__root", root["rigs"]![0]!["nodes"]![0]!["id"]!.GetValue<string>());
-    }
-
-    [Fact]
-    public void 명령줄도_문서의_리그로_검증하고_내보낸다()
-    {
-        MotionEditor editor = NewEditor();
-        editor.AddMotion("pop", RigTemplates.EmojiKind, 0.2f, MotionEnd.Commit, MotionChannelMode.Absolute);
-        editor.AddChannel("pop", "Emoji_Body", MotionChannelKind.Position);
-        editor.SetKeys("pop", "Emoji_Body", MotionChannelKind.Position, Axis.Y, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.2f, 40f) });
-
-        string directory = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", $"rig-{Guid.NewGuid():N}");
-        Directory.CreateDirectory(directory);
-        string document = Path.Combine(directory, "a.motion-authoring.json");
-        File.WriteAllText(document, MotionDocumentJson.Write(editor.Document));
-
-        int Run(out JsonNode? json, params string[] args)
-        {
-            var stdout = new StringWriter();
-            int code = MtCli.Run(args, stdout, new StringWriter());
-            json = JsonNode.Parse(stdout.ToString());
-            return code;
-        }
-
-        Assert.Equal(0, Run(out JsonNode? validated, "validate", document)); // 내장 덤프에는 emoji가 없다 — 문서의 리그로 통과한다
-        Assert.Empty(validated!["problems"]!.AsArray());
-        Assert.Equal(0, Run(out JsonNode? pose, "pose", document, "--motion", "pop", "--time", "0.2"));
-        Assert.Equal(40.0, pose!["nodes"]!["Emoji_Body"]!["position"]![1]!.GetValue<double>(), 3);
-
-        string target = Path.Combine(directory, "rigs.json");
-        Assert.Equal(0, Run(out JsonNode? exported, "rigs", document, target));
-        Assert.Equal(4, exported!["rigs"]![0]!["parts"]!.GetValue<int>());
-        Assert.Contains(RigTemplates.EmojiKind, RigSchemaFile.Load(target).RigKinds);
     }
 
     // ── 리그 편집기(PLAN-parts.md §12) ─────────────────────────────────
@@ -265,41 +212,6 @@ public class RigAssetTests
         Assert.Equal("Emoji_Part1", editor.Document.Find("pop")!.Channels[0].Node);
         Assert.Equal("Emoji_Anchor", editor.Document.FindEmoji("sweat")!.AnchorNode);
         Assert.True(editor.Document.FindSkin("땀")!.Parts.ContainsKey("Emoji_Part1"));
-    }
-
-    [Fact]
-    public void 색_오브젝트는_덤프와_같은_모양에_fillColor로_나가고_색_글은_고른_꼴로_선다()
-    {
-        var editor = new MotionEditor(new MotionDocument());
-        editor.AddRig(new RigAsset { Kind = "wipe", Nodes = { new RigNodeAsset { Id = "Body", Alpha = true } } });
-        editor.AddRigNode("wipe", "Panel", "Body");
-        long revision = editor.Revision;
-
-        // 색을 주면 색 오브젝트 — 한 칸. "#" 없이, 소문자로 적어도 고른 꼴로 선다. 같은 값은 무기록.
-        editor.UpdateRigNode("wipe", "Panel", new RigNodeAsset { Width = 1920f, Height = 400f, Color = "3d5a80", Alpha = true });
-        editor.UpdateRigNode("wipe", "Panel", new RigNodeAsset { Width = 1920f, Height = 400f, Color = "#3D5A80", Alpha = true });
-        Assert.Equal(revision + 1, editor.Revision);
-        Assert.Equal("#3D5A80", editor.Document.FindRig("wipe")!.Find("Panel")!.Color);
-        Assert.Throws<InvalidOperationException>(() => editor.UpdateRigNode("wipe", "Panel", new RigNodeAsset { Color = "blue" }));
-        Assert.Equal("#11223344", MotionEditor.NormalizeColor(" #11223344 ")); // 불투명도까지
-        Assert.Null(MotionEditor.NormalizeColor("  "));
-
-        // 세운 리그: 색 표에 그 노드가 서고, 그림 노드는 아니다(조각이 아니다).
-        RigSchemaFile composed = RigAssets.Compose(Dump, editor.Document);
-        Assert.Equal("#3D5A80", RigParts.ColorsOf(composed, "wipe")["Panel"]);
-        Assert.Empty(RigParts.Of(composed, "wipe"));
-        Assert.Empty(RigParts.ColorsOf(composed, "character"));
-
-        // 산출물과 저작본 — 색이 없는 노드에는 안 적힌다(저작본).
-        Assert.Contains("\"fillColor\": \"#3D5A80\"", RigAssets.WriteSchemas(editor.Document, new Vec2(1920f, 1080f)), StringComparison.Ordinal);
-        string json = MotionDocumentJson.Write(editor.Document);
-        Assert.Equal(1, json.Split("\"color\"").Length - 1);
-        Assert.Equal("#3D5A80", MotionDocumentJson.Read(json).FindRig("wipe")!.Find("Panel")!.Color);
-
-        // 비우면 색 오브젝트가 아니다.
-        editor.UpdateRigNode("wipe", "Panel", new RigNodeAsset { Width = 1920f, Height = 400f, Alpha = true });
-        Assert.Null(editor.Document.FindRig("wipe")!.Find("Panel")!.Color);
-        Assert.Empty(RigParts.ColorsOf(RigAssets.Compose(Dump, editor.Document), "wipe"));
     }
 
     // ── 시차 — 오브젝트의 움직임을 통째로 민다 ─────────────────────────

@@ -149,20 +149,6 @@ public sealed class DocumentSession
     private static string RigsKeyOf(MotionDocument document)
         => string.Join("|", document.Rigs.Select(r => r.Kind + ":" + string.Join(",", r.Nodes.Select(n => $"{n.Id}<{n.Parent}@{n.X},{n.Y}#{n.Width}x{n.Height}r{n.Rotation}s{n.ScaleX},{n.ScaleY}c{n.Color}{(n.Image ? "i" : "")}{(n.Alpha ? "a" : "")}"))));
 
-    /// <summary>문서가 정의한 리그를 덤프와 같은 모양의 파일로 내보낸다 — 런타임이 그것으로 리그를 세운다.</summary>
-    public bool ExportRigs(string path)
-    {
-        if (Editor.Document.Rigs.Count == 0)
-        {
-            SetStatus("내보낼 리그가 없다 — 문서가 정의한 리그만 나간다(덤프의 리그는 런타임이 원본이다).");
-            return false;
-        }
-
-        File.WriteAllBytes(path, new System.Text.UTF8Encoding(false).GetBytes(RigAssets.WriteSchemas(Editor.Document, StageSize)));
-        SetStatus($"내보냈다: {path} — 리그 {Editor.Document.Rigs.Count}개 ({string.Join(", ", Editor.Document.Rigs.Select(r => r.Kind))})");
-        return true;
-    }
-
     /// <summary>실은 덤프 파일의 경로. null이면 내장 리그다.</summary>
     public string? RigPath { get; private set; }
 
@@ -192,20 +178,6 @@ public sealed class DocumentSession
             string resolved = ResolveFromDocument(image);
             return (image, File.Exists(resolved) ? resolved : (string?)null);
         }).ToList();
-
-    /// <summary>이모지 정의를 <c>emojis.json</c>(초안)으로 내보낸다 — 막는 문제가 있으면 안 나간다.</summary>
-    public bool ExportEmojis(string path)
-    {
-        if (!EmojisJson.TryExport(Editor.Document, RigNodeIds, out string json, out IReadOnlyList<string> problems, Rig?.AlphaNodeIds))
-        {
-            SetStatus($"이모지 내보내기 막힘 — 문제 {problems.Count}건을 먼저 고친다: {problems[0]}");
-            return false;
-        }
-
-        File.WriteAllBytes(path, new System.Text.UTF8Encoding(false).GetBytes(json));
-        SetStatus($"내보냈다: {path} — 이모지 {Editor.Document.Emojis.Count}개 ({EmojisJson.Schema})");
-        return true;
-    }
 
     /// <summary>스킨의 조각 그림을 파일로 정한다 — 경로는 문서 기준 상대로 적힌다. null이면 그 조각을 비운다.</summary>
     /// <summary>
@@ -365,38 +337,6 @@ public sealed class DocumentSession
 
         AssetsChanged?.Invoke(this, EventArgs.Empty);
         SetStatus(path is null ? $"{objectId}: 초상을 뺐다." : $"{objectId}: 초상 {Path.GetFileName(path)}");
-    }
-
-    /// <summary><c>motions/1</c>을 읽어 문서로 올린다. 이름이 겹치면 바꿔 넣는다.</summary>
-    public IReadOnlyList<string> ImportMotions(string path)
-    {
-        if (!MotionsJson.TryRead(File.ReadAllText(path), out List<MotionClip> clips, out List<string> problems))
-        {
-            SetStatus($"가져오기 실패: {string.Join(" ", problems)}");
-            return Array.Empty<string>();
-        }
-
-        IReadOnlyList<string> imported = Editor.ImportClips(clips, replace: true);
-        SetStatus(problems.Count == 0
-            ? $"가져왔다: {string.Join(", ", imported)}"
-            : $"가져왔다: {string.Join(", ", imported)} — 건너뜀 {problems.Count}건: {string.Join(" ", problems)}");
-        return imported;
-    }
-
-    /// <summary>문제가 0건일 때만 쓴다. 정규 바이트(UTF-8 BOM 없음·LF)로 — Unity 내보내기와 같은 바이트다.</summary>
-    /// <param name="filter">내보낼 모션(null이면 전부). <paramref name="scopeLabel"/>은 상태 줄 글자.</param>
-    public bool Export(string path, Func<MotionAsset, bool>? filter = null, string? scopeLabel = null)
-    {
-        if (!MotionExport.TryExport(Editor.Document, RigNodeIds, out string json, out IReadOnlyList<MotionProblem> problems, filter, Rig?.AlphaNodeIds))
-        {
-            SetStatus($"내보내기 막힘 — 문제 {problems.Count}건을 먼저 고친다.");
-            return false;
-        }
-
-        File.WriteAllBytes(path, new System.Text.UTF8Encoding(false).GetBytes(json));
-        int count = Editor.Document.Motions.Count(m => filter is null || filter(m));
-        SetStatus($"내보냈다: {path} — 모션 {count}개{(scopeLabel is null ? "" : $" ({scopeLabel})")}");
-        return true;
     }
 
     private void Replace(MotionDocument document, string? path)

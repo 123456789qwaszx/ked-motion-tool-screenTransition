@@ -18,7 +18,7 @@ public partial class MainWindow
         _alphaPanel.Children.Add(Header("불투명도 (지금 시각)"));
         _alphaPanel.Children.Add(_alphaNode);
         _alphaPanel.Children.Add(Labeled("alpha", _alphaBox));
-        ToolTip.SetTip(_alphaBox, "고른 노드의 불투명도(0~1) — 값을 넣고 Enter = 그 시각에 알파 채널의 키(되돌리기 한 번). 커브는 그래프에서. 부모 노드의 불투명도와 곱해져 그려진다. 덤프에 CanvasGroup이 있는 노드만 받는다. 알파 채널이 든 모션은 motions/3으로 나간다");
+        ToolTip.SetTip(_alphaBox, "고른 노드의 불투명도(0~1) — 값을 넣고 Enter = 그 시각에 알파 채널의 키(되돌리기 한 번). 커브는 그래프에서. 부모 노드의 불투명도와 곱해져 그려진다. 덤프에 CanvasGroup이 있는 노드만 받는다.");
         OnCommit(_alphaBox, text =>
         {
             if (!_refreshing && _viewport.SelectedNode is { } node && TryFloat(text, out float value))

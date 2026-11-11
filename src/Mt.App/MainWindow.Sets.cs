@@ -212,7 +212,7 @@ public partial class MainWindow
         ToolTip.SetTip(add, "빈 세트(오브젝트 Body 하나)를 만들어 연다 — 이름 set, set_2…. 하이어아키에서 우클릭해 오브젝트를 더한다");
         ToolTip.SetTip(remove, "연 세트를 지운다. 그 세트의 애니메이션·스킨·연출은 남고 문제 목록이 알린다(되돌리기 한 번)");
         ToolTip.SetTip(close, "세트를 닫고 씬으로 돌아간다");
-        LeftPanel.Children.Insert(2, new WrapPanel { Orientation = Orientation.Horizontal, Children = { add, remove, close, import, importLayers, SmallButton("rigs.json…", OnExportRigsClick) } });
+        LeftPanel.Children.Insert(2, new WrapPanel { Orientation = Orientation.Horizontal, Children = { add, remove, close, import, importLayers } });
         LeftPanel.Children.Insert(3, Labeled("세트 이름", _setName));
         ToolTip.SetTip(_setName, "연 세트의 이름 — 고치고 Enter. 그 세트의 애니메이션·스킨·연출, 씬의 오브젝트가 따라온다(되돌리기 한 번). 영문자로 시작하는 영문·숫자·_");
         OnCommit(_setName, text =>
@@ -906,20 +906,4 @@ public partial class MainWindow
         }
     }
 
-    private async void OnExportRigsClick(object? sender, RoutedEventArgs e)
-    {
-        try
-        {
-            string? path = await PickSaveAsync("rigs.json 내보내기", "rigs.json", new FilePickerFileType("rigs.json") { Patterns = new[] { "*.json" } });
-
-            if (path is not null)
-            {
-                _session.ExportRigs(path);
-            }
-        }
-        catch (Exception exception)
-        {
-            _session.SetStatus($"리그 내보내기 실패: {exception.Message}");
-        }
-    }
 }

@@ -988,55 +988,6 @@ public sealed partial class MotionEditor
         });
     }
 
-    // ── 가져오기 ──────────────────────────────────────────────────────
-
-    /// <summary>
-    /// <c>motions/1</c> 클립들을 저작본으로 올린다(탄젠트는 free). 이름이 겹치면 <paramref name="replace"/>가
-    /// 참일 때만 바꿔 넣고, 아니면 건너뛴다. 돌려주는 것은 들어온 이름들이다.
-    /// </summary>
-    public IReadOnlyList<string> ImportClips(IEnumerable<MotionClip> clips, bool replace)
-    {
-        ArgumentNullException.ThrowIfNull(clips);
-
-        var incoming = clips.Select(MotionAssetCodec.FromClip).ToList();
-        var imported = new List<string>();
-        var plan = new List<(int Index, MotionAsset Asset)>();
-
-        foreach (MotionAsset asset in incoming)
-        {
-            int existing = Document.Motions.FindIndex(m => string.Equals(m.Name, asset.Name, StringComparison.Ordinal));
-
-            if (existing < 0 || replace)
-            {
-                plan.Add((existing, asset));
-                imported.Add(asset.Name);
-            }
-        }
-
-        // 바뀔 것이 없으면 조작도 없다 — Revision과 되돌리기 기록에 빈 항목을 남기지 않는다.
-        if (plan.Count == 0)
-        {
-            return imported;
-        }
-
-        Mutate(MotionChangeKind.Structure, () =>
-        {
-            foreach ((int index, MotionAsset asset) in plan)
-            {
-                if (index < 0)
-                {
-                    Document.Motions.Add(asset);
-                }
-                else
-                {
-                    Document.Motions[index] = asset;
-                }
-            }
-        });
-
-        return imported;
-    }
-
     // ── 되돌리기 ───────────────────────────────────────────────────────
 
     /// <summary>

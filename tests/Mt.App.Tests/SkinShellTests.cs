@@ -175,21 +175,6 @@ public class SkinShellTests
                 revision = editor.Revision;
                 window.Viewport.SetAlphaValue("Emoji_Anchor", 0.3f);
                 Assert.Equal(revision, editor.Revision);
-
-                // 알파가 든 모션은 motions/3으로 나간다.
-                string export = Path.Combine(Path.GetTempPath(), $"ked-motion-tool-{Guid.NewGuid():N}.json");
-
-                try
-                {
-                    Assert.True(window.Session.Export(export), window.Session.Status);
-                    string json = File.ReadAllText(export);
-                    Assert.Contains("\"schema\": \"motions/3\"", json, StringComparison.Ordinal);
-                    Assert.Contains("\"kind\": \"alpha\"", json, StringComparison.Ordinal);
-                }
-                finally
-                {
-                    File.Delete(export);
-                }
             }
             finally
             {
@@ -271,15 +256,10 @@ public class SkinShellTests
                 editor.SetObjectSkin(null, id, null);
                 Assert.Single(window.Viewport.DrawnParts(editor.Document.ActiveSceneAsset!.Find(id)!));
 
-                // 없는 모션을 가리키면 문제 칸이 알린다. 내보내기는 막힌다.
+                // 없는 모션을 가리키면 문제 칸이 알린다.
                 window.UpdateSelectedEmoji(e => e.Enter = "ghost");
                 Assert.Equal(1, window.ProblemRowsShown);
-                string target = Path.Combine(Path.GetTempPath(), $"ked-emojis-{Guid.NewGuid():N}.json");
-                Assert.False(window.Session.ExportEmojis(target));
                 editor.Undo();
-                Assert.True(window.Session.ExportEmojis(target), window.Session.Status);
-                Assert.Contains("\"schema\": \"emojis/1-draft\"", File.ReadAllText(target), StringComparison.Ordinal);
-                File.Delete(target);
 
                 // 모션을 고르면 이모지가 풀리고(오브젝트는 다시 제 스킨 — 벗었으니 안 그려진다), 다시 고르면 돌아온다.
                 window.SelectMotion("bob");

@@ -10,7 +10,7 @@ namespace Mt.Authoring.Serialization;
 /// 바이트 정규성은 요구하지 않는다 — 다만 같은 문서면 같은 글자가 나와야 되돌리기 스냅샷과
 /// "바뀌었나" 비교가 선다(System.Text.Json은 결정적이다).
 ///
-/// 산출물(<c>motions/2</c>)은 <see cref="MotionsJson"/>이 따로 쓴다 — 두 포맷을 섞지 않는다.
+/// 산출물은 따로 선다(T5) — 저작 원본과 섞지 않는다.
 /// 옛 판(<c>motion-authoring/1</c>)도 읽는다: 채널 <c>mode</c>는 버리고 모션 <c>defaultMode</c>는 <c>previewMode</c>가 된다 — 키 값은 그대로다.
 /// </summary>
 public static class MotionDocumentJson

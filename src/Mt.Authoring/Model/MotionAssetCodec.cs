@@ -43,43 +43,6 @@ public static class MotionAssetCodec
         };
     }
 
-    /// <summary>가져온 키는 전부 <see cref="TangentMode.Free"/>다 — 파일의 탄젠트 값을 그대로 지킨다. 재생 기준(relative/absolute)는 relative(커맨드의 생략값과 같다).</summary>
-    public static MotionAsset FromClip(MotionClip clip)
-    {
-        ArgumentNullException.ThrowIfNull(clip);
-
-        var asset = new MotionAsset
-        {
-            Name = clip.Name ?? "",
-            Rig = clip.Rig ?? "",
-            Duration = clip.Duration,
-            End = clip.End,
-            PreviewMode = MotionModeToken.Default,
-        };
-
-        foreach (MotionEvent e in clip.Events ?? Array.Empty<MotionEvent>())
-        {
-            asset.Events.Add(new MotionEventAsset { T = e.Time, Name = e.Name ?? "", Value = string.IsNullOrEmpty(e.Value) ? null : e.Value });
-        }
-
-        if (clip.Channels is not null)
-        {
-            foreach (MotionChannel ch in clip.Channels)
-            {
-                asset.Channels.Add(new ChannelAsset
-                {
-                    Node = ch.Node ?? "",
-                    Kind = ch.Kind,
-                    X = FromKeys(ch.X),
-                    Y = FromKeys(ch.Y),
-                    Z = FromKeys(ch.Z),
-                });
-            }
-        }
-
-        return asset;
-    }
-
     private static CurveKey[]? ToKeys(ComponentCurve? curve)
     {
         if (curve is null || curve.Keys.Count == 0)
@@ -95,22 +58,5 @@ public static class MotionAssetCodec
         }
 
         return keys;
-    }
-
-    private static ComponentCurve? FromKeys(CurveKey[]? keys)
-    {
-        if (keys is null || keys.Length == 0)
-        {
-            return null;
-        }
-
-        var curve = new ComponentCurve();
-
-        foreach (CurveKey key in keys)
-        {
-            curve.Keys.Add(KeyAsset.FromCurveKey(key));
-        }
-
-        return curve;
     }
 }

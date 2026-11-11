@@ -49,58 +49,6 @@ public class MainWindowTests
         });
     }
 
-    /// <summary>M2의 완료 기준: 빈 문서에서 폼·그래프 명령만으로 nod를 처음부터 만들고, 내보낸 바이트가 Unity 산출물과 같다.</summary>
-    [Fact]
-    public void 빈_문서에서_nod를_처음부터_만들어_내보내면_Unity_산출물과_같다()
-    {
-        HeadlessUi.Run(() =>
-        {
-            MainWindow window = NewWindow();
-            window.Show();
-            string export = Path.Combine(Path.GetTempPath(), $"ked-motion-tool-{Guid.NewGuid():N}.json");
-
-            try
-            {
-                window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
-                window.AddMotionFromForm("nod", "character", "0.6", MotionEnd.Restore);
-                Assert.Equal("nod", window.SelectedMotion);
-                Assert.Equal("nod", window.Graph.MotionName);
-
-                window.AddChannelFromForm("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position);
-                Assert.Empty(window.Graph.Curves); // 성분은 키가 생기면 생긴다
-
-                var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
-                window.Graph.CurrentTime = 0;
-                window.EnsureComponent(y.Node, y.Kind, y.Axis);
-                Assert.Single(window.Graph.Curves);
-
-                window.Graph.CurrentTime = 0.3;
-                window.Graph.InsertKeyAtCurrentTime();
-                window.CommitKeyValueFromInspector("-18");
-
-                window.Graph.CurrentTime = 0.6;
-                window.Graph.InsertKeyAtCurrentTime();
-                window.CommitKeyValueFromInspector("0");
-
-                window.Graph.SelectAll();
-                window.Graph.SetTangentMode(TangentMode.Flat);
-
-                Assert.Empty(window.ProblemsShown);
-                Assert.True(window.Session.Export(export), window.Session.Status);
-
-                // 견본의 nod만 정규 직렬화한 것과 바이트까지 같다.
-                Assert.True(MotionsJson.TryRead(File.ReadAllText(TestDocuments.FixturePath("motions.nod-bow.json")), out List<MotionClip> clips, out _));
-                byte[] expected = MotionsJson.WriteBytes(clips.Where(c => c.Name == "nod").ToList());
-                Assert.Equal(expected, File.ReadAllBytes(export));
-            }
-            finally
-            {
-                window.Close();
-                File.Delete(export);
-            }
-        });
-    }
-
     [Fact]
     public void 뷰포트와_그래프의_현재_시각은_하나이고_리그를_실으면_뷰포트에_초상이_선다()
     {
@@ -266,42 +214,6 @@ public class MainWindowTests
 
         Assert.True(File.Exists(settingsPath));
         Assert.Contains("\"snapEnabled\": false", File.ReadAllText(settingsPath), StringComparison.Ordinal);
-        Directory.Delete(directory, recursive: true);
-    }
-
-    [Fact]
-    public void 내보내기_범위는_선택_오브젝트의_rigKind로_거른다()
-    {
-        string directory = Path.Combine(Path.GetTempPath(), "ked-motion-tool-tests", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(directory);
-
-        HeadlessUi.Run(() =>
-        {
-            MainWindow window = NewWindow();
-            window.Show();
-
-            try
-            {
-                window.Session.LoadRig(TestDocuments.FixturePath("rig-schemas.json"));
-                window.Session.ImportMotions(TestDocuments.FixturePath("motions.nod-bow.json"));
-                window.Session.Editor.AddMotion("robot_wave", "robot", 1f);
-                window.Session.Editor.AddChannel("robot_wave", "Robot_Arm", MotionChannelKind.Position);
-
-                string export = Path.Combine(directory, "motions.json");
-                window.ExportScopeIndex = 0;
-                Assert.False(window.Session.Export(export, window.ExportFilter().Filter)); // robot_wave가 막는다
-                window.ExportScopeIndex = 1; // 선택 오브젝트 s1(character)의 rigKind만
-                Assert.True(window.Session.Export(export, window.ExportFilter().Filter), window.Session.Status);
-                string json = File.ReadAllText(export);
-                Assert.Contains("\"bow\"", json, StringComparison.Ordinal);
-                Assert.DoesNotContain("robot_wave", json, StringComparison.Ordinal);
-            }
-            finally
-            {
-                window.Close();
-            }
-        });
-
         Directory.Delete(directory, recursive: true);
     }
 

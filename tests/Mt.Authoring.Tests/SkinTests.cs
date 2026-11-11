@@ -174,28 +174,4 @@ public class SkinTests
         editor.SetSkinPart("땀", "Emoji_Part1", null);
         Assert.Empty(skin.Setups);
     }
-
-    [Fact]
-    public void 놓임은_연출_산출물에_풀려_나간다()
-    {
-        MotionEditor editor = NewEditor();
-        editor.AddSkin("꽃", EmojiRigFixture.RigKind);
-        editor.SetSkinPartImages("꽃", "Emoji_Part1", new[] { "art/f.png" });
-        editor.SetSkinPartImages("꽃", "Emoji_Part2", new[] { "art/f.png", "art/g.png" });
-        editor.SetSkinPartImages("꽃", "Emoji_Part3", new[] { "art/f.png" });
-        editor.SetSkinPartSetup("꽃", "Emoji_Part1", new SkinPartSetup { X = -150f, Y = 40f, Scale = 0.8f, Rotation = 15f });
-        editor.AddEmoji("flower", EmojiRigFixture.RigKind);
-        editor.UpdateEmoji("flower", new EmojiAsset { Skin = "꽃", HoldSeconds = 1f });
-        Assert.DoesNotContain(Mt.Authoring.Validation.EmojiValidator.Validate(editor.Document, RigFile.NodeIds), p => p.Blocking);
-
-        var emoji = System.Text.Json.Nodes.JsonNode.Parse(Mt.Authoring.Validation.EmojisJson.Write(editor.Document))!["emojis"]![0]!;
-        var parts = emoji["parts"]!;
-        Assert.Equal(("art/f.png", -150f, 40f, 0.8f, 15f),
-            (parts["Emoji_Part1"]!["image"]!.GetValue<string>(), parts["Emoji_Part1"]!["x"]!.GetValue<float>(), parts["Emoji_Part1"]!["y"]!.GetValue<float>(),
-             parts["Emoji_Part1"]!["scale"]!.GetValue<float>(), parts["Emoji_Part1"]!["rotation"]!.GetValue<float>()));
-        Assert.Null(parts["Emoji_Part1"]!["frames"]);
-        Assert.Equal(new[] { "art/g.png" }, parts["Emoji_Part2"]!["frames"]!.AsArray().Select(f => f!.GetValue<string>()));
-        Assert.Equal((0.2f, true), (parts["Emoji_Part2"]!["frameSeconds"]!.GetValue<float>(), parts["Emoji_Part2"]!["loop"]!.GetValue<bool>()));
-        Assert.Equal("art/f.png", parts["Emoji_Part3"]!.GetValue<string>()); // 한 장이고 제자리면 글 하나 — 전과 같은 모양
-    }
 }

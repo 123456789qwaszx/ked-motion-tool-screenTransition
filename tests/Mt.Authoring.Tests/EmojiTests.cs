@@ -155,55 +155,6 @@ public class EmojiTests
         Assert.DoesNotContain("emojis", MotionDocumentJson.Write(editor.Document), StringComparison.Ordinal);
     }
 
-    [Fact]
-    public void 검증은_참조와_리그를_보고_내보내기는_스킨을_풀어_싣는다()
-    {
-        MotionEditor editor = NewEditor();
-        Assert.Empty(EmojiValidator.Validate(editor.Document, RigFile.NodeIds));
-
-        Assert.True(EmojisJson.TryExport(editor.Document, RigFile.NodeIds, out string json, out IReadOnlyList<string> problems, RigFile.AlphaNodeIds), string.Join("\n", problems));
-        JsonNode root = JsonNode.Parse(json)!;
-        Assert.Equal("emojis/1-draft", root["schema"]!.GetValue<string>());
-        JsonNode sweat = Assert.Single(root["emojis"]!.AsArray())!;
-        Assert.Equal(("sweat", "emoji", "pop", "bob", "fade"), (sweat["name"]!.GetValue<string>(), sweat["rig"]!.GetValue<string>(), sweat["enter"]!.GetValue<string>(), sweat["hold"]!.GetValue<string>(), sweat["exit"]!.GetValue<string>()));
-        Assert.Equal("art/sweat.png", sweat["parts"]![Part]!.GetValue<string>()); // 스킨 이름이 아니라 조각 → 그림
-        Assert.Equal(1.0, sweat["holdSeconds"]!.GetValue<double>(), 3);
-        Assert.Null(sweat["stay"]);
-        Assert.Equal(new[] { 120.0, 300.0 }, sweat["offset"]!.AsArray().Select(v => v!.GetValue<double>()));
-        Assert.Equal(json, EmojisJson.Write(editor.Document)); // 결정적
-
-        // 머무는 이모지는 holdSeconds 대신 stay.
-        editor.UpdateEmoji("sweat", new EmojiAsset { Skin = "땀", Hold = "bob" });
-        JsonNode staying = JsonNode.Parse(EmojisJson.Write(editor.Document))!["emojis"]![0]!;
-        Assert.True(staying["stay"]!.GetValue<bool>());
-        Assert.Null(staying["holdSeconds"]);
-        Assert.Null(staying["enter"]);
-
-        // 어긋남: 없는 스킨 · 없는 모션 · 캐릭터 모션 · 캐릭터 스킨 — 막고, 내보내기도 안 된다.
-        editor.AddMotion("nod", "character", 0.5f);
-        editor.AddSkin("face", "character");
-        editor.UpdateEmoji("sweat", new EmojiAsset { Skin = "ghost", Enter = "nope", Hold = "nod" });
-        List<string> messages = EmojiValidator.Validate(editor.Document, RigFile.NodeIds).Where(p => p.Blocking).Select(p => p.Message).ToList();
-        Assert.Contains(messages, m => m.Contains("스킨 'ghost'이 없다", StringComparison.Ordinal));
-        Assert.Contains(messages, m => m.Contains("등장 모션 'nope'이 없다", StringComparison.Ordinal));
-        Assert.Contains(messages, m => m.Contains("머묾 모션 'nod'의 리그", StringComparison.Ordinal));
-        Assert.False(EmojisJson.TryExport(editor.Document, RigFile.NodeIds, out _, out _));
-        editor.UpdateEmoji("sweat", new EmojiAsset { Skin = "face" });
-        Assert.Contains(EmojiValidator.Validate(editor.Document, RigFile.NodeIds), p => p.Blocking && p.Message.Contains("리그 'character'의 것", StringComparison.Ordinal));
-
-        // 알림: 그림 없음 · 없는 자리 노드.
-        editor.UpdateEmoji("sweat", new EmojiAsset { AnchorNode = "Nowhere" });
-        IReadOnlyList<EmojiProblem> notices = EmojiValidator.Validate(editor.Document, RigFile.NodeIds);
-        Assert.All(notices, p => Assert.False(p.Blocking));
-        Assert.Equal(2, notices.Count);
-
-        // 이모지가 쓰는 모션이 규칙을 어기면 그것도 막는다.
-        editor.UpdateEmoji("sweat", new EmojiAsset { Skin = "땀", Enter = "pop" });
-        editor.SetDuration("pop", 0.1f);
-        Assert.False(EmojisJson.TryExport(editor.Document, RigFile.NodeIds, out _, out problems));
-        Assert.Contains(problems, p => p.Contains("pop", StringComparison.Ordinal));
-    }
-
     // ── 이모지 안에서 구간의 모션을 고친다(PLAN-parts.md §15) ───────────
 
     [Fact]

@@ -33,33 +33,5 @@ public class MotionAssetCodecTests
         Assert.Equal(1f, clip.Channels[0].X![1].Value);
     }
 
-    [Fact]
-    public void 클립에서_올린_키는_전부_free이고_값을_그대로_지키며_미리보기_mode는_relative다()
-    {
-        var clip = new MotionClip
-        {
-            Name = "a", Rig = "character", Duration = 1f, End = MotionEnd.Commit,
-            Channels = new[]
-            {
-                new MotionChannel
-                {
-                    Node = "N", Kind = MotionChannelKind.Position,
-                    X = new[] { new CurveKey(0f, 1f, 2f, 3f), new CurveKey(1f, 4f, 5f, 5f) },
-                },
-            },
-        };
-
-        MotionAsset asset = MotionAssetCodec.FromClip(clip);
-
-        Assert.Equal(MotionChannelMode.Relative, asset.PreviewMode); // 커맨드의 생략값과 같다
-        ChannelAsset ch = Assert.Single(asset.Channels);
-        Assert.Null(ch.Y);
-        Assert.Null(ch.Z);
-        Assert.All(ch.X!.Keys, k => Assert.Equal(TangentMode.Free, k.Tangent));
-        Assert.True(ch.X.Keys[0].Broken);
-        Assert.False(ch.X.Keys[1].Broken);
-        Assert.Equal(new CurveKey(0f, 1f, 2f, 3f), ch.X.Keys[0].ToCurveKey());
-    }
-
     private static ComponentCurve Curve(params KeyAsset[] keys) => new() { Keys = keys.ToList() };
 }

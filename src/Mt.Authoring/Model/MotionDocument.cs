@@ -245,15 +245,6 @@ public sealed class KeyAsset
 
     public CurveKey ToCurveKey() => new(T, V, InTangent, OutTangent);
 
-    public static KeyAsset FromCurveKey(in CurveKey key) => new()
-    {
-        T = key.Time,
-        V = key.Value,
-        InTangent = key.InTangent,
-        OutTangent = key.OutTangent,
-        Tangent = TangentMode.Free,
-        Broken = key.InTangent != key.OutTangent,
-    };
 }
 
 /// <summary>

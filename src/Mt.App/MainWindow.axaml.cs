@@ -136,7 +136,6 @@ public partial class MainWindow : Window
     private static readonly IBrush ActingNodeBrush = new SolidColorBrush(Color.FromRgb(0xC8, 0xE0, 0xFF));
     private static readonly IBrush PlacementNodeBrush = new SolidColorBrush(Color.FromRgb(0xB0, 0xB0, 0xB0));
     private static readonly IBrush ForbiddenNodeBrush = new SolidColorBrush(Color.FromRgb(0x70, 0x70, 0x70));
-    private readonly ComboBox _exportScope = new() { ItemsSource = new[] { "전체", "이 rigKind만", "이 오브젝트가 입는 모션만" }, SelectedIndex = 0, FontSize = 11 };
 
     // 오른쪽 — 오브젝트(채널 박스)
     private readonly TextBox _objX = new() { FontSize = 11, Width = 64 };
@@ -1317,10 +1316,6 @@ public partial class MainWindow : Window
         Toolbar.Children.Add(ToolButton("다른 이름으로…", OnSaveAsClick));
         Toolbar.Children.Add(Separator());
         Toolbar.Children.Add(ToolButton("리그 덤프…", OnLoadRigClick));
-        Toolbar.Children.Add(ToolButton("motions.json 가져오기…", OnImportClick));
-        Toolbar.Children.Add(_exportScope);
-        ToolTip.SetTip(_exportScope, "내보낼 범위 — 전체 / 선택 오브젝트의 rigKind 모션만 / 선택 오브젝트가 입을 수 있는 모션만. 모션의 주인은 rigKind다");
-        Toolbar.Children.Add(ToolButton("motions.json 내보내기…", OnExportClick));
         Toolbar.Children.Add(Separator());
         Toolbar.Children.Add(ToolButton("되돌리기", (_, _) => UndoCommand()));
         Toolbar.Children.Add(ToolButton("다시하기", (_, _) => RedoCommand()));
@@ -3026,65 +3021,6 @@ public partial class MainWindow : Window
         catch (Exception exception)
         {
             _session.SetStatus($"리그 덤프 실패: {exception.Message}");
-        }
-    }
-
-    private async void OnImportClick(object? sender, RoutedEventArgs e)
-    {
-        try
-        {
-            string? path = await PickOpenAsync("motions.json 가져오기", new FilePickerFileType("motions.json") { Patterns = new[] { "motions.json", "*.json" } });
-
-            if (path is not null)
-            {
-                _session.ImportMotions(path);
-            }
-        }
-        catch (Exception exception)
-        {
-            _session.SetStatus($"가져오기 실패: {exception.Message}");
-        }
-    }
-
-    /// <summary>툴바 범위 콤보 → 모션 거르기. 오브젝트가 없으면 전체.</summary>
-    internal (Func<MotionAsset, bool>? Filter, string? Label) ExportFilter()
-    {
-        SceneObject? o = _viewport.SelectedObject;
-
-        if (o is null || _session.Rig is not { } rig)
-        {
-            return (null, null);
-        }
-
-        return _exportScope.SelectedIndex switch
-        {
-            1 => (m => m.Rig == o.Rig, $"rigKind {o.Rig}"),
-            2 => (m => ScenePreview.CanWear(rig, o, m), $"{o.Id}가 입는 모션"),
-            _ => (null, null),
-        };
-    }
-
-    internal int ExportScopeIndex
-    {
-        get => _exportScope.SelectedIndex;
-        set => _exportScope.SelectedIndex = value;
-    }
-
-    private async void OnExportClick(object? sender, RoutedEventArgs e)
-    {
-        try
-        {
-            string? path = await PickSaveAsync("motions.json 내보내기", "motions.json", new FilePickerFileType("motions.json") { Patterns = new[] { "*.json" } });
-
-            if (path is not null)
-            {
-                (Func<MotionAsset, bool>? filter, string? label) = ExportFilter();
-                _session.Export(path, filter, label);
-            }
-        }
-        catch (Exception exception)
-        {
-            _session.SetStatus($"내보내기 실패: {exception.Message}");
         }
     }
 

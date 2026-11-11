@@ -62,7 +62,7 @@ public partial class MainWindow
         {
             Orientation = Orientation.Horizontal,
             Spacing = 4,
-            Children = { add, SmallButton("연출 삭제", (_, _) => Guard("연출 삭제", RemoveEmoji)), SmallButton("emojis.json…", OnExportEmojisClick) },
+            Children = { add, SmallButton("연출 삭제", (_, _) => Guard("연출 삭제", RemoveEmoji)) },
         });
 
         _emojiFields.Children.Add(Labeled("키", _emojiName));
@@ -529,20 +529,4 @@ public partial class MainWindow
         }
     }
 
-    private async void OnExportEmojisClick(object? sender, RoutedEventArgs e)
-    {
-        try
-        {
-            string? path = await PickSaveAsync("emojis.json 내보내기", "emojis.json", new FilePickerFileType("emojis.json") { Patterns = new[] { "*.json" } });
-
-            if (path is not null)
-            {
-                _session.ExportEmojis(path);
-            }
-        }
-        catch (Exception exception)
-        {
-            _session.SetStatus($"이모지 내보내기 실패: {exception.Message}");
-        }
-    }
 }

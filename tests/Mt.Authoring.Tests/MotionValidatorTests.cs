@@ -53,35 +53,6 @@ public class MotionValidatorTests
         Assert.Contains("rigKind 'robot'", problem.Message, StringComparison.Ordinal);
         Assert.Contains("character", problem.Message, StringComparison.Ordinal);
     }
-
-    [Fact]
-    public void 같은_이름이_둘이면_문제다()
-    {
-        MotionDocument document = Fixtures.NodBowDocument();
-        document.Motions.Add(MotionAssetCodec.FromClip(MotionAssetCodec.ToClip(document.Motions[0])));
-
-        Assert.Contains(MotionValidator.Validate(document), p => p.Message == "같은 이름이 둘이다");
-    }
-
-    [Fact]
-    public void 편집_중간_상태는_허용되고_내보내기만_막힌다()
-    {
-        var editor = new MotionEditor(new MotionDocument());
-        editor.AddMotion("a", "character", 1f, MotionEnd.Restore);
-        editor.AddChannel("a", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position);
-        // 마지막 키가 길이(1)에 있지 않다 — 편집 중엔 자연스러운 상태.
-        editor.SetKeys("a", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.25f, -10f), Fixtures.Key(0.5f, 0f) });
-
-        Assert.False(MotionExport.TryExport(editor.Document, RigFile.NodeIds, out string json, out IReadOnlyList<MotionProblem> problems));
-        Assert.Equal("", json);
-        Assert.Contains("마지막 키 시각이 길이와 다르다", Assert.Single(problems).Message, StringComparison.Ordinal);
-
-        editor.SetDuration("a", 0.5f);
-
-        Assert.True(MotionExport.TryExport(editor.Document, RigFile.NodeIds, out json, out problems));
-        Assert.Empty(problems);
-        Assert.Contains("\"duration\": 0.5", json, StringComparison.Ordinal);
-    }
 }
 
 public class MotionFixesTests
@@ -109,26 +80,6 @@ public class MotionFixesTests
         Assert.Empty(MotionValidator.Validate(editor.Document));
         Assert.Equal(0.5f, Y.Resolve(editor.Document.Find("nod")!)!.Keys[^1].T, 4);
         Assert.False(MotionFixes.Apply(editor, "nod", MotionFix.EndKeysToDuration)); // 바꿀 것이 없다
-    }
-
-    [Fact]
-    public void 길이를_마지막_키에_맞추기_그리고_키의_값은_복원의_끝이_중립값이_아니어도_알리지_않는다()
-    {
-        var editor = new MotionEditor(Fixtures.NodBowDocument());
-        editor.SetDuration("nod", 0.5f);
-        Assert.True(MotionFixes.Apply(editor, "nod", MotionFix.DurationToLastKey));
-        Assert.Equal(0.6f, editor.Document.Find("nod")!.Duration, 4);
-
-        // 첫 키가 중립값이 아닌 것은 뜻이다("지금 값 +3에서 시작") — 문제도 경고도 아니다.
-        editor.UpdateKey("nod", Y.Node, Y.Kind, Y.Axis, 0, new KeyAsset { T = 0f, V = 3f });
-        Assert.Empty(MotionValidator.Validate(editor.Document));
-
-        // 복원(restore)이 중립값이 아닌 데서 끝나도 알리지 않는다 — 끝에서 시작값으로 돌아가는 것은 작가의 뜻이다. 그대로 나간다.
-        editor.UpdateKey("nod", Y.Node, Y.Kind, Y.Axis, 2, new KeyAsset { T = 0.6f, V = 5f });
-        Assert.Empty(MotionValidator.Validate(editor.Document));
-        Assert.True(MotionExport.TryExport(editor.Document, null, out string json, out IReadOnlyList<MotionProblem> blocking));
-        Assert.Empty(blocking);
-        Assert.Contains("\"v\": 5", json, StringComparison.Ordinal);
     }
 
     [Fact]

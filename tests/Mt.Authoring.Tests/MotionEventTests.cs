@@ -49,48 +49,6 @@ public class MotionEventTests
     }
 
     [Fact]
-    public void 이벤트가_있으면_motions_3으로_나가고_한글_값도_왕복한다()
-    {
-        MotionEditor editor = NewEditor();
-        string plain = MotionsJson.Write(MotionExport.ToClips(editor.Document));
-        Assert.Equal(Fixtures.TextOf("motions.nod-bow.json"), plain); // 이벤트가 없으면 전과 같은 글자
-
-        editor.AddMotionEvent("nod", 0.3f, "emoji", "땀 \"큰\"");
-        editor.AddMotionEvent("nod", 0.6f, "done");
-        string json = MotionsJson.Write(MotionExport.ToClips(editor.Document));
-        Assert.Contains("\"schema\": \"motions/3\"", json, StringComparison.Ordinal);
-        Assert.Contains("{ \"t\": 0.3, \"name\": \"emoji\", \"value\": \"땀 \\\"큰\\\"\" }", json, StringComparison.Ordinal);
-        Assert.Contains("{ \"t\": 0.6, \"name\": \"done\" }", json, StringComparison.Ordinal);
-
-        Assert.True(MotionsJson.TryRead(json, out List<MotionClip> clips, out List<string> problems), string.Join("\n", problems));
-        Assert.Empty(problems);
-        MotionClip nod = clips.Single(c => c.Name == "nod");
-        Assert.Equal(new[] { ("emoji", "땀 \"큰\""), ("done", (string?)null) }, nod.Events.Select(e => (e.Name, (string?)e.Value)));
-        Assert.Null(clips.Single(c => c.Name == "bow").Events);
-        Assert.Equal(json, MotionsJson.Write(clips));
-
-        // 가져오면 저작본의 이벤트가 된다.
-        MotionAsset back = MotionAssetCodec.FromClip(nod);
-        Assert.Equal(new[] { (0.3f, "emoji"), (0.6f, "done") }, back.Events.Select(e => (e.T, e.Name)));
-    }
-
-    [Fact]
-    public void 규칙은_이름과_시각을_본다()
-    {
-        MotionEditor editor = NewEditor();
-        editor.AddMotionEvent("nod", 0.3f, "emoji", "땀");
-        Assert.Empty(MotionValidator.Validate(editor.Document, RigFile.NodeIds));
-
-        editor.AddMotionEvent("nod", 0.9f, "late"); // 길이(0.6) 밖
-        Assert.Contains(MotionValidator.Validate(editor.Document, RigFile.NodeIds), p => p.Blocking && p.Message.Contains("0~길이 밖", StringComparison.Ordinal));
-        editor.Undo();
-
-        editor.AddMotionEvent("nod", 0.2f, "Bad Name");
-        Assert.Contains(MotionValidator.Validate(editor.Document, RigFile.NodeIds), p => p.Blocking && p.Message.Contains("이벤트 0: 이름", StringComparison.Ordinal));
-        Assert.False(MotionExport.TryExport(editor.Document, RigFile.NodeIds, out _, out _));
-    }
-
-    [Fact]
     public void 구간은_열린_앞과_닫힌_뒤라_같은_이벤트가_두_번_잡히지_않는다()
     {
         MotionEditor editor = NewEditor();
