@@ -617,7 +617,7 @@ public partial class MainWindow : Window
     /// <summary>테스트 손잡이 — 채널을 바로 더한다(UI에는 "채널 추가"가 없다: 채널 박스·매니퓰레이터가 첫 키에서 만든다).</summary>
     internal void AddChannelFromForm(string node, MotionChannelKind kind)
     {
-        MotionAsset motion = _graph.Motion ?? throw new InvalidOperationException("먼저 모션을 고른다.");
+        TimelineAsset motion = _graph.Motion ?? throw new InvalidOperationException("먼저 모션을 고른다.");
         _session.Editor.AddChannel(motion.Name, node, kind);
     }
 
@@ -633,7 +633,7 @@ public partial class MainWindow : Window
     /// <summary>채널 행의 성분 토글과 같은 길 — 없는 성분을 현재 시각의 중립값 키 하나로 만든다.</summary>
     internal void EnsureComponent(string node, MotionChannelKind kind, Axis axis)
     {
-        MotionAsset motion = _graph.Motion ?? throw new InvalidOperationException("먼저 모션을 고른다.");
+        TimelineAsset motion = _graph.Motion ?? throw new InvalidOperationException("먼저 모션을 고른다.");
 
         if (motion.FindChannel(node, kind)?.Get(axis) is not null)
         {
@@ -982,12 +982,12 @@ public partial class MainWindow : Window
         try
         {
             string? shown = _viewport.ShownSet;
-            MotionAsset? motion = _graph.Motion;
+            TimelineAsset? motion = _graph.Motion;
             EnsureChannelBoxRows();
             float time = (float)(_viewport.SnapEnabled ? TimeSnap.Snap(_viewport.Time, _viewport.SnapStep) : _viewport.Time);
 
             string? node = _viewport.SelectedNode;
-            bool hasNode = node is not null && shown is not null && _viewport.HasRig;
+            bool hasNode = node is not null && shown is not null && _viewport.HasStage;
             _channelBoxTitle.Text = !hasNode
                 ? "(하이어아키에서 층을 고른다)"
                 : $"{shown} · {node}";
@@ -1151,7 +1151,7 @@ public partial class MainWindow : Window
     /// <summary>뷰포트가 축을 그릴 노드 — 선택한 키의 노드, 없으면 첫 채널의 노드.</summary>
     private void RefreshSelectedNode()
     {
-        MotionAsset? motion = _graph.Motion;
+        TimelineAsset? motion = _graph.Motion;
         string? node = _graph.Selection.Count > 0
             ? _graph.Selection.First().Curve.Node
             : motion?.Channels.FirstOrDefault()?.Node;
@@ -1517,7 +1517,7 @@ public partial class MainWindow : Window
         _hierarchy.Items.Clear();
         _hierarchyParents.Clear();
 
-        if (_viewport.ShownSet is not { } kind || _session.Editor.Document.FindRig(kind) is not { } set)
+        if (_viewport.ShownSet is not { } kind || _session.Editor.Document.FindTransition(kind) is not { } set)
         {
             return;
         }
@@ -1528,7 +1528,7 @@ public partial class MainWindow : Window
         Attach(setRoot, null);
         var itemsByNode = new Dictionary<string, TreeViewItem>(StringComparer.Ordinal);
 
-        foreach (RigNodeAsset node in set.Nodes)
+        foreach (LayerAsset node in set.Layers)
         {
             TreeViewItem nodeParent = string.IsNullOrEmpty(node.Parent) || !itemsByNode.TryGetValue(node.Parent, out TreeViewItem? found) ? setRoot : found;
             // 따로 보기(숨김 · 솔로)의 표시.
@@ -1710,7 +1710,7 @@ public partial class MainWindow : Window
     private void RefreshChannels()
     {
         _channelRows.Children.Clear();
-        MotionAsset? motion = _graph.Motion;
+        TimelineAsset? motion = _graph.Motion;
 
         if (motion is null)
         {
@@ -1723,7 +1723,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>모션의 채널을 노드 · 종류로, 성분은 종류의 축 전부(없는 것은 흐리게).</summary>
-    private void RefreshChannelsByNode(MotionAsset motion, string query)
+    private void RefreshChannelsByNode(TimelineAsset motion, string query)
     {
         foreach (ChannelAsset channel in motion.Channels)
         {
@@ -1808,18 +1808,18 @@ public partial class MainWindow : Window
     /// 아직 키가 없는 채널들을 흐리게 — 이 모션이 안 건드리는 노드·종류(위치·배율·회전·불투명도)도 보이고, 눌러서 그 노드를 고르거나 ＋로 지금 값에 키를 놓는다.
     /// "배율만 있는 모션에 살짝 위치도" 같은 손을 목록에서 바로 간다.
     /// </summary>
-    private void AddUnkeyedRows(MotionAsset motion, string query)
+    private void AddUnkeyedRows(TimelineAsset motion, string query)
     {
         _unkeyedRows.Clear();
 
-        if (_session.Editor.Document.FindRig(motion.Rig) is not { } set || set.Nodes.Count > UnkeyedRowsMaxNodes)
+        if (_session.Editor.Document.FindTransition(motion.Name) is not { } set || set.Layers.Count > UnkeyedRowsMaxNodes)
         {
             return;
         }
 
         bool headed = false;
 
-        foreach (RigNodeAsset layer in set.Nodes)
+        foreach (LayerAsset layer in set.Layers)
         {
             string node = layer.Id;
 
@@ -1885,7 +1885,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>성분 행: 색 네모 + 이름 + (있으면) ×. 보이는 행은 파랗게(마야 선택). 없는 성분은 흐리고, 클릭해도 만들지 않는다 — <paramref name="onMissingClick"/>만.</summary>
-    private Border ComponentRow(MotionAsset motion, CurveRef curveRef, string label)
+    private Border ComponentRow(TimelineAsset motion, CurveRef curveRef, string label)
     {
         CurveSlot? slot = _graph.Curves.FirstOrDefault(s => s.Curve == curveRef);
         bool exists = curveRef.Resolve(motion) is not null;
@@ -1937,7 +1937,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>성분 하나의 키를 지운다 — 다른 성분은 남고, 마지막 성분이면 채널이 없어진다(빈 채널은 규약에 없다).</summary>
-    private void RemoveComponent(MotionAsset motion, CurveRef curve)
+    private void RemoveComponent(TimelineAsset motion, CurveRef curve)
     {
         if (motion.FindChannel(curve.Node, curve.Kind) is not { } channel || channel.Get(curve.Axis) is null)
         {
@@ -1958,7 +1958,7 @@ public partial class MainWindow : Window
     /// <summary>아웃라이너 성분 행 클릭 — 있는 성분은 그 커브만(additive면 토글). 없는 성분은 **만들지 않는다**(마야식).</summary>
     internal void OutlinerClick(CurveRef curve, bool additive)
     {
-        MotionAsset? motion = _graph.Motion;
+        TimelineAsset? motion = _graph.Motion;
 
         if (motion is null)
         {
@@ -2015,7 +2015,7 @@ public partial class MainWindow : Window
 
         try
         {
-            MotionAsset? motion = _graph.Motion;
+            TimelineAsset? motion = _graph.Motion;
             bool has = motion is not null;
             _motionDuration.IsEnabled = has;
 
@@ -2034,7 +2034,7 @@ public partial class MainWindow : Window
 
         try
         {
-            MotionAsset? motion = _graph.Motion;
+            TimelineAsset? motion = _graph.Motion;
             int count = _graph.Selection.Count;
             KeyAsset? single = count == 1 && motion is not null ? _graph.Selection.First().Resolve(motion) : null;
             _keyValue.IsEnabled = count > 0;
@@ -2121,7 +2121,7 @@ public partial class MainWindow : Window
         _graph.Select(new[] { key }, additive: false);
     }
 
-    private void WithMotion(Action<MotionAsset> action)
+    private void WithMotion(Action<TimelineAsset> action)
     {
         if (_refreshing || _graph.Motion is not { } motion)
         {

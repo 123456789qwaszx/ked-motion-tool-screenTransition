@@ -20,17 +20,17 @@ public class AlphaChannelTests
     {
         var editor = new MotionEditor(new MotionDocument());
 
-        editor.AddTimeline("fade", 1f, RigTemplates.Emoji());
+        editor.AddTimeline("fade", 1f, TransitionTemplates.Emoji());
         editor.AddChannel("fade", Part, MotionChannelKind.Alpha);
         editor.SetKeys("fade", Part, MotionChannelKind.Alpha, Axis.X, new[] { Linear(0f, 1f), Linear(1f, 0f) });
 
-        editor.AddTimeline("dim", 1f, RigTemplates.Emoji());
+        editor.AddTimeline("dim", 1f, TransitionTemplates.Emoji());
         editor.AddChannel("dim", Body, MotionChannelKind.Alpha);
         editor.SetKeys("dim", Body, MotionChannelKind.Alpha, Axis.X, new[] { Linear(0f, 1f), Linear(1f, 0.5f) });
         return editor;
     }
 
-    private static RectNodeTree Template(MotionEditor editor) => StageTree.Build(editor.Document.FindRig("fade")!);
+    private static RectNodeTree Template(MotionEditor editor) => StageTree.Build(editor.Document.FindTransition("fade")!);
 
     private static void Near(float expected, float actual) => Assert.InRange(actual, expected - 1e-3f, expected + 1e-3f);
 
@@ -39,7 +39,7 @@ public class AlphaChannelTests
     {
         MotionEditor editor = NewEditor();
         RectNodeTree template = Template(editor);
-        MotionAsset fade = editor.Document.Find("fade")!;
+        TimelineAsset fade = editor.Document.Find("fade")!;
         var alphas = new Dictionary<string, float>();
 
         RectNodeTree pose = MotionPreview.Pose(template, fade, 0.25, null, alphas);

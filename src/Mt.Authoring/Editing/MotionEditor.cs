@@ -45,7 +45,7 @@ public sealed partial class MotionEditor
     /// </summary>
     public void SetDuration(string name, float seconds)
     {
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         Mutate(MotionChangeKind.Metadata, () => motion.Duration = seconds);
     }
 
@@ -54,7 +54,7 @@ public sealed partial class MotionEditor
     public ChannelAsset AddChannel(string name, string node, MotionChannelKind kind)
     {
         ArgumentNullException.ThrowIfNull(node);
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
 
         if (motion.FindChannel(node, kind) is not null)
         {
@@ -68,7 +68,7 @@ public sealed partial class MotionEditor
 
     public void RemoveChannel(string name, string node, MotionChannelKind kind)
     {
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         ChannelAsset channel = RequireChannel(motion, node, kind);
         Mutate(MotionChangeKind.Structure, () => motion.Channels.Remove(channel));
     }
@@ -79,7 +79,7 @@ public sealed partial class MotionEditor
     public void SetKeys(string name, string node, MotionChannelKind kind, Axis axis, IEnumerable<KeyAsset> keys)
     {
         ArgumentNullException.ThrowIfNull(keys);
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         ChannelAsset channel = RequireChannel(motion, node, kind);
 
         ComponentCurve? curve = Normalize(keys);
@@ -94,7 +94,7 @@ public sealed partial class MotionEditor
     public void SetKeysMany(string name, IEnumerable<(CurveRef Curve, IEnumerable<KeyAsset> Keys)> edits)
     {
         ArgumentNullException.ThrowIfNull(edits);
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         var plan = new List<(ChannelAsset Channel, Axis Axis, ComponentCurve? Curve)>();
 
         foreach ((CurveRef curveRef, IEnumerable<KeyAsset> keys) in edits)
@@ -121,7 +121,7 @@ public sealed partial class MotionEditor
     public void SetTangentMode(string name, IEnumerable<KeyRef> keys, TangentMode mode)
     {
         ArgumentNullException.ThrowIfNull(keys);
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         List<(ComponentCurve Curve, int Index)> targets = ResolveKeys(motion, keys);
 
         if (targets.Count == 0)
@@ -147,7 +147,7 @@ public sealed partial class MotionEditor
     public void SetBroken(string name, IEnumerable<KeyRef> keys, bool broken)
     {
         ArgumentNullException.ThrowIfNull(keys);
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         List<(ComponentCurve Curve, int Index)> targets = ResolveKeys(motion, keys);
 
         if (targets.Count == 0)
@@ -174,7 +174,7 @@ public sealed partial class MotionEditor
     /// <summary>핸들을 끈 결과. 모드는 free가 된다. 끊기지 않은 키는 양쪽이 같이 돈다 — 호출부가 같은 값을 넣는다.</summary>
     public void SetTangents(string name, KeyRef key, float inTangent, float outTangent)
     {
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         KeyAsset target = key.Resolve(motion) ?? throw new KeyNotFoundException($"키 {key}가 없다.");
 
         Mutate(MotionChangeKind.Keys, () =>
@@ -195,7 +195,7 @@ public sealed partial class MotionEditor
     {
         ArgumentNullException.ThrowIfNull(node);
         ArgumentNullException.ThrowIfNull(values);
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
 
         if (values.Count == 0)
         {
@@ -236,7 +236,7 @@ public sealed partial class MotionEditor
         string name, float time, IEnumerable<(string Node, MotionChannelKind Kind, IReadOnlyList<(Axis Axis, float Value)> Values)> items, TangentMode tangent)
     {
         ArgumentNullException.ThrowIfNull(items);
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         var list = items.Where(i => i.Values.Count > 0).ToList();
         var result = new List<KeyRef>();
 
@@ -277,7 +277,7 @@ public sealed partial class MotionEditor
     public void SetKeyValues(string name, IEnumerable<KeyRef> keys, Func<KeyAsset, float> map)
     {
         ArgumentNullException.ThrowIfNull(keys);
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         SetKeysMany(name, KeyOps.MapValues(motion, keys.ToList(), map));
     }
 
@@ -290,7 +290,7 @@ public sealed partial class MotionEditor
     public List<KeyRef> PasteKeys(string name, KeyClipboard clipboard, float atTime, Func<float, float>? snap = null, IReadOnlyList<CurveRef>? targets = null)
     {
         ArgumentNullException.ThrowIfNull(clipboard);
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         float shift = atTime - clipboard.Origin;
         var result = new List<KeyRef>();
 
@@ -354,7 +354,7 @@ public sealed partial class MotionEditor
     public List<(CurveRef Curve, float T)> MoveKeys(string name, IEnumerable<KeyRef> keys, float deltaSeconds, Func<float, float>? snap = null)
     {
         ArgumentNullException.ThrowIfNull(keys);
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         List<KeyRef> list = keys.ToList();
         var result = KeyOps.ResultingTimes(motion, list, t => t + deltaSeconds, snap);
         SetKeysMany(name, KeyOps.Move(motion, list, deltaSeconds, snap));
@@ -365,7 +365,7 @@ public sealed partial class MotionEditor
     public List<(CurveRef Curve, float T)> ScaleKeys(string name, IEnumerable<KeyRef> keys, float pivotSeconds, float factor, Func<float, float>? snap = null)
     {
         ArgumentNullException.ThrowIfNull(keys);
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         List<KeyRef> list = keys.ToList();
         var result = KeyOps.ResultingTimes(motion, list, t => pivotSeconds + (t - pivotSeconds) * factor, snap);
         SetKeysMany(name, KeyOps.Scale(motion, list, pivotSeconds, factor, snap));
@@ -376,7 +376,7 @@ public sealed partial class MotionEditor
     public List<(CurveRef Curve, float T)> DuplicateKeys(string name, IEnumerable<KeyRef> keys, float offsetSeconds, Func<float, float>? snap = null)
     {
         ArgumentNullException.ThrowIfNull(keys);
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         List<KeyRef> list = keys.ToList();
         var result = KeyOps.ResultingTimes(motion, list, t => t + offsetSeconds, snap);
         SetKeysMany(name, KeyOps.Duplicate(motion, list, offsetSeconds, snap));
@@ -386,7 +386,7 @@ public sealed partial class MotionEditor
     /// <summary>마야 Add/Remove Inbetween — <paramref name="atSeconds"/> 뒤의 키를 전부 민다(한 번의 조작). 바뀐 것이 없으면 false.</summary>
     public bool ShiftKeysAfter(string name, float atSeconds, float deltaSeconds)
     {
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         var edits = TimeSliderOps.Inbetween(motion, atSeconds, deltaSeconds);
 
         if (edits.Count == 0)
@@ -401,7 +401,7 @@ public sealed partial class MotionEditor
     /// <summary>마야 타임 슬라이더 Clear Key — 그 시각의 키를 모든 커브에서 지운다(한 번의 조작). 없으면 false.</summary>
     public bool RemoveKeysAt(string name, double seconds)
     {
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         List<KeyRef> keys = TimeSliderOps.KeysAt(motion, seconds);
 
         if (keys.Count == 0)
@@ -417,7 +417,7 @@ public sealed partial class MotionEditor
     public void RemoveKeys(string name, IEnumerable<KeyRef> keys)
     {
         ArgumentNullException.ThrowIfNull(keys);
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         var byCurve = new Dictionary<CurveRef, List<int>>();
 
         foreach (KeyRef key in keys)
@@ -466,7 +466,7 @@ public sealed partial class MotionEditor
         return new ComponentCurve { Keys = sorted };
     }
 
-    private static List<(ComponentCurve Curve, int Index)> ResolveKeys(MotionAsset motion, IEnumerable<KeyRef> keys)
+    private static List<(ComponentCurve Curve, int Index)> ResolveKeys(TimelineAsset motion, IEnumerable<KeyRef> keys)
     {
         var targets = new List<(ComponentCurve Curve, int Index)>();
 
@@ -487,7 +487,7 @@ public sealed partial class MotionEditor
     public KeyAsset AddKey(string name, string node, MotionChannelKind kind, Axis axis, KeyAsset key)
     {
         ArgumentNullException.ThrowIfNull(key);
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         ChannelAsset channel = RequireChannel(motion, node, kind);
         KeyAsset copy = Clone(key);
 
@@ -506,7 +506,7 @@ public sealed partial class MotionEditor
 
     public void RemoveKey(string name, string node, MotionChannelKind kind, Axis axis, int index)
     {
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         ChannelAsset channel = RequireChannel(motion, node, kind);
         ComponentCurve curve = RequireCurve(channel, axis, index);
 
@@ -529,7 +529,7 @@ public sealed partial class MotionEditor
     public void UpdateKey(string name, string node, MotionChannelKind kind, Axis axis, int index, KeyAsset value)
     {
         ArgumentNullException.ThrowIfNull(value);
-        MotionAsset motion = Require(name);
+        TimelineAsset motion = Require(name);
         ChannelAsset channel = RequireChannel(motion, node, kind);
         ComponentCurve curve = RequireCurve(channel, axis, index);
         KeyAsset copy = Clone(value);
@@ -760,13 +760,13 @@ public sealed partial class MotionEditor
         Changed?.Invoke(this, new MotionChangedEventArgs(kind));
     }
 
-    private MotionAsset Require(string name)
+    private TimelineAsset Require(string name)
     {
         ArgumentNullException.ThrowIfNull(name);
         return Document.Find(name) ?? throw new KeyNotFoundException($"세트 '{name}'가 없다.");
     }
 
-    private static ChannelAsset RequireChannel(MotionAsset motion, string node, MotionChannelKind kind)
+    private static ChannelAsset RequireChannel(TimelineAsset motion, string node, MotionChannelKind kind)
     {
         ArgumentNullException.ThrowIfNull(node);
         return motion.FindChannel(node, kind) ?? throw new KeyNotFoundException($"모션 '{motion.Name}'에 채널 {node}/{kind}가 없다.");

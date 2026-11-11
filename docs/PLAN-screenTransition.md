@@ -163,12 +163,18 @@
 | T2-2 | **그림은 층의 것.** 스킨(세트마다 그림 묶음 여럿)을 걷고 층이 그림을 직접 든다. 조각의 덧붙임(장 넘기기 · 놓임)도 걷는다 — 예시가 쓰지 않는다 | **끝**(2026-11-11) |
 | T2-3 | **기준값 하나.** 상대값/절대값 · 복원/유지의 고르기를 걷는다. 키는 "가만히 선 자세(배치)에 대한 값", 끝에서는 마지막 키가 남는다 — §3의 "절대값 · 유지로 고정"에서 **상대값**으로 바꾼다(배치를 옮겨도 움직임이 따라오고, 예시가 이미 그렇게 지어져 있다) | **끝**(2026-11-11) |
 | T2-4 ① | **타임라인을 세트 안으로**(소유자: 가 — 구조부터). 세트마다 타임라인 하나를 구조가 지킨다(`rigs[].timeline`). 모션 목록 · 모션 추가/지우기/이름 바꾸기, 돕는 손의 "이름 고치기" · `MotionNames`(구조 #6), 테스트 발판의 캐릭터 이름(구조 #8)을 걷는다 | **끝**(2026-11-11) |
-| T2-4 ② | **이름.** 세트 + 그 타임라인 → 전환, 노드 → 층, 문서 · 편집기 · 화면의 말 · 저작 파일의 이름과 스키마 | |
+| T2-4 ② | **이름.** 세트 + 그 타임라인 → 전환, 노드 → 층, 문서 · 편집기 · 화면의 말 · 저작 파일의 이름과 스키마. ⓐ 모델 · 명령 · 파일 ⓑ 화면의 말 · 주석 · 문서 | ⓐ **끝**(2026-11-11) |
 
 구조 #1 · #2에서 정한 것(한 걸음으로 걷었다 — 씬 그릇이 리그 스키마를 받아 트리를 세웠다):
 - 무대 = **세트 하나의 층들**. `StageTree.Build(세트)`가 1920×1080 무대 루트(`__root`) 밑에 층을 그 값 그대로 세운다 — 유니티 덤프 모양을 거치지 않는다. 노드 키는 층 id 그대로다(`set/` 접두사가 없다).
 - 걷은 것: `SceneAsset` · `SceneObject` · `ScenePreview` · "입을 수 있나"(`CanWear`) · 뷰포트의 오브젝트 고르기(`SelectedObjectId` · 클릭으로 오브젝트 집기), `RigSchemaFile` · `RigAssets` · `RigParts`, 코어의 `RigSchemaDto` · `RigSchemaLoader`와 그 테스트, `MotionPreview.Pose`의 키 접두사, 검증의 노드 표 인자(세트에서 바로 읽는다).
 - 조각(그림을 든 층) · 색 층 · 불투명도를 받는 층은 세트의 층에서 바로 읽는다. 무대의 그림은 화소까지 같다(라벨만 `set/Backdrop` → `Backdrop`).
+
+T2-4 ②ⓐ에서 정한 것:
+- 모델: `RigAsset` → `TransitionAsset`(`Kind` → `Name`, `Nodes` → `Layers`), `RigNodeAsset` → `LayerAsset`, `MotionAsset` → `TimelineAsset`(`Rig`는 걷었다 — 이름이 곧 전환), `MotionAssetCodec` → `TimelineCodec`, 문서의 `Rigs` → `Transitions` · `Motions` → `Timelines` · `FindRig` → `FindTransition`. 층 읽기(`LayerSheet`)의 이름 공간 `Rig` → `Import`.
+- 명령: `AddRig` · `RemoveRig` · `RenameRig` · `CloneRig` → `…Transition`, `AddRigNode` · `UpdateRigNode` · `RemoveRigNode` · `SetRigNodeParent` · `RenameRigNode` · `MoveRigNode` → `AddLayer` · `UpdateLayer` · `RemoveLayer` · `SetLayerParent` · `RenameLayer` · `MoveLayer`.
+- 저작 파일: `*.transition-authoring.json`, 스키마 `transition-authoring/1`(`transitions[]` — `name` · `layers[]` · `timeline`). 옛 판(`motion-authoring/*`)은 읽지 않는다. 예시 다섯을 다시 썼다.
+- **남긴 이름**: `MotionDocument` · `MotionEditor` · `MotionDocumentJson` — 이 툴은 "2D 움직임 저작 도구"라 맞다. 채널의 `node`(= 층 id)와 코어의 `RectNode*` — 사각형 계층의 키라는 뜻이라 그대로 둔다. 코어 `MotionClip.Rig`는 읽는 곳이 없어 걷었다.
 
 T2-4 ①에서 정한 것:
 - 세트가 타임라인을 든다(`RigAsset.Timeline`). 타임라인의 이름 · 세트는 주인 세트의 것이다(따로 적지 않는다). 세트를 지우면 타임라인도 함께 간다. 저작 파일 `motion-authoring/4`.

@@ -2,7 +2,7 @@ using Mt.Authoring;
 using Mt.Authoring.Editing;
 using Mt.Authoring.Model;
 using Mt.Authoring.Preview;
-using Mt.Authoring.Rig;
+using Mt.Authoring.Import;
 using Mt.Authoring.Serialization;
 using Mt.Authoring.Validation;
 
@@ -20,7 +20,7 @@ public sealed class DocumentSession
     {
         Editor = new MotionEditor(new MotionDocument());
         Editor.Changed += OnEditorChanged;
-        _assetFingerprint = RigsKeyOf(Editor.Document);
+        _assetFingerprint = TransitionsKeyOf(Editor.Document);
     }
 
     // ── 문서 ↔ 실은 그림 ──────────────────────────────────────────────
@@ -40,7 +40,7 @@ public sealed class DocumentSession
             return;
         }
 
-        string fingerprint = RigsKeyOf(Editor.Document);
+        string fingerprint = TransitionsKeyOf(Editor.Document);
 
         if (fingerprint == _assetFingerprint)
         {
@@ -56,14 +56,14 @@ public sealed class DocumentSession
 
     public string? DocumentPath { get; private set; }
 
-    private static string RigsKeyOf(MotionDocument document)
-        => string.Join("|", document.Rigs.Select(r => r.Kind + ":" + string.Join(",", r.Nodes.Select(n => $"{n.Id}<{n.Parent}@{n.X},{n.Y}#{n.Width}x{n.Height}r{n.Rotation}s{n.ScaleX},{n.ScaleY}c{n.Color}i{n.Image}{(n.Alpha ? "a" : "")}"))));
+    private static string TransitionsKeyOf(MotionDocument document)
+        => string.Join("|", document.Transitions.Select(r => r.Name + ":" + string.Join(",", r.Layers.Select(n => $"{n.Id}<{n.Parent}@{n.X},{n.Y}#{n.Width}x{n.Height}r{n.Rotation}s{n.ScaleX},{n.ScaleY}c{n.Color}i{n.Image}{(n.Alpha ? "a" : "")}"))));
 
     public string Status { get; private set; } = "";
 
     /// <summary>문서의 층들이 든 그림 전부 — 문서 기준 경로 → 파일 경로(파일이 없으면 null: 자리표시로 그린다).</summary>
     public IReadOnlyList<(string Image, string? Path)> LayerImages()
-        => Editor.Document.Rigs.SelectMany(r => r.Nodes).Select(n => n.Image).OfType<string>().Distinct(StringComparer.Ordinal).Select(image =>
+        => Editor.Document.Transitions.SelectMany(r => r.Layers).Select(n => n.Image).OfType<string>().Distinct(StringComparer.Ordinal).Select(image =>
         {
             string resolved = ResolveFromDocument(image);
             return (image, File.Exists(resolved) ? resolved : (string?)null);
@@ -94,8 +94,7 @@ public sealed class DocumentSession
     /// <summary>세트의 모양이나 층의 그림이 바뀌었다. 뷰포트가 다시 싣는다.</summary>
     public event EventHandler? AssetsChanged;
 
-    /// <summary>검증에 쓰는 rigKind → 노드 표.</summary>
-
+    /// <summary>문서의 문제 — 전환마다 그 층들로 검증한다.</summary>
     public IReadOnlyList<MotionProblem> Problems => MotionValidator.Validate(Editor.Document);
 
     public void SetStatus(string status)
@@ -118,7 +117,7 @@ public sealed class DocumentSession
         SetStatus($"열었다: {path}");
     }
 
-    /// <summary>자동 저장 — 문서 옆 <c>*.autosave.motion-authoring.json</c>. 저장 여부(IsDirty)는 건드리지 않는다. 경로가 없으면 안 한다.</summary>
+    /// <summary>자동 저장 — 문서 옆 <c>*.autosave.transition-authoring.json</c>. 저장 여부(IsDirty)는 건드리지 않는다. 경로가 없으면 안 한다.</summary>
     public string? AutoSave()
     {
         if (DocumentPath is null || !IsDirty)
@@ -158,7 +157,7 @@ public sealed class DocumentSession
         Editor.Changed += OnEditorChanged;
         DocumentPath = path;
         _savedRevision = Editor.Revision;
-        _assetFingerprint = RigsKeyOf(Editor.Document);
+        _assetFingerprint = TransitionsKeyOf(Editor.Document);
         DocumentReplaced?.Invoke(this, EventArgs.Empty);
     }
 

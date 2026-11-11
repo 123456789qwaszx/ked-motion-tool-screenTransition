@@ -88,7 +88,7 @@ public class ViewportViewTests
 
         try
         {
-            Assert.True(view.HasRig);
+            Assert.True(view.HasStage);
             Quad rest = view.SetQuad() ?? throw new InvalidOperationException("세트가 없다");
             Assert.Equal(0f, rest.Center.Y, 2);
 
@@ -389,11 +389,11 @@ public class ViewportViewTests
 
         try
         {
-            Assert.False(view.HasRig);
+            Assert.False(view.HasStage);
             Assert.Null(view.SetQuad());
 
             view.Bind(editor, "nod");
-            Assert.True(view.HasRig);
+            Assert.True(view.HasStage);
             Assert.NotNull(view.SetQuad());
 
             // 묶인 타임라인이 없으면 무대가 빈다.

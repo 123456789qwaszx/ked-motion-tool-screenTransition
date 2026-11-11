@@ -20,11 +20,11 @@ public class MotionAssetCodecTests
             Node = "N", Kind = MotionChannelKind.Euler,
             X = Curve(Fixtures.Key(0f, 0f), Fixtures.Key(1f, 0f)),
         };
-        MotionAsset asset = new RigAsset { Kind = "a" }.Timeline;
+        TimelineAsset asset = new TransitionAsset { Name = "a" }.Timeline;
         asset.Channels.Add(scale);
         asset.Channels.Add(euler);
 
-        MotionClip clip = MotionAssetCodec.ToClip(asset);
+        MotionClip clip = TimelineCodec.ToClip(asset);
 
         Assert.NotNull(clip.Channels[0].X);
         Assert.NotNull(clip.Channels[0].Y);

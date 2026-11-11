@@ -6,7 +6,7 @@ using Mt.Authoring.Model;
 namespace Mt.Authoring.Serialization;
 
 /// <summary>
-/// 저작 원본(<c>*.motion-authoring.json</c>)의 읽기·쓰기. 산출물이 아니라 툴의 살림이므로
+/// 저작 원본(<c>*.transition-authoring.json</c>)의 읽기·쓰기. 산출물이 아니라 툴의 살림이므로
 /// 바이트 정규성은 요구하지 않는다 — 다만 같은 문서면 같은 글자가 나와야 되돌리기 스냅샷과
 /// "바뀌었나" 비교가 선다(System.Text.Json은 결정적이다).
 ///
@@ -51,12 +51,12 @@ public static class MotionDocumentJson
         }
 
         // 역직렬화가 null을 남길 수 있는 목록은 빈 목록으로 — 모델의 불변 조건(목록은 null이 아니다)을 지킨다.
-        foreach (RigAsset rig in document.Rigs)
+        foreach (TransitionAsset rig in document.Transitions)
         {
-            rig.Nodes ??= new List<RigNodeAsset>();
+            rig.Layers ??= new List<LayerAsset>();
         }
 
-        foreach (MotionAsset motion in document.Motions)
+        foreach (TimelineAsset motion in document.Timelines)
         {
             motion.Channels ??= new List<ChannelAsset>();
 

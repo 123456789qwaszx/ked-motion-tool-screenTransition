@@ -51,7 +51,7 @@ public class MotionEventTests
     {
         MotionEditor editor = NewEditor();
         editor.AddMotionEvent("nod", 0.3f, "emoji", "땀");
-        MotionAsset nod = editor.Document.Find("nod")!;
+        TimelineAsset nod = editor.Document.Find("nod")!;
 
         Assert.Single(MotionEvents.Between(nod, 0.0, 0.3));
         Assert.Empty(MotionEvents.Between(nod, 0.3, 0.6));

@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Mt.Authoring.Rig;
+namespace Mt.Authoring.Import;
 
 /// <summary>층 하나 — 그림 파일과 무대 위의 자리(왼쪽 위 기준 px)·크기.</summary>
 public sealed record LayerEntry(string File, float Left, float Top, float Width, float Height);

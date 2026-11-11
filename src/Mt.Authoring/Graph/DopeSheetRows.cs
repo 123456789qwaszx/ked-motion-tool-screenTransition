@@ -40,7 +40,7 @@ public sealed record DopeRow(
 /// </summary>
 public static class DopeSheetRows
 {
-    public static List<DopeRow> Build(MotionAsset motion, Func<string, bool>? isCollapsed = null)
+    public static List<DopeRow> Build(TimelineAsset motion, Func<string, bool>? isCollapsed = null)
     {
         ArgumentNullException.ThrowIfNull(motion);
 
@@ -95,7 +95,7 @@ public static class DopeSheetRows
         return rows;
     }
 
-    private static List<DopeBlock> Group(MotionAsset motion, List<KeyRef> keys)
+    private static List<DopeBlock> Group(TimelineAsset motion, List<KeyRef> keys)
     {
         var blocks = new List<(float Time, List<KeyRef> Keys)>();
 

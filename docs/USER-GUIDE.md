@@ -5,7 +5,7 @@
 ## 1. 실행
 
 저장소 루트에서 `dotnet run --project src/Mt.App/Mt.App.csproj`. 빈 문서가 뜬다.
-설정은 `%APPDATA%\ked-motion-tool\settings.json`(리눅스는 `~/.config/ked-motion-tool/`)에, 자동 저장은 문서 옆 `<이름>.autosave.motion-authoring.json`에 남는다.
+설정은 `%APPDATA%\ked-motion-tool\settings.json`(리눅스는 `~/.config/ked-motion-tool/`)에, 자동 저장은 문서 옆 `<이름>.autosave.transition-authoring.json`에 남는다.
 
 ## 2. 화면
 
@@ -25,7 +25,7 @@
 
 ## 3. 예시 보기
 
-1. **열기…** → `examples/transitions/station/station.motion-authoring.json`.
+1. **열기…** → `examples/transitions/station/station.transition-authoring.json`.
 2. 왼쪽 세트 목록에서 `station`을 고른다. **Alt+`** — 처음부터 재생: 층들이 차례로 들어와 화면을 덮고 머물다 걷힌다. **Alt+Q**는 재생/일시정지.
 3. 재생 줄의 **무대만**을 켜면 무대 밖이 가려져 게임에서 보이는 그대로다.
 
@@ -50,4 +50,4 @@
 
 ## 6. 저장
 
-**다른 이름으로…** → `*.motion-authoring.json`(저작 원본). 산출물(유니티가 읽는 파일)은 아직 없다 — 소유자가 의도와 목적을 확정한 뒤의 일이다.
+**다른 이름으로…** → `*.transition-authoring.json`(저작 원본). 산출물(유니티가 읽는 파일)은 아직 없다 — 소유자가 의도와 목적을 확정한 뒤의 일이다.

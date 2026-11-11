@@ -9,7 +9,7 @@ public sealed partial class MotionEditor
     public int AddMotionEvent(string motionName, float time, string name, string? value = null)
     {
         ArgumentNullException.ThrowIfNull(name);
-        MotionAsset motion = Require(motionName);
+        TimelineAsset motion = Require(motionName);
         var added = new MotionEventAsset { T = ClampAt(time), Name = name.Trim(), Value = string.IsNullOrEmpty(value) ? null : value };
         Mutate(MotionChangeKind.Metadata, () => InsertEvent(motion, added));
         return motion.Events.IndexOf(added);
@@ -19,7 +19,7 @@ public sealed partial class MotionEditor
     public int UpdateMotionEvent(string motionName, int index, float time, string name, string? value)
     {
         ArgumentNullException.ThrowIfNull(name);
-        MotionAsset motion = Require(motionName);
+        TimelineAsset motion = Require(motionName);
         MotionEventAsset old = RequireEvent(motion, index);
         var next = new MotionEventAsset { T = ClampAt(time), Name = name.Trim(), Value = string.IsNullOrEmpty(value) ? null : value };
 
@@ -33,12 +33,12 @@ public sealed partial class MotionEditor
 
     public void RemoveMotionEvent(string motionName, int index)
     {
-        MotionAsset motion = Require(motionName);
+        TimelineAsset motion = Require(motionName);
         MotionEventAsset target = RequireEvent(motion, index);
         Mutate(MotionChangeKind.Metadata, () => motion.Events.Remove(target));
     }
 
-    private static void InsertEvent(MotionAsset motion, MotionEventAsset added)
+    private static void InsertEvent(TimelineAsset motion, MotionEventAsset added)
     {
         int at = motion.Events.Count;
 
@@ -54,7 +54,7 @@ public sealed partial class MotionEditor
         motion.Events.Insert(at, added);
     }
 
-    private static MotionEventAsset RequireEvent(MotionAsset motion, int index)
+    private static MotionEventAsset RequireEvent(TimelineAsset motion, int index)
     {
         if (index < 0 || index >= motion.Events.Count)
         {

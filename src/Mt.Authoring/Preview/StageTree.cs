@@ -15,13 +15,13 @@ public static class StageTree
     /// <summary>무대를 꽉 채우는 루트 노드의 키. 부모가 빈 노드는 이 밑에 선다.</summary>
     public const string RootKey = "__root";
 
-    public static RectNodeTree Build(RigAsset set)
+    public static RectNodeTree Build(TransitionAsset set)
     {
         ArgumentNullException.ThrowIfNull(set);
         var tree = new RectNodeTree(new RectSpace(Stage, Vec2.Half));
         tree.Add(RootKey, null, RectNodeState.StretchFull);
 
-        foreach (RigNodeAsset node in set.Nodes)
+        foreach (LayerAsset node in set.Layers)
         {
             tree.Add(node.Id, string.IsNullOrEmpty(node.Parent) ? RootKey : node.Parent, StateOf(node));
         }
@@ -30,7 +30,7 @@ public static class StageTree
     }
 
     /// <summary>노드의 가만히 선 자세 — 가운데 앵커 · 가운데 피벗.</summary>
-    public static RectNodeState StateOf(RigNodeAsset node) => new(
+    public static RectNodeState StateOf(LayerAsset node) => new(
         anchoredPosition: new Vec2(node.X, node.Y),
         anchorMin: Vec2.Half,
         anchorMax: Vec2.Half,

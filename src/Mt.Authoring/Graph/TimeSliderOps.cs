@@ -10,7 +10,7 @@ namespace Mt.Authoring.Graph;
 public static class TimeSliderOps
 {
     /// <summary>모든 커브에서 그 시각(허용 오차 안)의 키.</summary>
-    public static List<KeyRef> KeysAt(MotionAsset motion, double seconds)
+    public static List<KeyRef> KeysAt(TimelineAsset motion, double seconds)
     {
         ArgumentNullException.ThrowIfNull(motion);
         var result = new List<KeyRef>();
@@ -38,7 +38,7 @@ public static class TimeSliderOps
     }
 
     /// <summary>모든 커브에서 [a, b] 구간(허용 오차 포함)의 키 — 타임 슬라이더의 빨간 범위 선택.</summary>
-    public static List<KeyRef> KeysBetween(MotionAsset motion, double a, double b)
+    public static List<KeyRef> KeysBetween(TimelineAsset motion, double a, double b)
     {
         ArgumentNullException.ThrowIfNull(motion);
         double lo = Math.Min(a, b) - MotionRules.Tolerance;
@@ -73,7 +73,7 @@ public static class TimeSliderOps
     /// 뺄 때 <paramref name="atSeconds"/> 아래로는 안 내려가고, 닿은 자리의 키는 움직인 키가 이긴다.
     /// 돌려주는 것은 바뀐 커브만 — 그대로 <c>SetKeysMany</c>에 준다.
     /// </summary>
-    public static List<(CurveRef Curve, IEnumerable<KeyAsset> Keys)> Inbetween(MotionAsset motion, float atSeconds, float deltaSeconds)
+    public static List<(CurveRef Curve, IEnumerable<KeyAsset> Keys)> Inbetween(TimelineAsset motion, float atSeconds, float deltaSeconds)
     {
         ArgumentNullException.ThrowIfNull(motion);
         var edits = new List<(CurveRef, IEnumerable<KeyAsset>)>();

@@ -1,9 +1,9 @@
 {
-  "schema": "motion-authoring/4",
-  "rigs": [
+  "schema": "transition-authoring/1",
+  "transitions": [
     {
-      "kind": "mercury",
-      "nodes": [
+      "name": "mercury",
+      "layers": [
         {
           "id": "Backdrop",
           "parent": "",

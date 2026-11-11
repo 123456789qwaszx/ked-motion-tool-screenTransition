@@ -34,7 +34,7 @@ public class TransitionExampleShots
                     root = root.Parent;
                 }
 
-                window.Session.Open(Path.Combine(root!.FullName, "examples", "transitions", "station", "station.motion-authoring.json"));
+                window.Session.Open(Path.Combine(root!.FullName, "examples", "transitions", "station", "station.transition-authoring.json"));
                 Directory.CreateDirectory(directory);
 
                 void Shot(string name)
@@ -62,7 +62,7 @@ public class TransitionExampleShots
                 window.StageOnlyChecked = false;
 
                 // 기둥과 노을.
-                window.Session.Open(Path.Combine(root!.FullName, "examples", "transitions", "pillar", "pillar.motion-authoring.json"));
+                window.Session.Open(Path.Combine(root!.FullName, "examples", "transitions", "pillar", "pillar.transition-authoring.json"));
                 window.SelectSet("pillar");
                 window.StageOnlyChecked = true;
 
@@ -89,7 +89,7 @@ public class TransitionExampleShots
                 // 나머지 세 장면 — 타임라인을 따라.
                 foreach (string name in new[] { "lapis", "heredity", "mercury" })
                 {
-                    window.Session.Open(Path.Combine(root!.FullName, "examples", "transitions", name, name + ".motion-authoring.json"));
+                    window.Session.Open(Path.Combine(root!.FullName, "examples", "transitions", name, name + ".transition-authoring.json"));
                     window.SelectSet(name);
                     window.StageOnlyChecked = true;
 
@@ -103,7 +103,7 @@ public class TransitionExampleShots
                     window.StageOnlyChecked = false;
                 }
 
-                window.Session.Open(Path.Combine(root!.FullName, "examples", "transitions", "station", "station.motion-authoring.json"));
+                window.Session.Open(Path.Combine(root!.FullName, "examples", "transitions", "station", "station.transition-authoring.json"));
 
                 // 세트를 연다 — 배치 모드.
                 window.SelectSet("station");

@@ -10,7 +10,7 @@ using Mt.Authoring.Model;
 
 namespace Mt.App;
 
-// 세트 — 오브젝트들의 계층 + 그림 + 애니메이션들의 한 덩어리. 데이터는 툴이 정의한 리그(RigAsset)다.
+// 세트 — 오브젝트들의 계층 + 그림 + 애니메이션들의 한 덩어리. 데이터는 툴이 정의한 리그(TransitionAsset)다.
 // 왼쪽 목록에서 세트를 열면 뷰포트·하이어아키가 그 세트만 보이고, 하이어아키에서 오브젝트를 더하고 지우고 옮긴다.
 public partial class MainWindow
 {
@@ -48,18 +48,18 @@ public partial class MainWindow
     internal void PickColorSwatch(string color) => ApplySwatch(color);
 
     private List<string> SwatchColors()
-        => _session.Editor.Document.Rigs.SelectMany(r => r.Nodes).Select(n => n.Color).OfType<string>().Where(c => c.Length > 0)
+        => _session.Editor.Document.Transitions.SelectMany(r => r.Layers).Select(n => n.Color).OfType<string>().Where(c => c.Length > 0)
             .Concat(DefaultSwatches).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
     private void ApplySwatch(string color)
     {
-        if (EditedRigNode is null)
+        if (EditedLayer is null)
         {
             return;
         }
 
         _rigNodeColor.Text = color;
-        Guard("색", CommitRigNode);
+        Guard("색", CommitLayer);
     }
 
     private void OpenColorSwatches()
@@ -110,16 +110,16 @@ public partial class MainWindow
         => (SelectedSet, _rigNodeSelected, (_setList.ItemsSource as IEnumerable<string> ?? Array.Empty<string>()).ToList(), _setNodePanel.IsVisible && _rigNodeFields.IsEnabled);
 
     /// <summary>테스트 손잡이 — 오브젝트 칸들.</summary>
-    internal (TextBox Id, ComboBox Parent, TextBox X, TextBox Y, TextBox W, TextBox H, TextBox Image, CheckBox Alpha) RigNodeBoxes
+    internal (TextBox Id, ComboBox Parent, TextBox X, TextBox Y, TextBox W, TextBox H, TextBox Image, CheckBox Alpha) LayerBoxes
         => (_rigNodeId, _rigNodeParent, _rigNodeX, _rigNodeY, _rigNodeW, _rigNodeH, _rigNodeImage, _rigNodeAlpha);
 
     /// <summary>테스트 손잡이 — 가만히 선 자세의 회전·배율 칸.</summary>
-    internal (TextBox Rotation, TextBox ScaleX, TextBox ScaleY) RigNodePoseBoxes => (_rigNodeRotation, _rigNodeScaleX, _rigNodeScaleY);
+    internal (TextBox Rotation, TextBox ScaleX, TextBox ScaleY) LayerPoseBoxes => (_rigNodeRotation, _rigNodeScaleX, _rigNodeScaleY);
 
     /// <summary>테스트 손잡이 — 색 칸과 "색 사각형 더하기".</summary>
-    internal TextBox RigNodeColorBox => _rigNodeColor;
+    internal TextBox LayerColorBox => _rigNodeColor;
 
-    internal string? AddColorNodeFromForm() => AddColorNode(EditedRigNode?.Id ?? "");
+    internal string? AddColorNodeFromForm() => AddColorNode(EditedLayer?.Id ?? "");
 
     /// <summary>테스트 손잡이 — 그림 파일을 그 자리(루트 공간)에 그림 오브젝트로.</summary>
     internal string? AddImageObjectFromForm(string path, Ked.Presentation.Core.Vec2 at) => AddImageObject(path, at);
@@ -170,9 +170,9 @@ public partial class MainWindow
 
     internal void MoveSetNodeFromForm(int direction) => MoveSelectedSetNode(direction);
 
-    private RigAsset? EditedRig => _session.Editor.Document.FindRig(SelectedSet);
+    private TransitionAsset? EditedTransition => _session.Editor.Document.FindTransition(SelectedSet);
 
-    private RigNodeAsset? EditedRigNode => _rigNodeSelected is { } id ? EditedRig?.Find(id) : null;
+    private LayerAsset? EditedLayer => _rigNodeSelected is { } id ? EditedTransition?.Find(id) : null;
 
     private readonly TextBox _setName = new() { FontSize = 11, PlaceholderText = "(세트를 연다)" };
 
@@ -231,7 +231,7 @@ public partial class MainWindow
             {
                 Guard("세트 이름", () =>
                 {
-                    _session.Editor.RenameRig(kind, text);
+                    _session.Editor.RenameTransition(kind, text);
                     RefreshSets();
                     _setList.SelectedItem = text.Trim();
                 });
@@ -274,11 +274,11 @@ public partial class MainWindow
 
         OnCommit(_rigNodeId, text =>
         {
-            if (!_refreshing && SelectedSet is { } kind && EditedRigNode is { } node && text.Trim() != node.Id)
+            if (!_refreshing && SelectedSet is { } kind && EditedLayer is { } node && text.Trim() != node.Id)
             {
                 Guard("오브젝트 이름", () =>
                 {
-                    _session.Editor.RenameRigNode(kind, node.Id, text);
+                    _session.Editor.RenameLayer(kind, node.Id, text);
                     _rigNodeSelected = text.Trim();
                     _viewport.SelectedNode = _rigNodeSelected;
                     RefreshSetNodePanel();
@@ -287,9 +287,9 @@ public partial class MainWindow
         });
         _rigNodeParent.SelectionChanged += (_, _) =>
         {
-            if (!_refreshing && SelectedSet is { } kind && EditedRigNode is { } node && _rigNodeParent.SelectedItem is string chosen)
+            if (!_refreshing && SelectedSet is { } kind && EditedLayer is { } node && _rigNodeParent.SelectedItem is string chosen)
             {
-                Guard("오브젝트 부모", () => _session.Editor.SetRigNodeParent(kind, node.Id, chosen == RootParentChoice ? null : chosen));
+                Guard("오브젝트 부모", () => _session.Editor.SetLayerParent(kind, node.Id, chosen == RootParentChoice ? null : chosen));
             }
         };
 
@@ -331,10 +331,10 @@ public partial class MainWindow
 
         foreach (TextBox box in new[] { _rigNodeX, _rigNodeY, _rigNodeW, _rigNodeH, _rigNodeRotation, _rigNodeScaleX, _rigNodeScaleY, _rigNodeColor, _rigNodeImage })
         {
-            OnCommit(box, _ => CommitRigNode());
+            OnCommit(box, _ => CommitLayer());
         }
 
-        _rigNodeAlpha.IsCheckedChanged += (_, _) => CommitRigNode();
+        _rigNodeAlpha.IsCheckedChanged += (_, _) => CommitLayer();
         return _setNodePanel;
     }
 
@@ -387,7 +387,7 @@ public partial class MainWindow
         try
         {
             string? selected = SelectedSet;
-            List<string> kinds = _session.Editor.Document.Rigs.Select(r => r.Kind).OrderBy(k => k, StringComparer.Ordinal).ToList();
+            List<string> kinds = _session.Editor.Document.Transitions.Select(r => r.Name).OrderBy(k => k, StringComparer.Ordinal).ToList();
             _setList.ItemsSource = kinds;
             _setList.SelectedIndex = selected is null ? -1 : kinds.IndexOf(selected); // 지워졌으면(되돌리기 등) 풀린다
         }
@@ -404,12 +404,12 @@ public partial class MainWindow
     {
         string kind = "set";
 
-        for (int i = 2; _session.Editor.Document.FindRig(kind) is not null; i++)
+        for (int i = 2; _session.Editor.Document.FindTransition(kind) is not null; i++)
         {
             kind = $"set_{i.ToString(CultureInfo.InvariantCulture)}";
         }
 
-        _session.Editor.AddRig(new RigAsset { Kind = kind, Nodes = { new RigNodeAsset { Id = "Body", Alpha = true } } });
+        _session.Editor.AddTransition(new TransitionAsset { Name = kind, Layers = { new LayerAsset { Id = "Body", Alpha = true } } });
         RefreshSets();
         _setList.SelectedItem = kind;
         LayoutModeChecked = true; // 새 세트는 층부터 놓는다
@@ -423,7 +423,7 @@ public partial class MainWindow
     /// </summary>
     private string? AddImageObject(string path, Ked.Presentation.Core.Vec2 at)
     {
-        if (SelectedSet is not { } kind || EditedRig is not { } rig)
+        if (SelectedSet is not { } kind || EditedTransition is not { } rig)
         {
             return null;
         }
@@ -452,15 +452,15 @@ public partial class MainWindow
             height = size.Height;
         }
 
-        string under = EditedRigNode is { Image: null } group ? group.Id : "";
+        string under = EditedLayer is { Image: null } group ? group.Id : "";
         at = _viewport.ToSetLocal(under, at); // 놓은 자리(루트 공간)를 그 부모 안의 좌표로
         MotionEditor editor = _session.Editor;
         string image = _session.RelativeToDocument(path);
 
         editor.Batch(MotionChangeKind.Document, () =>
         {
-            editor.AddRigNode(kind, id, under);
-            editor.UpdateRigNode(kind, id, new RigNodeAsset { X = MathF.Round(at.X), Y = MathF.Round(at.Y), Width = width, Height = height, Image = image, Alpha = true });
+            editor.AddLayer(kind, id, under);
+            editor.UpdateLayer(kind, id, new LayerAsset { X = MathF.Round(at.X), Y = MathF.Round(at.Y), Width = width, Height = height, Image = image, Alpha = true });
         });
 
         SelectSetNode(id);
@@ -515,18 +515,18 @@ public partial class MainWindow
     {
         if (SelectedSet is { } kind)
         {
-            _session.Editor.RemoveRig(kind);
+            _session.Editor.RemoveTransition(kind);
         }
     }
 
-    private void CommitRigNode()
+    private void CommitLayer()
     {
-        if (_refreshing || SelectedSet is not { } kind || EditedRigNode is not { } node)
+        if (_refreshing || SelectedSet is not { } kind || EditedLayer is not { } node)
         {
             return;
         }
 
-        var value = new RigNodeAsset
+        var value = new LayerAsset
         {
             X = TryFloat(_rigNodeX.Text ?? "", out float x) ? x : node.X,
             Y = TryFloat(_rigNodeY.Text ?? "", out float y) ? y : node.Y,
@@ -539,13 +539,13 @@ public partial class MainWindow
             Image = _rigNodeImage.Text,
             Alpha = _rigNodeAlpha.IsChecked == true,
         };
-        Guard("오브젝트 값", () => _session.Editor.UpdateRigNode(kind, node.Id, value));
+        Guard("오브젝트 값", () => _session.Editor.UpdateLayer(kind, node.Id, value));
     }
 
     /// <summary>오브젝트(묶음)를 더한다 — 고른 오브젝트 밑에(없으면 맨 위에). 이름은 Node1…. 그림 오브젝트는 "그림 가져오기…"로.</summary>
     private string? AddSetNode(string? under = null)
     {
-        if (SelectedSet is not { } kind || EditedRig is not { } rig)
+        if (SelectedSet is not { } kind || EditedTransition is not { } rig)
         {
             return null;
         }
@@ -557,7 +557,7 @@ public partial class MainWindow
             id = "Node" + i.ToString(CultureInfo.InvariantCulture);
         }
 
-        _session.Editor.AddRigNode(kind, id, under ?? EditedRigNode?.Id);
+        _session.Editor.AddLayer(kind, id, under ?? EditedLayer?.Id);
         SelectSetNode(id);
         return id;
     }
@@ -565,7 +565,7 @@ public partial class MainWindow
     /// <summary>색 사각형을 더한다 — 오브젝트를 만들고 크기와 색을 주는 것이 한 칸. 이름은 Color1….</summary>
     private string? AddColorNode(string under)
     {
-        if (SelectedSet is not { } kind || EditedRig is not { } rig)
+        if (SelectedSet is not { } kind || EditedTransition is not { } rig)
         {
             return null;
         }
@@ -580,8 +580,8 @@ public partial class MainWindow
         MotionEditor editor = _session.Editor;
         editor.Batch(MotionChangeKind.Document, () =>
         {
-            editor.AddRigNode(kind, id, under);
-            editor.UpdateRigNode(kind, id, new RigNodeAsset { Width = 400f, Height = 300f, Color = "#3D5A80", Alpha = true });
+            editor.AddLayer(kind, id, under);
+            editor.UpdateLayer(kind, id, new LayerAsset { Width = 400f, Height = 300f, Color = "#3D5A80", Alpha = true });
         });
         SelectSetNode(id);
         return id;
@@ -589,19 +589,19 @@ public partial class MainWindow
 
     private void RemoveSelectedSetNode()
     {
-        if (SelectedSet is { } kind && EditedRigNode is { } node)
+        if (SelectedSet is { } kind && EditedLayer is { } node)
         {
             string? parent = node.Parent.Length > 0 ? node.Parent : null;
-            _session.Editor.RemoveRigNode(kind, node.Id);
+            _session.Editor.RemoveLayer(kind, node.Id);
             SelectSetNode(parent);
         }
     }
 
     private void MoveSelectedSetNode(int direction)
     {
-        if (SelectedSet is { } kind && EditedRigNode is { } node)
+        if (SelectedSet is { } kind && EditedLayer is { } node)
         {
-            _session.Editor.MoveRigNode(kind, node.Id, direction);
+            _session.Editor.MoveLayer(kind, node.Id, direction);
         }
     }
 
@@ -609,7 +609,7 @@ public partial class MainWindow
     private void AddSetMenu(object? target)
     {
         string? nodeId = target is HierarchyNode { NodeId: { } id } ? id : null;
-        RigAsset? rig = EditedRig;
+        TransitionAsset? rig = EditedTransition;
 
         MenuItem Item(ItemsControl into, string header, Action action, bool enabled = true)
         {
@@ -640,10 +640,10 @@ public partial class MainWindow
         bool hidden = _viewport.IsSetNodeHidden(nodeId);
         Item(_hierarchyMenu, solo ? "이것만 보기 풀기" : "이것만 보기 (솔로)", () => SetSetNodeView(nodeId, solo: !solo, hidden: null));
         Item(_hierarchyMenu, hidden ? "보이기" : "숨기기", () => SetSetNodeView(nodeId, solo: null, hidden: !hidden));
-        Item(_hierarchyMenu, "전부 보이기", () => SetSetNodeView(null, null, null), enabled: _viewport.SoloSetNode is not null || rig.Nodes.Any(n => _viewport.IsSetNodeHidden(n.Id)));
+        Item(_hierarchyMenu, "전부 보이기", () => SetSetNodeView(null, null, null), enabled: _viewport.SoloSetNode is not null || rig.Layers.Any(n => _viewport.IsSetNodeHidden(n.Id)));
 
         // 시차 — 고른 애니메이션에서 이 오브젝트의 움직임을 통째로 민다(키를 하나씩 옮기지 않는다).
-        if (_graph.Motion is { } animation && animation.Rig == rig.Kind)
+        if (_graph.Motion is { } animation && animation.Name == rig.Name)
         {
             _hierarchyMenu.Items.Add(new Separator());
             var shift = new MenuItem { Header = $"움직임 밀기 — {animation.Name}", FontSize = 11, IsEnabled = animation.Channels.Any(c => c.Node == nodeId) };
@@ -695,7 +695,7 @@ public partial class MainWindow
         foreach (string choice in ParentChoicesOf(rig, node))
         {
             string captured = choice;
-            Item(parents, choice + ((choice == RootParentChoice ? "" : choice) == node.Parent ? "  ✓" : ""), () => _session.Editor.SetRigNodeParent(rig.Kind, node.Id, captured == RootParentChoice ? null : captured));
+            Item(parents, choice + ((choice == RootParentChoice ? "" : choice) == node.Parent ? "  ✓" : ""), () => _session.Editor.SetLayerParent(rig.Name, node.Id, captured == RootParentChoice ? null : captured));
         }
 
         _hierarchyMenu.Items.Add(parents);
@@ -725,7 +725,7 @@ public partial class MainWindow
             return;
         }
 
-        if (EditedRig?.Find(node) is { Alpha: false })
+        if (EditedTransition?.Find(node) is { Alpha: false })
         {
             _session.SetStatus($"{node}: 불투명도를 받지 않는 오브젝트다 — \"불투명도를 받는다\"를 켠다.");
             return;
@@ -750,12 +750,12 @@ public partial class MainWindow
     /// <summary>그 오브젝트와 그 뒤의 형제들에 차례로 시차를 준다 — 첫째(고른 것)는 그대로, 다음은 step, 그다음은 2·step… 한 칸.</summary>
     private void StaggerSetNodesFrom(string node, float step)
     {
-        if (_graph.Motion is not { } motion || EditedRig is not { } rig || rig.Find(node) is not { } first)
+        if (_graph.Motion is not { } motion || EditedTransition is not { } rig || rig.Find(node) is not { } first)
         {
             return;
         }
 
-        List<string> siblings = rig.Nodes.Where(n => n.Parent == first.Parent).Select(n => n.Id).SkipWhile(id => id != node).ToList();
+        List<string> siblings = rig.Layers.Where(n => n.Parent == first.Parent).Select(n => n.Id).SkipWhile(id => id != node).ToList();
         _session.Editor.StaggerNodes(motion.Name, siblings, step);
     }
 
@@ -785,12 +785,12 @@ public partial class MainWindow
     }
 
     /// <summary>부모로 고를 수 있는 것 — 제 식구(밑의 오브젝트)가 아닌 것.</summary>
-    private static List<string> ParentChoicesOf(RigAsset rig, RigNodeAsset node)
+    private static List<string> ParentChoicesOf(TransitionAsset rig, LayerAsset node)
     {
         var parents = new List<string> { RootParentChoice };
         var family = new HashSet<string>(StringComparer.Ordinal) { node.Id };
 
-        foreach (RigNodeAsset n in rig.Nodes)
+        foreach (LayerAsset n in rig.Layers)
         {
             if (family.Contains(n.Parent))
             {
@@ -811,19 +811,19 @@ public partial class MainWindow
 
         try
         {
-            RigAsset? rig = EditedRig;
+            TransitionAsset? rig = EditedTransition;
 
             if (rig?.Find(_rigNodeSelected ?? "") is null)
             {
                 _rigNodeSelected = null;
             }
 
-            RigNodeAsset? node = EditedRigNode;
+            LayerAsset? node = EditedLayer;
             _setNodePanel.IsVisible = rig is not null;
             _rigNodeFields.IsEnabled = node is not null;
             _setNodeTitle.Text = rig is null ? ""
-                : node is null ? $"세트 {rig.Kind} — 오브젝트 {rig.Nodes.Count}개. 하이어아키에서 오브젝트를 고르면 여기서 고친다(우클릭: 더하기 · 지우기 · 순서 · 부모)"
-                : $"세트 {rig.Kind} › {node.Id}";
+                : node is null ? $"세트 {rig.Name} — 오브젝트 {rig.Layers.Count}개. 하이어아키에서 오브젝트를 고르면 여기서 고친다(우클릭: 더하기 · 지우기 · 순서 · 부모)"
+                : $"세트 {rig.Name} › {node.Id}";
 
             void Write(TextBox box, string text)
             {

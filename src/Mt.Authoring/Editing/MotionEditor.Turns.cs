@@ -17,7 +17,7 @@ public sealed partial class MotionEditor
     /// </summary>
     public bool HideUntilTurn(string motionName, string node)
     {
-        MotionAsset motion = Require(motionName);
+        TimelineAsset motion = Require(motionName);
 
         if (FirstChange(motion, node) is not { } start || start <= MotionRules.Tolerance)
         {
@@ -42,7 +42,7 @@ public sealed partial class MotionEditor
     /// </summary>
     public bool HideAfterTurn(string motionName, string node)
     {
-        MotionAsset motion = Require(motionName);
+        TimelineAsset motion = Require(motionName);
 
         if (LastChange(motion, node) is not { } end || end >= motion.Duration - MotionRules.Tolerance)
         {
@@ -67,14 +67,14 @@ public sealed partial class MotionEditor
     /// <summary>그 애니메이션이 움직이는 오브젝트 전부에 <see cref="HideUntilTurn"/> — 한 칸. 숨긴 오브젝트의 수.</summary>
     public int HideAllUntilTurn(string motionName)
     {
-        MotionAsset motion = Require(motionName);
+        TimelineAsset motion = Require(motionName);
         int count = 0;
         Batch(MotionChangeKind.Keys, () =>
         {
             foreach (string node in motion.Channels.Where(c => c.Kind != MotionChannelKind.Alpha).Select(c => c.Node).Distinct().ToList())
             {
                 // 불투명도를 받을 수 있는 오브젝트만(세트의 표시를 본다).
-                if (Document.FindRig(motion.Rig)?.Find(node) is { Alpha: false })
+                if (Document.FindTransition(motion.Name)?.Find(node) is { Alpha: false })
                 {
                     continue;
                 }
@@ -90,7 +90,7 @@ public sealed partial class MotionEditor
 
     private static KeyAsset Flat(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Flat };
 
-    private void SetAlphaCurve(MotionAsset motion, string node, List<KeyAsset> keys)
+    private void SetAlphaCurve(TimelineAsset motion, string node, List<KeyAsset> keys)
     {
         Batch(MotionChangeKind.Keys, () =>
         {
@@ -103,14 +103,14 @@ public sealed partial class MotionEditor
         });
     }
 
-    private static IEnumerable<List<KeyAsset>> MovingCurves(MotionAsset motion, string node)
+    private static IEnumerable<List<KeyAsset>> MovingCurves(TimelineAsset motion, string node)
         => motion.Channels.Where(c => c.Node == node && c.Kind != MotionChannelKind.Alpha)
             .SelectMany(c => new[] { c.Get(Axis.X), c.Get(Axis.Y), c.Get(Axis.Z) })
             .Where(curve => curve is { Keys.Count: > 1 })
             .Select(curve => curve!.Keys);
 
     /// <summary>그 오브젝트의 커브들이 처음으로 값이 바뀌기 시작하는 시각 — 움직임이 없으면 null.</summary>
-    private static float? FirstChange(MotionAsset motion, string node)
+    private static float? FirstChange(TimelineAsset motion, string node)
     {
         float? first = null;
 
@@ -130,7 +130,7 @@ public sealed partial class MotionEditor
     }
 
     /// <summary>그 오브젝트의 커브들이 마지막으로 값이 바뀌기를 마치는 시각 — 움직임이 없으면 null.</summary>
-    private float? LastChange(MotionAsset motion, string node)
+    private float? LastChange(TimelineAsset motion, string node)
     {
         float? last = null;
 

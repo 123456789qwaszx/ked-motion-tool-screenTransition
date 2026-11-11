@@ -61,7 +61,7 @@ public class MainWindowTests
                 window.AddFigureTimeline("nod", 0.6f);
 
                 Assert.Equal("nod", window.Viewport.MotionName);
-                Assert.True(window.Viewport.HasRig);
+                Assert.True(window.Viewport.HasStage);
                 Assert.NotNull(window.Viewport.SetQuad());
 
                 window.Viewport.ScrubTo(0.25);
@@ -191,12 +191,12 @@ public class MainWindowTests
 
                 // 설정: 스냅을 끄고 창을 닫으면 파일에 남는다.
                 window.Settings.SnapEnabled = false;
-                string documentPath = Path.Combine(directory, "doc.motion-authoring.json");
+                string documentPath = Path.Combine(directory, "doc.transition-authoring.json");
                 window.Session.Save(documentPath);
                 window.Session.Editor.SetDuration("nod", 0.7f);
                 string? autosaved = window.Session.AutoSave();
                 Assert.NotNull(autosaved);
-                Assert.Equal(Path.Combine(directory, "doc.autosave.motion-authoring.json"), autosaved);
+                Assert.Equal(Path.Combine(directory, "doc.autosave.transition-authoring.json"), autosaved);
                 Assert.True(File.Exists(autosaved!));
                 Assert.True(window.Session.IsDirty);
             }
@@ -222,8 +222,8 @@ public class MainWindowTests
             try
             {
                 var editor = window.Session.Editor;
-                editor.AddTimeline("pop", 0.5f, RigTemplates.Emoji());
-                editor.AddTimeline("nod", 0.5f, RigTemplates.Figure());
+                editor.AddTimeline("pop", 0.5f, TransitionTemplates.Emoji());
+                editor.AddTimeline("nod", 0.5f, TransitionTemplates.Figure());
 
                 window.SelectSet("pop");
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
@@ -256,7 +256,7 @@ public class MainWindowTests
                 var y = new CurveRef("MoverY", MotionChannelKind.Position, Axis.Y);
                 window.AddChannelFromForm(y.Node, y.Kind);
                 window.Session.Editor.SetKeys("nod", y.Node, y.Kind, y.Axis, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -18f), TestDocuments.Key(0.6f, 0f) });
-                MotionAsset Nod() => window.Session.Editor.Document.Find("nod")!;
+                TimelineAsset Nod() => window.Session.Editor.Document.Find("nod")!;
 
                 // 2 다음 키 · 1 이전 키 (물리 키로 — 포커스가 어디 있든 듣는다)
                 window.KeyPressQwerty(PhysicalKey.Digit2, RawInputModifiers.None);
@@ -508,7 +508,7 @@ public class MainWindowTests
             {
                 window.AddFigureTimeline("step", 0.6f);
                 var editor = window.Session.Editor;
-                MotionAsset Step() => editor.Document.Find("step")!;
+                TimelineAsset Step() => editor.Document.Find("step")!;
                 window.AutoKeyChecked = false;
                 window.Viewport.ScrubTo(0.25);
                 window.SelectInHierarchy("Mover");

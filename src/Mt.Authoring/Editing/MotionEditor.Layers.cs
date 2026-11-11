@@ -1,6 +1,6 @@
 using Ked.Presentation.Core;
 using Mt.Authoring.Model;
-using Mt.Authoring.Rig;
+using Mt.Authoring.Import;
 
 namespace Mt.Authoring.Editing;
 
@@ -20,7 +20,7 @@ public sealed partial class MotionEditor
     {
         ArgumentNullException.ThrowIfNull(sheet);
         ArgumentNullException.ThrowIfNull(imageFolder);
-        RigAsset rig = RequireRig(kind);
+        TransitionAsset rig = RequireTransition(kind);
 
         if (sheet.Layers.Count == 0)
         {
@@ -34,15 +34,15 @@ public sealed partial class MotionEditor
         {
             if (sheet.Background is { } background && rig.Find(BackdropNode) is null)
             {
-                AddRigNode(kind, BackdropNode, parent);
-                UpdateRigNode(kind, BackdropNode, new RigNodeAsset { Width = stageSize.X, Height = stageSize.Y, Color = background, Alpha = true });
+                AddLayer(kind, BackdropNode, parent);
+                UpdateLayer(kind, BackdropNode, new LayerAsset { Width = stageSize.X, Height = stageSize.Y, Color = background, Alpha = true });
             }
 
             foreach (LayerEntry layer in sheet.Layers)
             {
                 string id = UniqueNodeId(rig, NodeIdFrom(layer.File));
-                AddRigNode(kind, id, parent);
-                UpdateRigNode(kind, id, new RigNodeAsset
+                AddLayer(kind, id, parent);
+                UpdateLayer(kind, id, new LayerAsset
                 {
                     // 표는 왼쪽 위 기준(y 아래가 +), 세트는 가운데 기준(y 위가 +).
                     X = layer.Left + layer.Width / 2f - stageSize.X / 2f,
@@ -67,7 +67,7 @@ public sealed partial class MotionEditor
         return stem.Length > 0 && char.IsAsciiLetter(stem[0]) ? stem : "Layer";
     }
 
-    private static string UniqueNodeId(RigAsset rig, string stem)
+    private static string UniqueNodeId(TransitionAsset rig, string stem)
     {
         string id = stem;
 

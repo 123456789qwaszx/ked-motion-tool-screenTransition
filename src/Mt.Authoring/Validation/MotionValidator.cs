@@ -26,19 +26,19 @@ public static class MotionValidator
     public static IReadOnlyList<MotionProblem> Validate(MotionDocument document)
     {
         ArgumentNullException.ThrowIfNull(document);
-        return document.Rigs.SelectMany(ValidateTimeline).ToList();
+        return document.Transitions.SelectMany(ValidateTimeline).ToList();
     }
 
     /// <summary>세트의 타임라인 — 채널의 노드는 그 세트에 있어야 하고, 알파 채널은 불투명도를 받는 노드에만 놓인다.</summary>
-    public static IReadOnlyList<MotionProblem> ValidateTimeline(RigAsset set)
+    public static IReadOnlyList<MotionProblem> ValidateTimeline(TransitionAsset set)
     {
         ArgumentNullException.ThrowIfNull(set);
-        MotionAsset motion = set.Timeline;
+        TimelineAsset motion = set.Timeline;
         var problems = new List<MotionProblem>();
-        var nodeIds = new HashSet<string>(set.Nodes.Select(n => n.Id), StringComparer.Ordinal);
-        var alphaNodes = set.Nodes.Where(n => n.Alpha).Select(n => n.Id).ToList();
+        var nodeIds = new HashSet<string>(set.Layers.Select(n => n.Id), StringComparer.Ordinal);
+        var alphaNodes = set.Layers.Where(n => n.Alpha).Select(n => n.Id).ToList();
 
-        MotionClip clip = MotionAssetCodec.ToClip(motion);
+        MotionClip clip = TimelineCodec.ToClip(motion);
 
         if (!MotionRules.TryValidate(clip, nodeIds, out string reason))
         {

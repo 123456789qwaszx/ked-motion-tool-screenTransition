@@ -23,7 +23,7 @@ public sealed class KeyClipboard
     public int Count => Items.Sum(i => i.Keys.Count);
 
     /// <summary>선택을 복사한다. 키가 하나도 없으면 null.</summary>
-    public static KeyClipboard? Copy(MotionAsset motion, IEnumerable<KeyRef> keys)
+    public static KeyClipboard? Copy(TimelineAsset motion, IEnumerable<KeyRef> keys)
     {
         ArgumentNullException.ThrowIfNull(motion);
         ArgumentNullException.ThrowIfNull(keys);

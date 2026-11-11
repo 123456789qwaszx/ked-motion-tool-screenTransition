@@ -21,7 +21,7 @@ public class MotionRulesTests
         => new() { Node = node, Kind = kind, X = x, Y = y, Z = z };
 
     private static MotionClip Clip(float duration = 0.6f, params MotionChannel[] channels)
-        => new() { Name = "nod", Rig = "figure", Duration = duration, Channels = channels };
+        => new() { Name = "nod", Duration = duration, Channels = channels };
 
     private static MotionChannel Nod => Channel(y: Keys((0f, 0f), (0.3f, -18f), (0.6f, 0f)));
 

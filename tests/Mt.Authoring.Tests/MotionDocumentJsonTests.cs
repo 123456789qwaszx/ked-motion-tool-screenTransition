@@ -18,7 +18,7 @@ public class MotionDocumentJsonTests
 
         Assert.Equal(first, second);
         Assert.Equal(AuthoringFormat.AuthoringSchema, read.Schema);
-        Assert.Equal(document.Rigs.Select(r => r.Kind), read.Rigs.Select(r => r.Kind));
+        Assert.Equal(document.Transitions.Select(r => r.Name), read.Transitions.Select(r => r.Name));
         Assert.DoesNotContain("\"notes\"", first, StringComparison.Ordinal); // 메모는 없다(소유자, 2026-10-28)
     }
 
@@ -39,7 +39,7 @@ public class MotionDocumentJsonTests
 
         Assert.DoesNotContain("\"end\"", json, StringComparison.Ordinal);
         Assert.DoesNotContain("\"previewMode\"", json, StringComparison.Ordinal);
-        Assert.Contains("\"schema\": \"motion-authoring/4\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"schema\": \"transition-authoring/1\"", json, StringComparison.Ordinal);
         Assert.Contains("\"kind\": \"euler\"", json, StringComparison.Ordinal);
         Assert.Contains("\"tangent\": \"auto\"", json, StringComparison.Ordinal);
         Assert.Contains("\"broken\": true", json, StringComparison.Ordinal);
@@ -57,7 +57,7 @@ public class MotionDocumentJsonTests
     public void 새_탄젠트_모드도_소문자로_왕복한다()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddTimeline("a", 1f, RigTemplates.Figure());
+        editor.AddTimeline("a", 1f, TransitionTemplates.Figure());
         editor.AddChannel("a", "N", MotionChannelKind.Position);
         editor.SetKeys("a", "N", MotionChannelKind.Position, Axis.X, new[]
         {
@@ -77,15 +77,15 @@ public class MotionDocumentJsonTests
     [Fact]
     public void 다른_스키마는_거부한다()
     {
-        Assert.Throws<JsonException>(() => MotionDocumentJson.Read("""{ "schema": "motion-authoring/0", "motions": [] }"""));
+        Assert.Throws<JsonException>(() => MotionDocumentJson.Read("""{ "schema": "motion-authoring/4", "rigs": [] }"""));
     }
 
     [Fact]
     public void 빈_성분_목록은_없음으로_읽는다()
     {
         string json = """
-            { "schema": "motion-authoring/4",
-              "rigs": [ { "kind": "a", "nodes": [], "timeline": { "duration": 1,
+            { "schema": "transition-authoring/1",
+              "transitions": [ { "name": "a", "layers": [], "timeline": { "duration": 1,
                              "channels": [ { "node": "N", "kind": "position", "x": { "keys": [] } } ] } } ] }
             """;
 

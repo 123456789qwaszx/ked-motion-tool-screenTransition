@@ -5,7 +5,7 @@
 화면을 덮고 걷는 전환은 그 쓰임의 하나다. 깊이 · 카메라 · 캐릭터 리그는 없다. `ked-presentation-runtime`과는 무관하다.
 
 **지금은 기반 시설이다**(소유자, 2026-11-11). 당장 쓰는 툴이 아니라 뒤에 설 전환 툴의 바탕으로, 출발점(`ked-motion-tool-extend`의 `a522149`)에서
-화면 전환에 필요 없는 것을 과감하게 걷어 내는 중이다. **산출물이 아직 없다** — 저작 원본(`*.motion-authoring.json`)을 쓰고 읽을 뿐이고,
+화면 전환에 필요 없는 것을 과감하게 걷어 내는 중이다. **산출물이 아직 없다** — 저작 원본(`*.transition-authoring.json`)을 쓰고 읽을 뿐이고,
 산출물(과 그것을 읽는 유니티 쪽 코드)은 소유자가 의도와 목적을 확정한 뒤의 일이다(보류). 계획 · 지금 어디인가 · 정해진 것은 [`docs/PLAN-screenTransition.md`](docs/PLAN-screenTransition.md),
 쓰는 법은 [`docs/USER-GUIDE.md`](docs/USER-GUIDE.md).
 

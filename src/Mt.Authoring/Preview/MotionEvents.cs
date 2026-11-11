@@ -9,7 +9,7 @@ public static class MotionEvents
     private const double Epsilon = 1e-6;
 
     /// <summary>모션 하나에서 그 구간 (after, until]에 울리는 이벤트 키들.</summary>
-    public static List<MotionEventAsset> Between(MotionAsset motion, double after, double until)
+    public static List<MotionEventAsset> Between(TimelineAsset motion, double after, double until)
     {
         ArgumentNullException.ThrowIfNull(motion);
         return motion.Events.Where(e => e.T > after + Epsilon && e.T <= until + Epsilon).ToList();

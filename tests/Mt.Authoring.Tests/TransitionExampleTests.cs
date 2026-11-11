@@ -25,7 +25,7 @@ public class TransitionExampleTests
         return Path.Combine(at?.FullName ?? throw new InvalidOperationException("저장소 뿌리를 못 찾았다"), "examples", "transitions", name);
     }
 
-    private static RectNodeTree Pose(RectNodeTree template, MotionAsset timeline, double seconds, IDictionary<string, float>? alphas = null)
+    private static RectNodeTree Pose(RectNodeTree template, TimelineAsset timeline, double seconds, IDictionary<string, float>? alphas = null)
         => MotionPreview.Pose(template, timeline, seconds, null, alphas);
 
     [Fact]
@@ -36,16 +36,16 @@ public class TransitionExampleTests
         MotionDocument document = editor.Document;
 
         // 층 표: 바탕색 + 층 열 장이 오브젝트 열하나로 — 뒤에서 앞으로.
-        RigAsset set = document.FindRig(TransitionExamples.Station)!;
-        Assert.Equal(new[] { "Backdrop", "arches", "floor", "pillars_left", "pillars_right", "train", "sign", "light", "microbe_sun", "microbe_leaf", "microbe_cell" }, set.Nodes.Select(n => n.Id));
+        TransitionAsset set = document.FindTransition(TransitionExamples.Station)!;
+        Assert.Equal(new[] { "Backdrop", "arches", "floor", "pillars_left", "pillars_right", "train", "sign", "light", "microbe_sun", "microbe_leaf", "microbe_cell" }, set.Layers.Select(n => n.Id));
         Assert.Equal(("#10262B", 1920f, 1080f), (set.Find("Backdrop")!.Color, set.Find("Backdrop")!.Width, set.Find("Backdrop")!.Height));
-        RigNodeAsset sign = set.Find("sign")!; // 표: 왼쪽 556 · 위 56 · 889×249 → 가운데 기준 (40.5, 359.5)
+        LayerAsset sign = set.Find("sign")!; // 표: 왼쪽 556 · 위 56 · 889×249 → 가운데 기준 (40.5, 359.5)
         Assert.Equal((40.5f, 359.5f, 889f, 249f), (sign.X, sign.Y, sign.Width, sign.Height));
 
         string Problems<T>(IEnumerable<T> problems, Func<T, string> text) => string.Join("\n", problems.Select(text));
         Assert.True(!MotionValidator.Validate(document).Any(), Problems(MotionValidator.Validate(document), p => $"{p.MotionName}: {p.Message}"));
 
-        string path = Path.Combine(directory, "station.motion-authoring.json");
+        string path = Path.Combine(directory, "station.transition-authoring.json");
         string json = MotionDocumentJson.Write(document);
 
         if (Environment.GetEnvironmentVariable("MT_WRITE_EXAMPLES") == "1")
@@ -54,12 +54,12 @@ public class TransitionExampleTests
         }
 
         Assert.Equal(json, File.ReadAllText(path));
-        Assert.All(document.Rigs.SelectMany(r => r.Nodes).Select(n => n.Image).OfType<string>().Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
+        Assert.All(document.Transitions.SelectMany(r => r.Layers).Select(n => n.Image).OfType<string>().Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
 
         // 타임라인 하나: 등장 1.2 › 머묾 2(한 바퀴) › 퇴장 0.9. 등장의 가운데에서 왼쪽 기둥은 아직 들어오는 중이고, 끝나면 제자리다.
-        MotionAsset timeline = Assert.Single(document.Motions);
+        TimelineAsset timeline = Assert.Single(document.Timelines);
         Assert.Equal((TransitionExamples.Station, 4.1f), (timeline.Name, timeline.Duration));
-        RectNodeTree template = StageTree.Build(document.FindRig(TransitionExamples.Station)!);
+        RectNodeTree template = StageTree.Build(document.FindTransition(TransitionExamples.Station)!);
         float rest = template.GetState("pillars_left").AnchoredPosition.X;
         float PillarX(double t) => Pose(template, timeline, t).GetState("pillars_left").AnchoredPosition.X;
         Assert.Equal(rest - 820f, PillarX(0.1), 1);
@@ -80,11 +80,11 @@ public class TransitionExampleTests
         MotionDocument document = editor.Document;
 
         // 바탕색 + 층 열둘.
-        Assert.Equal(13, document.FindRig(TransitionExamples.Pillar)!.Nodes.Count);
+        Assert.Equal(13, document.FindTransition(TransitionExamples.Pillar)!.Layers.Count);
         string Problems<T>(IEnumerable<T> problems, Func<T, string> text) => string.Join("\n", problems.Select(text));
         Assert.True(!MotionValidator.Validate(document).Any(), Problems(MotionValidator.Validate(document), p => $"{p.MotionName}: {p.Message}"));
 
-        string path = Path.Combine(directory, "pillar.motion-authoring.json");
+        string path = Path.Combine(directory, "pillar.transition-authoring.json");
         string json = MotionDocumentJson.Write(document);
 
         if (Environment.GetEnvironmentVariable("MT_WRITE_EXAMPLES") == "1")
@@ -93,15 +93,15 @@ public class TransitionExampleTests
         }
 
         Assert.Equal(json, File.ReadAllText(path));
-        Assert.All(document.Rigs.SelectMany(r => r.Nodes).Select(n => n.Image).OfType<string>().Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
+        Assert.All(document.Transitions.SelectMany(r => r.Layers).Select(n => n.Image).OfType<string>().Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
 
         // 시차: 지평선의 층 넷이 0.12초씩 늦게 솟기 시작한다(노을 0.2 · 먼 도시 0.32 · 가까운 도시 0.44 · 언덕 0.56).
-        MotionAsset timeline = Assert.Single(document.Motions);
+        TimelineAsset timeline = Assert.Single(document.Timelines);
         float StartOf(string node) => timeline.FindChannel(node, MotionChannelKind.Position)!.Y!.Keys[1].T;
         Assert.Equal(new[] { 0.2f, 0.32f, 0.44f, 0.56f }, new[] { "haze", "city_far", "city_near", "hill" }.Select(n => MathF.Round(StartOf(n), 2)));
 
         // 등장의 가운데에서 노을은 이미 올라왔고 언덕은 아직 아래에 있다.
-        RectNodeTree template = StageTree.Build(document.FindRig(TransitionExamples.Pillar)!);
+        RectNodeTree template = StageTree.Build(document.FindTransition(TransitionExamples.Pillar)!);
         float Offset(string node, double t) => Pose(template, timeline, t).GetState(node).AnchoredPosition.Y - template.GetState(node).AnchoredPosition.Y;
         Assert.True(Offset("haze", 0.7) > -1f);
         Assert.True(Offset("hill", 0.7) < -300f);
@@ -141,7 +141,7 @@ public class TransitionExampleTests
         string Problems<T>(IEnumerable<T> problems, Func<T, string> text) => string.Join("\n", problems.Select(text));
         Assert.True(!MotionValidator.Validate(document).Any(), Problems(MotionValidator.Validate(document), p => $"{p.MotionName}: {p.Message}"));
 
-        string path = Path.Combine(directory, name + ".motion-authoring.json");
+        string path = Path.Combine(directory, name + ".transition-authoring.json");
         string json = MotionDocumentJson.Write(document);
 
         if (Environment.GetEnvironmentVariable("MT_WRITE_EXAMPLES") == "1")
@@ -150,12 +150,12 @@ public class TransitionExampleTests
         }
 
         Assert.Equal(json, File.ReadAllText(path));
-        Assert.All(document.Rigs.SelectMany(r => r.Nodes).Select(n => n.Image).OfType<string>().Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
+        Assert.All(document.Transitions.SelectMany(r => r.Layers).Select(n => n.Image).OfType<string>().Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
 
         // 늦게 나오는 층은 제 차례 전에 숨어 있고("제 차례 전까지 숨기기"), 걷기 시작(표지 "release")에서는 다 보인다.
-        MotionAsset timeline = Assert.Single(document.Motions);
+        TimelineAsset timeline = Assert.Single(document.Timelines);
         float release = timeline.Events.Single(e => e.Name == "release").T;
-        RectNodeTree template = StageTree.Build(document.FindRig(name)!);
+        RectNodeTree template = StageTree.Build(document.FindTransition(name)!);
 
         foreach (string node in late.Split(','))
         {

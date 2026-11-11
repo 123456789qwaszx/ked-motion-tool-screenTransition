@@ -6,29 +6,29 @@ namespace Mt.Authoring.Editing;
 public sealed partial class MotionEditor
 {
     /// <summary>세트의 이름을 바꾼다 — 타임라인의 이름은 세트의 것이라 함께 바뀐다. 한 칸.</summary>
-    public void RenameRig(string kind, string newKind)
+    public void RenameTransition(string kind, string newKind)
     {
-        RigAsset rig = RequireRig(kind);
+        TransitionAsset rig = RequireTransition(kind);
 
         if (string.Equals(kind, newKind?.Trim(), StringComparison.Ordinal))
         {
             return;
         }
 
-        string name = RequireNewRigKind(newKind);
-        Mutate(MotionChangeKind.Document, () => rig.Kind = name);
+        string name = RequireNewTransitionName(newKind);
+        Mutate(MotionChangeKind.Document, () => rig.Name = name);
     }
 
-    private string RequireNewRigKind(string? kind)
+    private string RequireNewTransitionName(string? kind)
     {
         string name = (kind ?? "").Trim();
 
-        if (!RigKindRule.IsMatch(name))
+        if (!TransitionNameRule.IsMatch(name))
         {
             throw new InvalidOperationException($"세트 이름은 영문 소문자로 시작하는 소문자·숫자·_ 다 ('{kind}')");
         }
 
-        if (Document.FindRig(name) is not null)
+        if (Document.FindTransition(name) is not null)
         {
             throw new InvalidOperationException($"세트 '{name}'가 이미 있다.");
         }

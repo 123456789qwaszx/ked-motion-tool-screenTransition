@@ -15,8 +15,8 @@ public class MotionPreviewTests
     public void nod는_가운데서_18_내려가고_길이를_지나면_restore라_시작_상태다()
     {
         MotionDocument document = Fixtures.NodBowDocument();
-        RectNodeTree template = StageTree.Build(RigTemplates.Figure());
-        MotionAsset nod = document.Find("nod")!;
+        RectNodeTree template = StageTree.Build(TransitionTemplates.Figure());
+        TimelineAsset nod = document.Find("nod")!;
 
         Assert.Equal(0f, MotionPreview.Pose(template, nod, 0).GetState(MoveY).AnchoredPosition.Y, 4);
         Assert.Equal(-18f, MotionPreview.Pose(template, nod, 0.3).GetState(MoveY).AnchoredPosition.Y, 4);
@@ -30,8 +30,8 @@ public class MotionPreviewTests
     [Fact]
     public void bow는_commit이라_길이를_지나도_마지막_키가_남고_중간은_에르미트다()
     {
-        MotionAsset bow = Fixtures.NodBowDocument().Find("bow")!;
-        RectNodeTree template = StageTree.Build(RigTemplates.Figure());
+        TimelineAsset bow = Fixtures.NodBowDocument().Find("bow")!;
+        RectNodeTree template = StageTree.Build(TransitionTemplates.Figure());
 
         Assert.Equal(4f, MotionPreview.Pose(template, bow, 0.2).GetState(Sway).LocalEulerAngles.Z, 3);
         Assert.Equal(8f, MotionPreview.Pose(template, bow, 0.4).GetState(Sway).LocalEulerAngles.Z, 4);
@@ -41,8 +41,8 @@ public class MotionPreviewTests
     [Fact]
     public void 뮤트된_성분은_재생에서_빠진다()
     {
-        MotionAsset nod = Fixtures.NodBowDocument().Find("nod")!;
-        RectNodeTree template = StageTree.Build(RigTemplates.Figure());
+        TimelineAsset nod = Fixtures.NodBowDocument().Find("nod")!;
+        RectNodeTree template = StageTree.Build(TransitionTemplates.Figure());
         var y = new CurveRef(MoveY, MotionChannelKind.Position, Axis.Y);
 
         Assert.Equal(-18f, MotionPreview.Pose(template, nod, 0.3, c => c != y).GetState(MoveY).AnchoredPosition.Y, 4);
@@ -226,7 +226,7 @@ public class KeyTimesTests
     [Fact]
     public void 모든_키_시각은_합쳐_오름차순이고_다음_이전을_찾는다()
     {
-        MotionAsset bow = Fixtures.NodBowDocument().Find("bow")!;
+        TimelineAsset bow = Fixtures.NodBowDocument().Find("bow")!;
         List<float> times = KeyTimes.All(bow);
 
         Assert.Equal(new[] { 0f, 0.4f }, times);
@@ -241,7 +241,7 @@ public class KeyTimesTests
     [Fact]
     public void 선택_키_시각()
     {
-        MotionAsset nod = Fixtures.NodBowDocument().Find("nod")!;
+        TimelineAsset nod = Fixtures.NodBowDocument().Find("nod")!;
         var y = new CurveRef("MoverY", MotionChannelKind.Position, Axis.Y);
 
         List<float> selected = KeyTimes.OfSelection(nod, new[] { new KeyRef(y, 2), new KeyRef(y, 1), new KeyRef(y, 9) });

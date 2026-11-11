@@ -3,9 +3,9 @@ using Ked.Presentation.Core;
 namespace Mt.Authoring.Model;
 
 /// <summary>
-/// 저작 원본 한 벌 (<c>*.motion-authoring.json</c>, 스키마 <see cref="AuthoringFormat.AuthoringSchema"/>).
+/// 저작 원본 한 벌 (<c>*.transition-authoring.json</c>, 스키마 <see cref="AuthoringFormat.AuthoringSchema"/>).
 ///
-/// 제작 정보 — 탄젠트 모드·끊김 — 를 함께 든다. 검증은 <see cref="MotionAsset"/>을 코어 <see cref="MotionClip"/>으로 바꿔 코어 규칙을 지난다.
+/// 제작 정보 — 탄젠트 모드·끊김 — 를 함께 든다. 검증은 <see cref="TimelineAsset"/>을 코어 <see cref="MotionClip"/>으로 바꿔 코어 규칙을 지난다.
 ///
 /// 전부 가변 클래스다. 편집은 <see cref="Editing.MotionEditor"/>만 하고, 되돌리기는 문서 전체 스냅샷이다
 /// (VnTool <c>ProjectEditor</c>의 방식) — 명령마다 역연산을 짓지 않는다.
@@ -14,48 +14,44 @@ public sealed class MotionDocument
 {
     public string Schema { get; set; } = AuthoringFormat.AuthoringSchema;
 
-    /// <summary>세트마다 하나인 타임라인들(세트의 차례대로) — 세트가 든다(<see cref="RigAsset.Timeline"/>).</summary>
+    /// <summary>전환마다 하나인 타임라인들(전환의 차례대로) — 전환이 든다(<see cref="TransitionAsset.Timeline"/>).</summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public IEnumerable<MotionAsset> Motions => Rigs.Select(r => r.Timeline);
+    public IEnumerable<TimelineAsset> Timelines => Transitions.Select(r => r.Timeline);
 
     /// <summary>
-    /// 세트들 — 층(오브젝트)의 사각형 · 그림 · 색과 그 타임라인. 미리보기는 이것만으로 선다(<see cref="Preview.StageTree"/>).
-    /// 저작본에는 <see cref="RigsOrNull"/>로 실린다(없으면 안 적는다).
+    /// 전환들 — 층의 사각형 · 그림 · 색과 그 타임라인. 미리보기는 이것만으로 선다(<see cref="Preview.StageTree"/>).
+    /// 저작본에는 <see cref="TransitionsOrNull"/>로 실린다(없으면 안 적는다).
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public List<RigAsset> Rigs { get; set; } = new();
+    public List<TransitionAsset> Transitions { get; set; } = new();
 
-    [System.Text.Json.Serialization.JsonPropertyName("rigs")]
-    public List<RigAsset>? RigsOrNull
+    [System.Text.Json.Serialization.JsonPropertyName("transitions")]
+    public List<TransitionAsset>? TransitionsOrNull
     {
-        get => Rigs.Count == 0 ? null : Rigs;
-        set => Rigs = value ?? new List<RigAsset>();
+        get => Transitions.Count == 0 ? null : Transitions;
+        set => Transitions = value ?? new List<TransitionAsset>();
     }
 
-    public RigAsset? FindRig(string? kind)
-        => kind is null ? null : Rigs.FirstOrDefault(r => string.Equals(r.Kind, kind, StringComparison.Ordinal));
+    public TransitionAsset? FindTransition(string? name)
+        => name is null ? null : Transitions.FirstOrDefault(r => string.Equals(r.Name, name, StringComparison.Ordinal));
 
-    /// <summary>그 세트의 타임라인.</summary>
-    public MotionAsset? Find(string name) => FindRig(name)?.Timeline;
+    /// <summary>그 전환의 타임라인.</summary>
+    public TimelineAsset? Find(string name) => FindTransition(name)?.Timeline;
 }
 
 /// <summary>
-/// 세트의 타임라인 — 세트마다 하나다. 수치는 코어 <see cref="MotionClip"/>과 같고, 제작 정보만 더 든다.
-/// 이름과 세트는 주인 세트의 것이다(<see cref="RigAsset.Timeline"/>가 이어 준다) — 따로 적지 않는다.
+/// 전환의 타임라인 — 전환마다 하나다. 수치는 코어 <see cref="MotionClip"/>과 같고, 제작 정보만 더 든다.
+/// 이름은 주인 전환의 것이다(<see cref="TransitionAsset.Timeline"/>가 이어 준다) — 따로 적지 않는다.
 /// </summary>
-public sealed class MotionAsset
+public sealed class TimelineAsset
 {
-    /// <summary>주인 세트. 세트에 놓이면 정해진다.</summary>
+    /// <summary>주인 전환. 전환에 놓이면 정해진다.</summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public RigAsset? Owner { get; internal set; }
+    public TransitionAsset? Owner { get; internal set; }
 
-    /// <summary>타임라인의 이름 = 주인 세트의 이름.</summary>
+    /// <summary>타임라인의 이름 = 주인 전환의 이름.</summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public string Name => Owner?.Kind ?? "";
-
-    /// <summary>이 타임라인이 움직이는 세트(rigKind) = 주인 세트.</summary>
-    [System.Text.Json.Serialization.JsonIgnore]
-    public string Rig => Owner?.Kind ?? "";
+    public string Name => Owner?.Name ?? "";
 
     /// <summary>초.</summary>
     public float Duration { get; set; } = 1f;
@@ -90,7 +86,7 @@ public sealed class MotionEventAsset
     public string? Value { get; set; }
 }
 
-/// <summary>노드 하나의 속성 하나. 성분이 null이면 "건드리지 않는다"(코어와 같은 뜻).</summary>
+/// <summary>층 하나의 속성 하나(<see cref="Node"/> = 층 id). 성분이 null이면 "건드리지 않는다"(코어와 같은 뜻).</summary>
 public sealed class ChannelAsset
 {
     public string Node { get; set; } = "";

@@ -55,7 +55,7 @@ public static class MotionFixes
     public static bool Apply(MotionEditor editor, string motionName, MotionFix fix)
     {
         ArgumentNullException.ThrowIfNull(editor);
-        MotionAsset motion = editor.Document.Find(motionName) ?? throw new KeyNotFoundException($"세트 '{motionName}'가 없다.");
+        TimelineAsset motion = editor.Document.Find(motionName) ?? throw new KeyNotFoundException($"세트 '{motionName}'가 없다.");
 
         switch (fix)
         {
@@ -106,7 +106,7 @@ public static class MotionFixes
         }
     }
 
-    private static bool ApplyToCurve(MotionFix fix, List<KeyAsset> keys, MotionAsset motion)
+    private static bool ApplyToCurve(MotionFix fix, List<KeyAsset> keys, TimelineAsset motion)
     {
         KeyAsset first = keys[0];
         KeyAsset last = keys[^1];

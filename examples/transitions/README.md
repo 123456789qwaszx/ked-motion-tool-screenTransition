@@ -2,8 +2,8 @@
 
 화면 전환 다섯 장면 — 각각 **세트** 하나와 **타임라인** 하나로 지었다(쓰는 법은 `docs/USER-GUIDE.md`).
 
-- `station/station.motion-authoring.json` — 앱에서 **열기…** 로 연다. 그림은 `station/art/`(층 PNG 열 장 + 층 표 `layers.tsv`).
-- `pillar/pillar.motion-authoring.json` — 기둥과 노을. 층들을 같은 타이밍으로 놓고 **시차**로 밀어 지은 것(지평선의 층들이 차례로 솟고, 해가 떠오르고, 기둥이 넘어지듯 들어온다).
+- `station/station.transition-authoring.json` — 앱에서 **열기…** 로 연다. 그림은 `station/art/`(층 PNG 열 장 + 층 표 `layers.tsv`).
+- `pillar/pillar.transition-authoring.json` — 기둥과 노을. 층들을 같은 타이밍으로 놓고 **시차**로 밀어 지은 것(지평선의 층들이 차례로 솟고, 해가 떠오르고, 기둥이 넘어지듯 들어온다).
   해는 제 차례(0.6초) 전까지 숨어 있다("제 차례 전까지 숨기기") — 떠오르고, 머묾에서 빛이 두 번 숨쉬고, 퇴장의 처음에 진다.
 - `lapis/` · `heredity/` · `mercury/` — 나머지 세 장면.
   - `lapis`(바닷속 기둥들) — 바닥과 기둥이 차례로 솟고 양옆의 줄기가 닫히듯 들어온다("화면 밖에서 들어온다"). 구슬이 톡 나타나 둥실거리다 사그라든다.

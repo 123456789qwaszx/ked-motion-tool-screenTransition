@@ -23,9 +23,9 @@ public sealed partial class MotionEditor
     /// </summary>
     public float SlideFromOutside(string motionName, string node, StageSide side, float start, float seconds, Vec2 stageSize, bool leaving = false)
     {
-        MotionAsset motion = Require(motionName);
-        RigAsset rig = Document.FindRig(motion.Rig) ?? throw new InvalidOperationException($"'{motion.Rig}'는 툴에서 정의한 세트가 아니다 — 가만히 선 자리를 알 수 없다.");
-        RigNodeAsset target = rig.Find(node) ?? throw new KeyNotFoundException($"오브젝트 '{node}'가 세트 '{rig.Kind}'에 없다.");
+        TimelineAsset motion = Require(motionName);
+        TransitionAsset rig = Document.FindTransition(motion.Name) ?? throw new InvalidOperationException($"'{motion.Name}'는 툴에서 정의한 세트가 아니다 — 가만히 선 자리를 알 수 없다.");
+        LayerAsset target = rig.Find(node) ?? throw new KeyNotFoundException($"오브젝트 '{node}'가 세트 '{rig.Name}'에 없다.");
 
         if (!float.IsFinite(start) || !float.IsFinite(seconds) || seconds <= 0f || start < 0f || start >= motion.Duration - MotionRules.Tolerance)
         {
@@ -36,7 +36,7 @@ public sealed partial class MotionEditor
         float x = 0f;
         float y = 0f;
 
-        for (RigNodeAsset? at = target; at is not null; at = at.Parent.Length > 0 ? rig.Find(at.Parent) : null)
+        for (LayerAsset? at = target; at is not null; at = at.Parent.Length > 0 ? rig.Find(at.Parent) : null)
         {
             x += at.X;
             y += at.Y;

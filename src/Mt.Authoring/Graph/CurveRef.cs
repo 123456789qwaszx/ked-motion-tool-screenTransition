@@ -8,14 +8,14 @@ public readonly record struct CurveRef(string Node, MotionChannelKind Kind, Axis
 {
     public override string ToString() => $"{Node}/{Kind}.{Axis}";
 
-    public ComponentCurve? Resolve(MotionAsset motion)
+    public ComponentCurve? Resolve(TimelineAsset motion)
         => motion.FindChannel(Node, Kind)?.Get(Axis);
 }
 
 /// <summary>커브 안의 키 하나. Index는 시각 오름차순 자리라 편집 뒤에는 다시 풀어야 한다.</summary>
 public readonly record struct KeyRef(CurveRef Curve, int Index)
 {
-    public KeyAsset? Resolve(MotionAsset motion)
+    public KeyAsset? Resolve(TimelineAsset motion)
     {
         ComponentCurve? curve = Curve.Resolve(motion);
         return curve is not null && Index >= 0 && Index < curve.Keys.Count ? curve.Keys[Index] : null;

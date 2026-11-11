@@ -7,9 +7,9 @@ namespace Mt.Authoring.Model;
 ///
 /// 키가 있는 성분은 전부 옮긴다 — 전 구간 중립값인 성분도 빼지 않는다(저작본과 클립이 같은 모양이게).
 /// </summary>
-public static class MotionAssetCodec
+public static class TimelineCodec
 {
-    public static MotionClip ToClip(MotionAsset asset)
+    public static MotionClip ToClip(TimelineAsset asset)
     {
         ArgumentNullException.ThrowIfNull(asset);
 
@@ -32,7 +32,6 @@ public static class MotionAssetCodec
         return new MotionClip
         {
             Name = asset.Name,
-            Rig = asset.Rig,
             Duration = asset.Duration,
             Channels = channels,
             Events = asset.Events.Count == 0

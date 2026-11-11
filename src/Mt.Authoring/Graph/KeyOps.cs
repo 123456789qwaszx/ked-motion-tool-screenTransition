@@ -36,12 +36,12 @@ public static class KeyOps
 
     /// <summary>선택 키의 시각에 delta를 더한다.</summary>
     public static List<(CurveRef Curve, IEnumerable<KeyAsset> Keys)> Move(
-        MotionAsset motion, IEnumerable<KeyRef> keys, float deltaSeconds, Func<float, float>? snap = null)
+        TimelineAsset motion, IEnumerable<KeyRef> keys, float deltaSeconds, Func<float, float>? snap = null)
         => Transform(motion, keys, t => t + deltaSeconds, snap, keepOriginals: false);
 
     /// <summary>pivot을 기준으로 선택 키의 시각을 factor배 늘린다. factor는 양수여야 한다.</summary>
     public static List<(CurveRef Curve, IEnumerable<KeyAsset> Keys)> Scale(
-        MotionAsset motion, IEnumerable<KeyRef> keys, float pivotSeconds, float factor, Func<float, float>? snap = null)
+        TimelineAsset motion, IEnumerable<KeyRef> keys, float pivotSeconds, float factor, Func<float, float>? snap = null)
     {
         if (!(factor > 0f))
         {
@@ -53,12 +53,12 @@ public static class KeyOps
 
     /// <summary>선택 키의 사본을 offset만큼 옮겨 둔다. 원본은 그대로.</summary>
     public static List<(CurveRef Curve, IEnumerable<KeyAsset> Keys)> Duplicate(
-        MotionAsset motion, IEnumerable<KeyRef> keys, float offsetSeconds, Func<float, float>? snap = null)
+        TimelineAsset motion, IEnumerable<KeyRef> keys, float offsetSeconds, Func<float, float>? snap = null)
         => Transform(motion, keys, t => t + offsetSeconds, snap, keepOriginals: true);
 
     /// <summary>선택 키의 값만 바꾼다(시각은 그대로). 값 스케일·상대 입력이 쓴다.</summary>
     public static List<(CurveRef Curve, IEnumerable<KeyAsset> Keys)> MapValues(
-        MotionAsset motion, IEnumerable<KeyRef> keys, Func<KeyAsset, float> map)
+        TimelineAsset motion, IEnumerable<KeyRef> keys, Func<KeyAsset, float> map)
     {
         ArgumentNullException.ThrowIfNull(motion);
         ArgumentNullException.ThrowIfNull(keys);
@@ -109,7 +109,7 @@ public static class KeyOps
 
     /// <summary>변환 뒤 선택이 가리킬 (커브, 시각) — 편집 뒤 자리를 다시 푸는 데 쓴다.</summary>
     public static List<(CurveRef Curve, float T)> ResultingTimes(
-        MotionAsset motion, IEnumerable<KeyRef> keys, Func<float, float> map, Func<float, float>? snap = null)
+        TimelineAsset motion, IEnumerable<KeyRef> keys, Func<float, float> map, Func<float, float>? snap = null)
     {
         var result = new List<(CurveRef, float)>();
 
@@ -125,7 +125,7 @@ public static class KeyOps
     }
 
     private static List<(CurveRef Curve, IEnumerable<KeyAsset> Keys)> Transform(
-        MotionAsset motion, IEnumerable<KeyRef> keys, Func<float, float> map, Func<float, float>? snap, bool keepOriginals)
+        TimelineAsset motion, IEnumerable<KeyRef> keys, Func<float, float> map, Func<float, float>? snap, bool keepOriginals)
     {
         ArgumentNullException.ThrowIfNull(motion);
         ArgumentNullException.ThrowIfNull(keys);

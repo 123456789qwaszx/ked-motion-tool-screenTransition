@@ -1,12 +1,12 @@
 using Ked.Presentation.Core;
 using Mt.Authoring.Editing;
 using Mt.Authoring.Model;
-using Mt.Authoring.Rig;
+using Mt.Authoring.Import;
 
 namespace Mt.Authoring.Tests;
 
 /// <summary>
-/// 예시 문서 <c>examples/transitions/station/station.motion-authoring.json</c> — 화면 전환 하나를 세트와 타임라인 하나로 지은 것.
+/// 예시 문서 <c>examples/transitions/station/station.transition-authoring.json</c> — 화면 전환 하나를 세트와 타임라인 하나로 지은 것.
 /// 층 표(<c>art/layers.tsv</c>)를 세트로 들이고, 등장·머묾·퇴장을 사본 세트에서 따로 짓고(<see cref="Section"/>) 한 타임라인으로 잇는다(<see cref="Join"/>). 편집기의 명령으로만 짓는다.
 /// </summary>
 internal static class TransitionExamples
@@ -97,7 +97,7 @@ internal static class TransitionExamples
     public static MotionEditor BuildStation(string layersPath)
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddRig(new RigAsset { Kind = Station });
+        editor.AddTransition(new TransitionAsset { Name = Station });
         editor.ImportLayers(Station, LayerSheet.Load(layersPath), "art", Stage);
 
 
@@ -279,7 +279,7 @@ internal static class TransitionExamples
     private static MotionEditor Begin(string kind, string layersPath)
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddRig(new RigAsset { Kind = kind });
+        editor.AddTransition(new TransitionAsset { Name = kind });
         editor.ImportLayers(kind, LayerSheet.Load(layersPath), "art", Stage);
         return editor;
     }
@@ -307,7 +307,7 @@ internal static class TransitionExamples
     /// </summary>
     private static void Section(MotionEditor editor, string kind, string section, float duration)
     {
-        editor.AddRig(new RigAsset { Kind = section, Nodes = editor.Document.FindRig(kind)!.Nodes });
+        editor.AddTransition(new TransitionAsset { Name = section, Layers = editor.Document.FindTransition(kind)!.Layers });
         editor.SetDuration(section, duration);
     }
 
@@ -318,7 +318,7 @@ internal static class TransitionExamples
     /// </summary>
     private static void Join(MotionEditor editor, string kind, string enter, string hold, string exit)
     {
-        MotionAsset[] parts = { editor.Document.Find(enter)!, editor.Document.Find(hold)!, editor.Document.Find(exit)! };
+        TimelineAsset[] parts = { editor.Document.Find(enter)!, editor.Document.Find(hold)!, editor.Document.Find(exit)! };
         editor.SetDuration(kind, parts.Sum(p => p.Duration));
 
         foreach (MotionEventAsset e in parts[0].Events)
@@ -345,7 +345,7 @@ internal static class TransitionExamples
                 float start = neutral;
                 float offset = 0f;
 
-                foreach (MotionAsset part in parts)
+                foreach (TimelineAsset part in parts)
                 {
                     IReadOnlyList<KeyAsset> source = (IReadOnlyList<KeyAsset>?)part.FindChannel(node, channelKind)?.Get(axis)?.Keys
                         ?? new[] { F(0f, neutral), F(part.Duration, neutral) };
@@ -383,9 +383,9 @@ internal static class TransitionExamples
             }
         }
 
-        foreach (MotionAsset part in parts)
+        foreach (TimelineAsset part in parts)
         {
-            editor.RemoveRig(part.Name);
+            editor.RemoveTransition(part.Name);
         }
     }
 

@@ -23,7 +23,7 @@ public class MotionEditorGraphTests
         });
 
         Assert.Equal(before + 1, editor.Revision);
-        MotionAsset bow = editor.Document.Find("bow")!;
+        TimelineAsset bow = editor.Document.Find("bow")!;
         Assert.Equal(20f, z.Resolve(bow)!.Keys[1].V);
         Assert.Null(bow.Channels[0].X);
 
@@ -102,7 +102,7 @@ public class TimeSliderOpsTests
     [Fact]
     public void 현재_시각의_키를_모든_커브에서_모은다()
     {
-        MotionAsset bow = Fixtures.NodBowDocument().Find("bow")!;
+        TimelineAsset bow = Fixtures.NodBowDocument().Find("bow")!;
 
         List<KeyRef> at = TimeSliderOps.KeysAt(bow, 0.4);
 
@@ -154,7 +154,7 @@ public class TimeSliderOpsTests
         Assert.True(editor.RemoveKeysAt("bow", 0.4));
 
         Assert.Equal(before + 1, editor.Revision);
-        MotionAsset bow = editor.Document.Find("bow")!;
+        TimelineAsset bow = editor.Document.Find("bow")!;
         Assert.All(new[] { Axis.X, Axis.Y, Axis.Z }, a => Assert.Single(bow.Channels[0].Get(a)!.Keys));
         Assert.False(editor.RemoveKeysAt("bow", 0.4));
     }

@@ -51,7 +51,7 @@ public class KeyOpsTests
 {
     private static readonly CurveRef Y = new("MoverY", MotionChannelKind.Position, Axis.Y);
 
-    private static MotionAsset Nod() => Fixtures.NodBowDocument().Find("nod")!;
+    private static TimelineAsset Nod() => Fixtures.NodBowDocument().Find("nod")!;
 
     [Fact]
     public void 이동은_선택만_옮기고_0_아래로_내려가지_않는다()
@@ -141,7 +141,7 @@ public class DopeSheetRowsTests
     [Fact]
     public void 노드_채널_성분_트리와_요약_블록()
     {
-        MotionAsset bow = Fixtures.NodBowDocument().Find("bow")!;
+        TimelineAsset bow = Fixtures.NodBowDocument().Find("bow")!;
 
         List<DopeRow> rows = DopeSheetRows.Build(bow);
 
@@ -180,7 +180,7 @@ public class DopeSheetRowsTests
     [Fact]
     public void 채널이_없으면_행이_없다()
     {
-        Assert.Empty(DopeSheetRows.Build(new RigAsset { Kind = "a" }.Timeline));
+        Assert.Empty(DopeSheetRows.Build(new TransitionAsset { Name = "a" }.Timeline));
     }
 }
 
@@ -248,7 +248,7 @@ public class KeyClipboardTests
     [Fact]
     public void 복사는_사본이고_기준은_가장_이른_키다()
     {
-        MotionAsset nod = Fixtures.NodBowDocument().Find("nod")!;
+        TimelineAsset nod = Fixtures.NodBowDocument().Find("nod")!;
 
         KeyClipboard clipboard = KeyClipboard.Copy(nod, new[] { new KeyRef(Y, 2), new KeyRef(Y, 1), new KeyRef(Y, 9) })!;
 
@@ -265,7 +265,7 @@ public class KeyClipboardTests
     public void 붙여넣기는_현재_시각에_기준을_맞추고_같은_시각은_바꾸며_없는_채널은_만든다()
     {
         var editor = new MotionEditor(Fixtures.NodBowDocument());
-        MotionAsset nod = editor.Document.Find("nod")!;
+        TimelineAsset nod = editor.Document.Find("nod")!;
         KeyClipboard clipboard = KeyClipboard.Copy(nod, new[] { new KeyRef(Y, 1), new KeyRef(Y, 2) })!; // 0.3(-18) · 0.6(0)
         long before = editor.Revision;
 

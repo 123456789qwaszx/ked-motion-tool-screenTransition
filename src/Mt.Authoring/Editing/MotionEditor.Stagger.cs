@@ -15,7 +15,7 @@ public sealed partial class MotionEditor
     public bool ShiftNodeKeys(string motionName, string node, float delta)
     {
         ArgumentNullException.ThrowIfNull(node);
-        MotionAsset motion = Require(motionName);
+        TimelineAsset motion = Require(motionName);
 
         if (!float.IsFinite(delta))
         {

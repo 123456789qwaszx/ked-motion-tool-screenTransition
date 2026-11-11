@@ -9,11 +9,11 @@ public class StageTreeTests
     [Fact]
     public void 세트의_층은_무대_루트_밑에_그_값_그대로_선다()
     {
-        RectNodeTree tree = StageTree.Build(RigTemplates.Emoji());
+        RectNodeTree tree = StageTree.Build(TransitionTemplates.Emoji());
 
         Assert.Equal(StageTree.Stage, tree.GetRectSize(StageTree.RootKey));
         Assert.Equal(StageTree.RootKey, tree.GetParentKey("Emoji_Anchor"));
         Assert.Equal("Emoji_Body", tree.GetParentKey("Emoji_Part3"));
-        Assert.Equal(RigTemplates.DefaultPartSize, tree.GetRectSize("Emoji_Part1").X, 3);
+        Assert.Equal(TransitionTemplates.DefaultPartSize, tree.GetRectSize("Emoji_Part1").X, 3);
     }
 }

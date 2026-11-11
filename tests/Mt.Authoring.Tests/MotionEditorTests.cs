@@ -15,7 +15,7 @@ public class MotionEditorTests
         var kinds = new List<MotionChangeKind>();
         editor.Changed += (_, e) => kinds.Add(e.Kind);
 
-        editor.AddTimeline("a", 2f, RigTemplates.Figure());
+        editor.AddTimeline("a", 2f, TransitionTemplates.Figure());
         editor.AddChannel("a", "N", MotionChannelKind.Position);
         editor.AddKey("a", "N", MotionChannelKind.Position, Axis.X, Fixtures.Key(0f, 0f));
         editor.AddKey("a", "N", MotionChannelKind.Position, Axis.X, Fixtures.Key(1f, 5f));
@@ -46,11 +46,11 @@ public class MotionEditorTests
     public void 새_조작은_다시하기_기록을_지운다()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddTimeline("a", 1f, RigTemplates.Figure());
+        editor.AddTimeline("a", 1f, TransitionTemplates.Figure());
         editor.Undo();
         Assert.True(editor.CanRedo);
 
-        editor.AddTimeline("b", 1f, RigTemplates.Figure());
+        editor.AddTimeline("b", 1f, TransitionTemplates.Figure());
         Assert.False(editor.CanRedo);
         Assert.Null(editor.Document.Find("a"));
         Assert.NotNull(editor.Document.Find("b"));
@@ -60,7 +60,7 @@ public class MotionEditorTests
     public void 같은_시각의_키는_하나다_더하면_바뀌고_시각_순서를_지킨다()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddTimeline("a", 1f, RigTemplates.Figure());
+        editor.AddTimeline("a", 1f, TransitionTemplates.Figure());
         editor.AddChannel("a", "N", MotionChannelKind.Position);
         editor.AddKey("a", "N", MotionChannelKind.Position, Axis.X, Fixtures.Key(1f, 1f));
         editor.AddKey("a", "N", MotionChannelKind.Position, Axis.X, Fixtures.Key(0f, 0f));
@@ -82,7 +82,7 @@ public class MotionEditorTests
     public void 호출자의_키_객체는_문서에_꽂히지_않는다()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddTimeline("a", 1f, RigTemplates.Figure());
+        editor.AddTimeline("a", 1f, TransitionTemplates.Figure());
         editor.AddChannel("a", "N", MotionChannelKind.Position);
         KeyAsset mine = Fixtures.Key(0f, 0f);
         KeyAsset stored = editor.AddKey("a", "N", MotionChannelKind.Position, Axis.X, mine);
@@ -97,10 +97,10 @@ public class MotionEditorTests
     public void 중복_이름과_중복_채널은_거부한다()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddTimeline("a", 1f, RigTemplates.Figure());
+        editor.AddTimeline("a", 1f, TransitionTemplates.Figure());
         editor.AddChannel("a", "N", MotionChannelKind.Position);
 
-        Assert.Throws<InvalidOperationException>(() => editor.AddTimeline("a", 2f, RigTemplates.Figure()));
+        Assert.Throws<InvalidOperationException>(() => editor.AddTimeline("a", 2f, TransitionTemplates.Figure()));
         Assert.Throws<InvalidOperationException>(() => editor.AddChannel("a", "N", MotionChannelKind.Position));
         Assert.Throws<KeyNotFoundException>(() => editor.SetDuration("zzz", 1f));
         Assert.Throws<KeyNotFoundException>(() => editor.RemoveChannel("a", "M", MotionChannelKind.Position));
@@ -110,7 +110,7 @@ public class MotionEditorTests
     public void Replace는_기록을_버린다()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddTimeline("a", 1f, RigTemplates.Figure());
+        editor.AddTimeline("a", 1f, TransitionTemplates.Figure());
 
         editor.Replace(Fixtures.NodBowDocument());
 

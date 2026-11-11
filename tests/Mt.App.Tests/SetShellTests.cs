@@ -32,7 +32,7 @@ public class SetShellTests
             try
             {
                 MotionEditor editor = window.Session.Editor;
-                editor.AddTimeline("vanish", 1f, RigTemplates.Emoji());
+                editor.AddTimeline("vanish", 1f, TransitionTemplates.Emoji());
                 window.SelectSet("vanish");
                 window.Viewport.SnapEnabled = false;
                 window.InspectorTab = 2; // 타임라인 탭
@@ -118,13 +118,13 @@ public class SetShellTests
                 window.InspectorTab = 1;
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 Assert.True(view.IsLayoutMode);
-                RigAsset Rig() => editor.Document.FindRig("set")!;
+                TransitionAsset Rig() => editor.Document.FindTransition("set")!;
 
                 // 그림 가져오기 — 오브젝트(이름은 파일에서, 크기는 그림의 것) + 자리 + 그림이 한 칸.
                 long revision = editor.Revision;
                 Assert.Equal("alert", window.AddImageObjectFromForm(art, new Vec2(100f, 50f)));
                 Assert.Equal(revision + 1, editor.Revision);
-                RigNodeAsset node = Rig().Find("alert")!;
+                LayerAsset node = Rig().Find("alert")!;
                 Assert.Equal(("Body", 100f, 50f, 256f, 256f), (node.Parent, node.X, node.Y, node.Width, node.Height));
                 Assert.EndsWith("alert.png", node.Image, StringComparison.Ordinal);
                 Assert.Equal("alert", window.SetEditorState.Node);
@@ -151,7 +151,7 @@ public class SetShellTests
                 Assert.Equal((160f, 10f), (Rig().Find("alert")!.X, Rig().Find("alert")!.Y));
                 Assert.Empty(editor.Document.Find("set")!.Channels); // 키가 아니다
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Assert.Equal("160", window.RigNodeBoxes.X.Text);
+                Assert.Equal("160", window.LayerBoxes.X.Text);
 
                 // Shift+끌기 = 배율(원점에서의 거리 비), Ctrl+끌기 = 회전.
                 Vec2 c = Center("alert");
@@ -165,11 +165,11 @@ public class SetShellTests
                 window.MouseUp(At(new Vec2(c.X, c.Y + 40f)), MouseButton.Left, RawInputModifiers.Control);
                 Assert.Equal(90f, Rig().Find("alert")!.Rotation, 0);
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Assert.Equal(("90", "0.5"), (window.RigNodePoseBoxes.Rotation.Text, window.RigNodePoseBoxes.ScaleX.Text));
+                Assert.Equal(("90", "0.5"), (window.LayerPoseBoxes.Rotation.Text, window.LayerPoseBoxes.ScaleX.Text));
 
                 // 칸에서도 고친다.
-                window.RigNodePoseBoxes.Rotation.Focus();
-                window.RigNodePoseBoxes.Rotation.Text = "15";
+                window.LayerPoseBoxes.Rotation.Focus();
+                window.LayerPoseBoxes.Rotation.Text = "15";
                 window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
                 Assert.Equal(15f, Rig().Find("alert")!.Rotation);
 
@@ -182,7 +182,7 @@ public class SetShellTests
                 Assert.Equal("alert_2", window.SetEditorState.Node);
 
                 // 그림 칸 — 고른 오브젝트의 그림 경로. 비우고 Enter면 그림 오브젝트가 아니다(한 칸), 다시 적으면 돌아온다.
-                TextBox imageBox = window.RigNodeBoxes.Image;
+                TextBox imageBox = window.LayerBoxes.Image;
                 string path = imageBox.Text!;
                 Assert.EndsWith("alert.png", path, StringComparison.Ordinal);
                 revision = editor.Revision;
@@ -224,7 +224,7 @@ public class SetShellTests
             {
                 MotionEditor editor = window.Session.Editor;
                 ViewportView view = window.Viewport;
-                editor.AddTimeline("nod", 0.6f, RigTemplates.Figure());
+                editor.AddTimeline("nod", 0.6f, TransitionTemplates.Figure());
                 window.NewSetFromForm();
                 string a = window.AddSetNodeFromForm()!;   // Node1 — Body 밑
                 window.SelectSetNode("Body");
@@ -233,7 +233,7 @@ public class SetShellTests
                 string c = window.AddSetNodeFromForm()!;   // Node3 — Node2 밑
                 foreach (string part in new[] { a, b, c })
                 {
-                    editor.UpdateRigNode("set", part, new RigNodeAsset { Width = 100f, Height = 100f, Image = $"art/{part}.png" });
+                    editor.UpdateLayer("set", part, new LayerAsset { Width = 100f, Height = 100f, Image = $"art/{part}.png" });
                 }
 
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
@@ -317,7 +317,7 @@ public class SetShellTests
                 window.NewSetFromForm();
                 window.InspectorTab = 1;
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                RigNodeAsset Node(string id) => editor.Document.FindRig("set")!.Find(id)!;
+                LayerAsset Node(string id) => editor.Document.FindTransition("set")!.Find(id)!;
 
                 // 색 사각형 더하기 — 오브젝트 + 크기 + 색이 한 칸. 그림이 없어도 선다(세트의 오브젝트 사각형이 그 색 사각형이다).
                 long revision = editor.Revision;
@@ -328,14 +328,14 @@ public class SetShellTests
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 Quad quad = view.SetQuad()!.Value;
                 Assert.Equal(400f, quad.BottomRight.X - quad.BottomLeft.X, 1);
-                Assert.Equal("#3D5A80", window.RigNodeColorBox.Text);
+                Assert.Equal("#3D5A80", window.LayerColorBox.Text);
 
                 // 칸에서 색을 바꾼다(Enter) — 한 칸. 틀린 글은 막히고 문서는 그대로다.
-                window.RigNodeColorBox.Focus();
-                window.RigNodeColorBox.Text = "ee6c4d";
+                window.LayerColorBox.Focus();
+                window.LayerColorBox.Text = "ee6c4d";
                 window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
                 Assert.Equal("#EE6C4D", Node("Color1").Color);
-                window.RigNodeColorBox.Text = "red";
+                window.LayerColorBox.Text = "red";
                 window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
                 Assert.Equal("#EE6C4D", Node("Color1").Color);
 
@@ -357,12 +357,12 @@ public class SetShellTests
                 window.PickColorSwatch("#243B6B");
                 Assert.Equal("#243B6B", Node("Color1").Color);
                 Assert.Equal(revision + 1, editor.Revision);
-                Assert.Equal("#243B6B", window.RigNodeColorBox.Text);
+                Assert.Equal("#243B6B", window.LayerColorBox.Text);
 
                 // 색을 비우면 보통 오브젝트로 돌아간다.
                 window.SelectSetNode("Color1");
-                window.RigNodeColorBox.Focus();
-                window.RigNodeColorBox.Text = "";
+                window.LayerColorBox.Focus();
+                window.LayerColorBox.Text = "";
                 window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
                 Assert.Null(Node("Color1").Color);
             }
@@ -401,7 +401,7 @@ public class SetShellTests
                 IReadOnlyList<string> created = window.ImportLayerSheetFromForm(sheet);
                 Assert.Equal(revision + 1, editor.Revision);
                 Assert.Equal(10, created.Count);
-                RigAsset rig = editor.Document.FindRig("set")!;
+                TransitionAsset rig = editor.Document.FindTransition("set")!;
                 Assert.Equal("#10262B", rig.Find("Backdrop")!.Color);
                 Assert.Equal((1920f, 1080f), (rig.Find("arches")!.Width, rig.Find("arches")!.Height));
                 Assert.EndsWith("art/06_sign.png", rig.Find("sign")!.Image, StringComparison.Ordinal);
@@ -410,7 +410,7 @@ public class SetShellTests
 
                 // 되돌리면 통째로 사라진다(처음의 Body만 남는다).
                 editor.Undo();
-                Assert.Equal(new[] { "Body" }, editor.Document.FindRig("set")!.Nodes.Select(n => n.Id));
+                Assert.Equal(new[] { "Body" }, editor.Document.FindTransition("set")!.Layers.Select(n => n.Id));
             }
             finally
             {
@@ -439,7 +439,7 @@ public class SetShellTests
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
 
                 Assert.Equal(revision + 1, editor.Revision);
-                Assert.Null(editor.Document.FindRig("set"));
+                Assert.Null(editor.Document.FindTransition("set"));
                 Assert.Equal("lamp", editor.Document.Find("lamp")!.Name); // 타임라인의 이름도 함께
                 Assert.Equal("lamp", window.Graph.MotionName);
                 Assert.Equal("lamp", window.SelectedSet); // 연 세트는 그대로 열려 있다

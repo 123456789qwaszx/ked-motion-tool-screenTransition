@@ -169,7 +169,7 @@ public sealed class DopeSheetView : Control
 
     public string? MotionName => _motionName;
 
-    public MotionAsset? Motion => _editor is not null && _motionName is not null ? _editor.Document.Find(_motionName) : null;
+    public TimelineAsset? Motion => _editor is not null && _motionName is not null ? _editor.Document.Find(_motionName) : null;
 
     public IReadOnlyList<DopeRow> Rows => _rows;
 
@@ -283,7 +283,7 @@ public sealed class DopeSheetView : Control
 
     public void FitAll()
     {
-        MotionAsset? motion = Motion;
+        TimelineAsset? motion = Motion;
         double end = Math.Max(motion?.Duration ?? 1f, 0.1);
 
         foreach (DopeRow row in _rows)
@@ -329,7 +329,7 @@ public sealed class DopeSheetView : Control
     /// <summary>성분 행의 그 시각에 키(값은 곡선 위). 요약 행이면 아무것도 안 한다.</summary>
     public void InsertKey(DopeRow row, double seconds)
     {
-        MotionAsset? motion = Motion;
+        TimelineAsset? motion = Motion;
 
         if (_editor is null || _motionName is null || motion is null || row.Curve is not { } curveRef || curveRef.Resolve(motion) is not { } curve)
         {
@@ -376,7 +376,7 @@ public sealed class DopeSheetView : Control
     /// <summary>선택 키들의 시각 범위. 둘 이상 다른 시각일 때만 있다 — 스케일 핸들의 조건.</summary>
     public (double Min, double Max)? SelectionRange()
     {
-        MotionAsset? motion = Motion;
+        TimelineAsset? motion = Motion;
 
         if (motion is null)
         {
@@ -400,7 +400,7 @@ public sealed class DopeSheetView : Control
 
     private void SelectByTime(IEnumerable<(CurveRef Curve, float T)> targets)
     {
-        MotionAsset? motion = Motion;
+        TimelineAsset? motion = Motion;
         var next = new List<KeyRef>();
 
         if (motion is not null)
@@ -435,7 +435,7 @@ public sealed class DopeSheetView : Control
         DrawRuler(context);
         DrawRange(context);
 
-        MotionAsset? motion = Motion;
+        TimelineAsset? motion = Motion;
 
         if (motion is null)
         {
@@ -809,7 +809,7 @@ public sealed class DopeSheetView : Control
         Drag drag = _drag;
         _drag = Drag.None;
         e.Pointer.Capture(null);
-        MotionAsset? motion = Motion;
+        TimelineAsset? motion = Motion;
 
         try
         {

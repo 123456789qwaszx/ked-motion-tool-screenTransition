@@ -17,13 +17,13 @@ public static class MotionPreview
     /// 노드 키 → 불투명도(없는 키는 1). 알파 채널은 트리가 아니라 이 표에 얹힌다 — 불투명도는 <c>RectNodeState</c>에 없다(코어도 따로 든다).
     /// 받은 표를 **그 자리에서 고친다**. null이면 알파 채널은 건너뛴다.
     /// </param>
-    public static RectNodeTree Pose(RectNodeTree template, MotionAsset motion, double seconds, Func<Graph.CurveRef, bool>? isMuted = null, IDictionary<string, float>? alphas = null)
+    public static RectNodeTree Pose(RectNodeTree template, TimelineAsset motion, double seconds, Func<Graph.CurveRef, bool>? isMuted = null, IDictionary<string, float>? alphas = null)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(motion);
 
         RectNodeTree tree = template.Clone();
-        MotionClip clip = MotionAssetCodec.ToClip(motion);
+        MotionClip clip = TimelineCodec.ToClip(motion);
 
         MotionChannel[] channels = clip.Channels ?? Array.Empty<MotionChannel>();
 

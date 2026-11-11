@@ -139,7 +139,7 @@ public sealed class TimeSliderView : Control
         }
     }
 
-    public MotionAsset? Motion => _editor is not null && _motionName is not null ? _editor.Document.Find(_motionName) : null;
+    public TimelineAsset? Motion => _editor is not null && _motionName is not null ? _editor.Document.Find(_motionName) : null;
 
     public void Bind(MotionEditor? editor, string? motionName)
     {

@@ -19,7 +19,7 @@ public class MotionValidatorTests
     public void 세트에_없는_노드의_채널은_거부한다()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddTimeline("a", 1f, RigTemplates.Figure());
+        editor.AddTimeline("a", 1f, TransitionTemplates.Figure());
         editor.AddChannel("a", "NoSuchNode", MotionChannelKind.Position);
         // relative 전 구간 중립값이면 성분이 내보내기에서 빠지므로 가운데 키를 둔다 — 보려는 것은 노드 검사뿐이다.
         editor.SetKeys("a", "NoSuchNode", MotionChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.5f, 5f), Fixtures.Key(1f, 0f) });
@@ -109,9 +109,9 @@ public class ToolSettingsTests
             settings.SnapEnabled = false;
             settings.DefaultTangent = TangentMode.Plateau;
             settings.AutoSaveMinutes = 1;
-            settings.Touch("/a/one.motion-authoring.json");
-            settings.Touch("/a/two.motion-authoring.json");
-            settings.Touch("/a/one.motion-authoring.json");
+            settings.Touch("/a/one.transition-authoring.json");
+            settings.Touch("/a/two.transition-authoring.json");
+            settings.Touch("/a/one.transition-authoring.json");
             settings.Save(path);
 
             var back = Mt.Authoring.Settings.ToolSettings.Load(path);
@@ -119,7 +119,7 @@ public class ToolSettingsTests
             Assert.Equal(TangentMode.Plateau, back.DefaultTangent);
             Assert.Equal(1, back.AutoSaveMinutes);
             Assert.Equal(2, back.RecentFiles.Count);
-            Assert.EndsWith("one.motion-authoring.json", back.RecentFiles[0]);
+            Assert.EndsWith("one.transition-authoring.json", back.RecentFiles[0]);
             Assert.Contains("\"plateau\"", File.ReadAllText(path), StringComparison.Ordinal);
 
             File.WriteAllText(path, "{ broken");
