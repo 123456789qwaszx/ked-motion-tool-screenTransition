@@ -3,7 +3,6 @@ using Ked.Presentation.Core;
 using Mt.Authoring.Editing;
 using Mt.Authoring.Model;
 using Mt.Authoring.Preview;
-using Mt.Authoring.Rig;
 using Mt.Authoring.Serialization;
 using Mt.Authoring.Validation;
 
@@ -75,17 +74,13 @@ public class RigAssetTests
         editor.UpdateRigNode(RigTemplates.EmojiKind, "Emoji_Glow", moved);
         editor.UpdateRigNode(RigTemplates.EmojiKind, "Emoji_Glow", moved);
         Assert.Equal(revision + 1, editor.Revision);
-        RigSchemaFile composed = RigAssets.Compose(editor.Document);
-        Assert.True(composed.TryGetRig(RigTemplates.EmojiKind, out RigSchemaRigDto dto));
-        RigSchemaNodeDto node = dto.nodes.Single(n => n.id == "Emoji_Glow");
-        Assert.Equal((30f, -12f, 80f, 40f, true, false), (node.anchoredPosition.x, node.anchoredPosition.y, node.sizeDelta.x, node.sizeDelta.y, node.hasImage, node.hasCanvasGroup));
-        Assert.Contains("Emoji_Glow", RigParts.Of(composed, RigTemplates.EmojiKind));
+        RectNodeState placed = StageTree.Build(editor.Document.FindRig(RigTemplates.EmojiKind)!).GetState("Emoji_Glow");
+        Assert.Equal((30f, -12f, 80f, 40f), (placed.AnchoredPosition.X, placed.AnchoredPosition.Y, placed.SizeDelta.X, placed.SizeDelta.Y));
 
         // 가만히 선 자세의 회전·배율(배치 모드) — 세운 나무에 그대로 선다. 배율 0은 막는다.
         editor.UpdateRigNode(RigTemplates.EmojiKind, "Emoji_Glow", new RigNodeAsset { X = 30f, Y = -12f, Width = 80f, Height = 40f, Image = "art/glow.png", Rotation = 30f, ScaleX = 2f, ScaleY = -1f });
-        Assert.True(RigAssets.Compose(editor.Document).TryGetRig(RigTemplates.EmojiKind, out RigSchemaRigDto posed));
-        RigSchemaNodeDto turned = posed.nodes.Single(n => n.id == "Emoji_Glow");
-        Assert.Equal((30f, 2f, -1f), (turned.localEulerAngles.z, turned.localScale.x, turned.localScale.y));
+        RectNodeState turned = StageTree.Build(editor.Document.FindRig(RigTemplates.EmojiKind)!).GetState("Emoji_Glow");
+        Assert.Equal((30f, 2f, -1f), (turned.LocalEulerAngles.Z, turned.LocalScale.X, turned.LocalScale.Y));
         Assert.Throws<InvalidOperationException>(() => editor.UpdateRigNode(RigTemplates.EmojiKind, "Emoji_Glow", new RigNodeAsset { ScaleX = 0f }));
         editor.Undo();
 
@@ -94,7 +89,7 @@ public class RigAssetTests
         Assert.Equal(new[] { "Extra", "Emoji_Anchor" }, Ids(editor));
         editor.Undo();
         Assert.Equal(7, Ids(editor).Length);
-        RigAssets.Compose(editor.Document); // 여전히 세울 수 있다
+        StageTree.Build(editor.Document.FindRig(RigTemplates.EmojiKind)!); // 여전히 세울 수 있다
     }
 
     [Fact]
@@ -158,8 +153,7 @@ public class RigAssetTests
         Assert.Equal(new[] { (0f, -50f), (0.2f, 0f), (1f, 0f) }, Keys("Emoji_Part3"));
 
         // 어느 쪽이든 규칙(처음과 끝에 키)이 그대로 선다.
-        RigSchemaFile rig = RigAssets.Compose(editor.Document);
-        Assert.Empty(MotionValidator.Validate(editor.Document, rig.NodeIds, rig.AlphaNodeIds));
+        Assert.Empty(MotionValidator.Validate(editor.Document));
 
         // 채널이 없는 오브젝트·0초는 아무 일도 없다(기록 없음).
         revision = editor.Revision;
@@ -218,8 +212,7 @@ public class RigAssetTests
         Assert.Equal(1, editor.HideAllUntilTurn("in"));
         Assert.Equal(revision + 1, editor.Revision);
         Assert.Null(editor.Document.Find("in")!.FindChannel("Emoji_Part2", MotionChannelKind.Alpha));
-        RigSchemaFile rig = RigAssets.Compose(editor.Document);
-        Assert.Empty(MotionValidator.Validate(editor.Document, rig.NodeIds, rig.AlphaNodeIds));
+        Assert.Empty(MotionValidator.Validate(editor.Document));
     }
 
     // ── 세트 이름 바꾸기 ───────────────────────────────────────────────
@@ -291,7 +284,6 @@ public class RigAssetTests
         Assert.Throws<InvalidOperationException>(() => editor.SlideFromOutside("town", "Sun", StageSide.Left, 1f, 0.5f, stage));
         Assert.Throws<KeyNotFoundException>(() => editor.SlideFromOutside("town", "Nope", StageSide.Left, 0f, 0.5f, stage));
         Assert.Equal(revision, editor.Revision);
-        RigSchemaFile rig = RigAssets.Compose(editor.Document);
-        Assert.Empty(MotionValidator.Validate(editor.Document, rig.NodeIds, rig.AlphaNodeIds));
+        Assert.Empty(MotionValidator.Validate(editor.Document));
     }
 }

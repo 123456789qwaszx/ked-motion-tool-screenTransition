@@ -274,7 +274,7 @@ public sealed partial class MotionEditor
 
     private static void RequireBuildable(RigAsset rig)
     {
-        var seen = new HashSet<string>(StringComparer.Ordinal) { RigAssetCodec.RootId };
+        var seen = new HashSet<string>(StringComparer.Ordinal) { Preview.StageTree.RootKey };
 
         foreach (RigNodeAsset node in rig.Nodes)
         {

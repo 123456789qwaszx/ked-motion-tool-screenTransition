@@ -34,8 +34,6 @@ public class SetShellTests
                 MotionEditor editor = window.Session.Editor;
                 editor.AddTimeline("vanish", 1f, RigTemplates.Emoji());
                 window.SelectSet("vanish");
-                string id = ViewportView.SetObjectId;
-                window.Viewport.SelectedObjectId = id;
                 window.Viewport.SnapEnabled = false;
                 window.InspectorTab = 2; // 타임라인 탭
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
@@ -66,11 +64,11 @@ public class SetShellTests
 
                 // 뷰포트: 가운데에서 절반, 끝에서 0(안 그려진다). 다른 조각은 그대로 1.
                 window.Viewport.ScrubTo(0.5);
-                Assert.Equal(0.5f, window.Viewport.NodeOpacity(id, "Emoji_Part1")!.Value, 2);
-                Assert.Equal(1f, window.Viewport.NodeOpacity(id, "Emoji_Part2")!.Value, 3);
+                Assert.Equal(0.5f, window.Viewport.NodeOpacity("Emoji_Part1")!.Value, 2);
+                Assert.Equal(1f, window.Viewport.NodeOpacity("Emoji_Part2")!.Value, 3);
                 Assert.Equal("0.5", window.AlphaBox.Box.Text);
                 window.Viewport.ScrubTo(1.0);
-                Assert.Equal(0f, window.Viewport.NodeOpacity(id, "Emoji_Part1")!.Value, 3);
+                Assert.Equal(0f, window.Viewport.NodeOpacity("Emoji_Part1")!.Value, 3);
 
                 // 묶음(Body)의 불투명도는 조각의 것과 곱해진다.
                 window.Viewport.SelectedNode = "Emoji_Body";
@@ -79,8 +77,8 @@ public class SetShellTests
                 window.Viewport.ScrubTo(1.0);
                 window.Viewport.SetAlphaValue("Emoji_Body", 0.5f);
                 window.Viewport.ScrubTo(0.5);
-                Assert.Equal(0.25f, window.Viewport.NodeOpacity(id, "Emoji_Part1")!.Value, 2);
-                Assert.Equal(0.5f, window.Viewport.NodeOpacity(id, "Emoji_Part2")!.Value, 2);
+                Assert.Equal(0.25f, window.Viewport.NodeOpacity("Emoji_Part1")!.Value, 2);
+                Assert.Equal(0.5f, window.Viewport.NodeOpacity("Emoji_Part2")!.Value, 2);
 
                 // 범위 밖 값은 0~1로 죈다. 캐릭터의 노드(받을 수 없는 것)에는 안 놓인다.
                 window.Viewport.SetAlphaValue("Emoji_Body", 7f);
@@ -131,12 +129,12 @@ public class SetShellTests
                 Assert.EndsWith("alert.png", node.Image, StringComparison.Ordinal);
                 Assert.Equal("alert", window.SetEditorState.Node);
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Assert.Equal(new[] { "alert" }, view.DrawnParts(view.SelectedObject!));
+                Assert.Equal(new[] { "alert" }, view.DrawnParts());
                 Assert.Equal("alert_2", window.AddImageObjectFromForm(art, new Vec2(-200f, 0f))); // 같은 이름이면 번호가 붙는다
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
 
                 Point At(Vec2 p) => view.TranslatePoint(view.ToScreen(p), window) ?? throw new InvalidOperationException("뷰가 창에 붙어 있지 않다");
-                Vec2 Center(string id) => view.PartQuad(ViewportView.SetObjectId, id)!.Value.Center;
+                Vec2 Center(string id) => view.PartQuad(id)!.Value.Center;
 
                 // 끌기 = 자리. 집은 것이 하이어아키·칸에서도 골라진다. 끈 하나가 한 칸이고 끄는 동안에는 기록이 없다. 모션은 안 생긴다.
                 revision = editor.Revision;
@@ -194,7 +192,7 @@ public class SetShellTests
                 Assert.Equal(revision + 1, editor.Revision);
                 Assert.Null(Rig().Find("alert_2")!.Image);
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Assert.Equal(new[] { "alert" }, view.DrawnParts(view.SelectedObject!));
+                Assert.Equal(new[] { "alert" }, view.DrawnParts());
                 imageBox.Focus();
                 imageBox.Text = path;
                 window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
@@ -239,7 +237,7 @@ public class SetShellTests
                 }
 
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                IReadOnlyList<string> Drawn() => view.DrawnParts(view.SelectedObject!);
+                IReadOnlyList<string> Drawn() => view.DrawnParts();
                 Assert.Equal(new[] { a, b, c }, Drawn());
 
                 // 세트를 고르면 그 타임라인이 묶인다. 배치를 끄면 애니메이션 모드.
@@ -328,7 +326,7 @@ public class SetShellTests
                 Assert.Equal(("Body", 400f, 300f, "#3D5A80"), (Node("Color1").Parent, Node("Color1").Width, Node("Color1").Height, Node("Color1").Color));
                 Assert.Null(Node("Color1").Image);
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Quad quad = view.ObjectQuad(ViewportView.SetObjectId)!.Value;
+                Quad quad = view.SetQuad()!.Value;
                 Assert.Equal(400f, quad.BottomRight.X - quad.BottomLeft.X, 1);
                 Assert.Equal("#3D5A80", window.RigNodeColorBox.Text);
 
@@ -344,7 +342,7 @@ public class SetShellTests
                 // 배치 모드에서 끌어 옮긴다 — 색은 그대로 남는다.
                 Point At(Vec2 p) => view.TranslatePoint(view.ToScreen(p), window) ?? throw new InvalidOperationException("뷰가 창에 붙어 있지 않다");
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Vec2 grab = view.ObjectQuad(ViewportView.SetObjectId)!.Value.Center;
+                Vec2 grab = view.SetQuad()!.Value.Center;
                 var drop = new Vec2(grab.X + 50f, grab.Y + 20f);
                 window.MouseDown(At(grab), MouseButton.Left);
                 window.MouseMove(At(drop), RawInputModifiers.LeftMouseButton);
@@ -408,7 +406,7 @@ public class SetShellTests
                 Assert.Equal((1920f, 1080f), (rig.Find("arches")!.Width, rig.Find("arches")!.Height));
                 Assert.EndsWith("art/06_sign.png", rig.Find("sign")!.Image, StringComparison.Ordinal);
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Assert.Equal(created, window.Viewport.DrawnParts(window.Viewport.SelectedObject!));
+                Assert.Equal(created, window.Viewport.DrawnParts());
 
                 // 되돌리면 통째로 사라진다(처음의 Body만 남는다).
                 editor.Undo();
@@ -486,7 +484,7 @@ public class SetShellTests
                 {
                     window.Graph.CurrentTime = t;
                     Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                    return window.Viewport.CurrentPose()!.TransformPoint("set/Color1", Vec3.Zero).X;
+                    return window.Viewport.CurrentPose()!.TransformPoint("Color1", Vec3.Zero).X;
                 }
 
                 Assert.Equal(-1160f, X(0.1) - X(1.0), 0);

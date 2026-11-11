@@ -62,13 +62,13 @@ public class MotionRulesTests
     }
 
     [Test]
-    public void 스키마에_없는_노드는_거부한다_스키마를_줬을_때만()
+    public void 세트에_없는_노드는_거부한다_노드_표를_줬을_때만()
     {
         MotionClip clip = Clip(0.6f, Channel("NoSuchNode", x: Keys((0f, 0f), (0.6f, 10f))));
 
         Assert.IsTrue(MotionRules.TryValidate(clip, null, out _));
         Assert.IsFalse(MotionRules.TryValidate(clip, Rig, out string reason));
-        StringAssert.Contains("스키마", reason);
+        StringAssert.Contains("세트에 없는 노드", reason);
     }
 
     [Test]

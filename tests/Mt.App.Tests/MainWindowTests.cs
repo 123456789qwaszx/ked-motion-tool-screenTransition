@@ -7,7 +7,6 @@ using Ked.Presentation.Core;
 using Mt.Authoring.Graph;
 using Mt.Authoring.Model;
 using Mt.Authoring.Preview;
-using Mt.Authoring.Rig;
 using Mt.Authoring.Serialization;
 using Mt.Authoring.Validation;
 
@@ -63,7 +62,7 @@ public class MainWindowTests
 
                 Assert.Equal("nod", window.Viewport.MotionName);
                 Assert.True(window.Viewport.HasRig);
-                Assert.NotNull(window.Viewport.ObjectQuad(Mt.App.Views.ViewportView.SetObjectId));
+                Assert.NotNull(window.Viewport.SetQuad());
 
                 window.Viewport.ScrubTo(0.25);
                 Assert.Equal(0.25, window.Graph.CurrentTime, 9);
@@ -225,17 +224,16 @@ public class MainWindowTests
                 var editor = window.Session.Editor;
                 editor.AddTimeline("pop", 0.5f, RigTemplates.Emoji());
                 editor.AddTimeline("nod", 0.5f, RigTemplates.Figure());
-                string set = Mt.App.Views.ViewportView.SetObjectId;
 
                 window.SelectSet("pop");
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Assert.Equal(new[] { "세트  pop", "Emoji_Anchor", "Emoji_Body" }, window.HierarchyPathOf(set, "Emoji_Body"));
+                Assert.Equal(new[] { "세트  pop", "Emoji_Anchor", "Emoji_Body" }, window.HierarchyPathOf("Emoji_Body"));
 
                 // 다른 세트를 고르면 하이어아키가 그 세트로 바뀐다.
                 window.SelectSet("nod");
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Assert.Empty(window.HierarchyPathOf(set, "Emoji_Body"));
-                Assert.Equal("세트  nod", window.HierarchyPathOf(set, "Mover")[0]);
+                Assert.Empty(window.HierarchyPathOf("Emoji_Body"));
+                Assert.Equal("세트  nod", window.HierarchyPathOf("Mover")[0]);
             }
             finally
             {
@@ -513,7 +511,7 @@ public class MainWindowTests
                 MotionAsset Step() => editor.Document.Find("step")!;
                 window.AutoKeyChecked = false;
                 window.Viewport.ScrubTo(0.25);
-                window.SelectInHierarchy(Mt.App.Views.ViewportView.SetObjectId, "Mover");
+                window.SelectInHierarchy("Mover");
 
                 // 좌우·상하 두 성분을 키 없는 포즈로 두고 S — 키 확정은 한 칸이고, 되돌리면 둘 다 키 없는 포즈로 돌아온다.
                 window.SetChannelBoxValue(MotionChannelKind.Position, Axis.X, "10");

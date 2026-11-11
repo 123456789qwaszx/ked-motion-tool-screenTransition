@@ -2,7 +2,6 @@ using Ked.Presentation.Core;
 using Mt.Authoring.Editing;
 using Mt.Authoring.Model;
 using Mt.Authoring.Preview;
-using Mt.Authoring.Rig;
 using Mt.Authoring.Serialization;
 using Mt.Authoring.Validation;
 
@@ -11,7 +10,6 @@ namespace Mt.Authoring.Tests;
 /// <summary>이벤트 키 — "이 프레임에 이모지·소리".</summary>
 public class MotionEventTests
 {
-    private static readonly RigSchemaFile RigFile = RigTemplates.File();
 
     private static MotionEditor NewEditor() => new(Fixtures.NodBowDocument()); // nod 0.6초 · bow 0.4초
 

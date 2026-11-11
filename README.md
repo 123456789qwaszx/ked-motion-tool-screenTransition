@@ -25,7 +25,7 @@ Ked.Presentation.Core (재생의 계산 — 순수 C#, netstandard2.1)  ──�
 tests: Ked.Presentation.Core.Tests (NUnit) · Mt.Authoring.Tests (xunit) · Mt.App.Tests (xunit + Avalonia.Headless)
 ```
 
-미리보기는 문서의 세트만으로 선다: `RigAssets.Compose(문서)` → 코어의 사각형 계층(`RectNodeTree`) → 모션의 포즈(`MotionPreview`).
+미리보기는 세트 하나로 선다: 세트의 층 → 코어의 사각형 계층(`StageTree.Build` → `RectNodeTree`) → 타임라인의 포즈(`MotionPreview`).
 무대는 기준 화면 1920×1080이고, 뷰포트에는 고른 세트 하나가 서고 그 타임라인이 묶인다.
 
 ## 명령

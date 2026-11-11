@@ -3,8 +3,7 @@ namespace Mt.App.Tests;
 /// <summary>테스트의 발판 — 그 세트를 열어 뷰포트에 세운다. 발판 세트(<see cref="RigTemplates"/>)가 아직 없으면 먼저 정의한다.</summary>
 internal static class TestRigs
 {
-    /// <summary>뷰포트가 그 세트를 보이는 오브젝트의 id(<see cref="Views.ViewportView.SetObjectId"/>).</summary>
-    public static string PlaceRig(this MainWindow window, string rig)
+    public static void PlaceRig(this MainWindow window, string rig)
     {
         if (window.Session.Editor.Document.Rigs.All(r => r.Kind != rig))
         {
@@ -12,7 +11,6 @@ internal static class TestRigs
         }
 
         window.SelectSet(rig);
-        return Views.ViewportView.SetObjectId;
     }
 
     /// <summary>인형 세트 하나(= 타임라인 하나)를 더하고 고른다 — 그 타임라인이 묶인다(애니메이션 모드).</summary>

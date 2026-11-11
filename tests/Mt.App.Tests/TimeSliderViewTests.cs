@@ -8,7 +8,6 @@ using Mt.Authoring.Editing;
 using Mt.Authoring.Graph;
 using Mt.Authoring.Model;
 using Mt.Authoring.Preview;
-using Mt.Authoring.Rig;
 
 namespace Mt.App.Tests;
 
@@ -26,7 +25,6 @@ public class TimeSliderViewTests
         var panel = new StackPanel { Children = { viewport, slider } };
         var window = new Window { Width = 900, Height = 400, Content = panel };
         window.Show();
-        viewport.SetRig(Mt.Authoring.Rig.RigAssets.Compose(editor.Document));
         viewport.Bind(editor, "nod");
         slider.Viewport = viewport;
         slider.Bind(editor, "nod");
@@ -132,7 +130,7 @@ public class TimeSliderViewTests
         try
         {
             viewport.ScrubTo(0.3);
-            string key = ViewportView.SetObjectId + "/" + Node; // 무대 트리의 노드 키는 오브젝트 접두사를 갖는다
+            string key = Node;
             float heldY = PoseEdit.Component(MotionChannelKind.Position, viewport.PoseAt(0.3)!.GetState(key), Axis.Y);
             float restY = PoseEdit.Component(MotionChannelKind.Position, viewport.PoseAt(0.45)!.GetState(key), Axis.Y);
             Assert.NotEqual(heldY, restY);

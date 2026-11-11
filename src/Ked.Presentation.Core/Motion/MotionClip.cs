@@ -33,7 +33,7 @@ namespace Ked.Presentation.Core
     [Serializable]
     public struct MotionChannel
     {
-        /// <summary>리그 스키마의 노드 id (예: CharacterPortrait_Track_Move_Y). 슬롯 접두사는 없다.</summary>
+        /// <summary>세트의 노드(층) id. 접두사는 없다.</summary>
         public string Node;
 
         public MotionChannelKind Kind;
@@ -79,7 +79,7 @@ namespace Ked.Presentation.Core
     {
         public string Name;
 
-        /// <summary>리그 스키마 이름(rigKind). 노드 id는 이 스키마로 검증한다.</summary>
+        /// <summary>세트 이름(rigKind). 노드 id는 이 세트로 검증한다.</summary>
         public string Rig;
 
         /// <summary>초. 모든 채널의 모든 성분이 이 시각에 마지막 키를 둔다(규칙).</summary>

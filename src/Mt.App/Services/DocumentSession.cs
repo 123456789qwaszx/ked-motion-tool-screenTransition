@@ -1,6 +1,7 @@
 using Mt.Authoring;
 using Mt.Authoring.Editing;
 using Mt.Authoring.Model;
+using Mt.Authoring.Preview;
 using Mt.Authoring.Rig;
 using Mt.Authoring.Serialization;
 using Mt.Authoring.Validation;
@@ -55,38 +56,6 @@ public sealed class DocumentSession
 
     public string? DocumentPath { get; private set; }
 
-    /// <summary>
-    /// 문서의 세트들을 코어의 리그 스키마로 세운 것(<see cref="RigAssets.Compose"/>) — 세트가 바뀌면 다시 세운다.
-    /// 세울 수 없는 세트가 있으면 앞의 것을 그대로 쓰고 상태 줄에 남긴다.
-    /// </summary>
-    public RigSchemaFile Rig
-    {
-        get
-        {
-            string key = RigsKeyOf(Editor.Document);
-
-            if (_rig is null || key != _rigKey)
-            {
-                _rigKey = key;
-
-                try
-                {
-                    _rig = RigAssets.Compose(Editor.Document);
-                }
-                catch (Exception exception) when (exception is InvalidOperationException or KeyNotFoundException or ArgumentException)
-                {
-                    _rig ??= RigAssets.Compose(new MotionDocument());
-                    Status = $"세트를 세우지 못했다: {exception.Message}";
-                }
-            }
-
-            return _rig;
-        }
-    }
-
-    private RigSchemaFile? _rig;
-    private string _rigKey = "";
-
     private static string RigsKeyOf(MotionDocument document)
         => string.Join("|", document.Rigs.Select(r => r.Kind + ":" + string.Join(",", r.Nodes.Select(n => $"{n.Id}<{n.Parent}@{n.X},{n.Y}#{n.Width}x{n.Height}r{n.Rotation}s{n.ScaleX},{n.ScaleY}c{n.Color}i{n.Image}{(n.Alpha ? "a" : "")}"))));
 
@@ -111,7 +80,7 @@ public sealed class DocumentSession
         // 표의 파일 하나를 문서 기준 경로로 바꿔 그 폴더를 얻는다(저장 전의 문서면 절대 경로로 남는다).
         string probe = RelativeToDocument(Path.Combine(folder, "x")).Replace('\\', '/');
         string relative = probe.Length > 1 ? probe[..^2] : "";
-        return Editor.ImportLayers(kind, sheet, relative, RigAssets.Stage);
+        return Editor.ImportLayers(kind, sheet, relative, StageTree.Stage);
     }
 
 
@@ -126,9 +95,8 @@ public sealed class DocumentSession
     public event EventHandler? AssetsChanged;
 
     /// <summary>검증에 쓰는 rigKind → 노드 표.</summary>
-    public IReadOnlyDictionary<string, ICollection<string>> RigNodeIds => Rig.NodeIds;
 
-    public IReadOnlyList<MotionProblem> Problems => MotionValidator.Validate(Editor.Document, RigNodeIds, Rig.AlphaNodeIds);
+    public IReadOnlyList<MotionProblem> Problems => MotionValidator.Validate(Editor.Document);
 
     public void SetStatus(string status)
     {

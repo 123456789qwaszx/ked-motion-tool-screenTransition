@@ -1,7 +1,6 @@
 using Ked.Presentation.Core;
 using Mt.Authoring.Graph;
 using Mt.Authoring.Model;
-using Mt.Authoring.Rig;
 
 namespace Mt.Authoring.Validation;
 
@@ -24,28 +23,20 @@ public sealed record MotionProblem(string MotionName, string Message, bool Block
 /// </summary>
 public static class MotionValidator
 {
-    /// <param name="rigNodeIds">rigKind → 노드 id 목록. null이면 노드 존재 검사를 생략한다.</param>
-    /// <param name="alphaNodeIds">rigKind → 불투명도를 받을 수 있는 노드(세트의 표시). 주면 알파 채널이 그 노드에 놓였는지 본다.</param>
-    public static IReadOnlyList<MotionProblem> Validate(
-        MotionDocument document,
-        IReadOnlyDictionary<string, ICollection<string>>? rigNodeIds = null,
-        IReadOnlyDictionary<string, ICollection<string>>? alphaNodeIds = null)
+    public static IReadOnlyList<MotionProblem> Validate(MotionDocument document)
     {
         ArgumentNullException.ThrowIfNull(document);
-
-        return document.Motions.SelectMany(m => ValidateMotion(m, rigNodeIds, alphaNodeIds)).ToList();
+        return document.Rigs.SelectMany(ValidateTimeline).ToList();
     }
 
-    public static IReadOnlyList<MotionProblem> ValidateMotion(
-        MotionAsset motion,
-        IReadOnlyDictionary<string, ICollection<string>>? rigNodeIds = null,
-        IReadOnlyDictionary<string, ICollection<string>>? alphaNodeIds = null)
+    /// <summary>세트의 타임라인 — 채널의 노드는 그 세트에 있어야 하고, 알파 채널은 불투명도를 받는 노드에만 놓인다.</summary>
+    public static IReadOnlyList<MotionProblem> ValidateTimeline(RigAsset set)
     {
-        ArgumentNullException.ThrowIfNull(motion);
-
+        ArgumentNullException.ThrowIfNull(set);
+        MotionAsset motion = set.Timeline;
         var problems = new List<MotionProblem>();
-        ICollection<string>? nodeIds = null;
-        rigNodeIds?.TryGetValue(motion.Rig, out nodeIds);
+        var nodeIds = new HashSet<string>(set.Nodes.Select(n => n.Id), StringComparer.Ordinal);
+        var alphaNodes = set.Nodes.Where(n => n.Alpha).Select(n => n.Id).ToList();
 
         MotionClip clip = MotionAssetCodec.ToClip(motion);
 
@@ -55,16 +46,13 @@ public static class MotionValidator
         }
 
         // 알파 채널은 불투명도를 받을 수 있는 노드에만 — 호스트가 쓸 CanvasGroup이 없으면 재생에서 아무 일도 안 일어난다.
-        if (alphaNodeIds is not null && alphaNodeIds.TryGetValue(motion.Rig, out ICollection<string>? alphaNodes))
+        for (int i = 0; i < motion.Channels.Count; i++)
         {
-            for (int i = 0; i < motion.Channels.Count; i++)
+            if (motion.Channels[i].Kind == MotionChannelKind.Alpha && nodeIds.Contains(motion.Channels[i].Node) && !alphaNodes.Contains(motion.Channels[i].Node))
             {
-                if (motion.Channels[i].Kind == MotionChannelKind.Alpha && !alphaNodes.Contains(motion.Channels[i].Node))
-                {
-                    problems.Add(new MotionProblem(
-                        motion.Name,
-                        $"채널 {i}: '{motion.Channels[i].Node}'는 불투명도를 받을 수 없는 노드다. 받을 수 있는 노드: [{string.Join(", ", alphaNodes)}]"));
-                }
+                problems.Add(new MotionProblem(
+                    motion.Name,
+                    $"채널 {i}: '{motion.Channels[i].Node}'는 불투명도를 받을 수 없는 노드다. 받을 수 있는 노드: [{string.Join(", ", alphaNodes)}]"));
             }
         }
 

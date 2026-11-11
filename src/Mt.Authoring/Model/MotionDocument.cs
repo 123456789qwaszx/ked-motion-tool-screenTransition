@@ -19,7 +19,7 @@ public sealed class MotionDocument
     public IEnumerable<MotionAsset> Motions => Rigs.Select(r => r.Timeline);
 
     /// <summary>
-    /// 세트들 — 층(오브젝트)의 사각형 · 그림 · 색과 그 타임라인. 미리보기는 이것만으로 선다(<see cref="Rig.RigAssets.Compose"/>).
+    /// 세트들 — 층(오브젝트)의 사각형 · 그림 · 색과 그 타임라인. 미리보기는 이것만으로 선다(<see cref="Preview.StageTree"/>).
     /// 저작본에는 <see cref="RigsOrNull"/>로 실린다(없으면 안 적는다).
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]

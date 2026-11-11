@@ -134,7 +134,7 @@ public partial class MainWindow
         }
         else
         {
-            SelectInHierarchy(ViewportView.SetObjectId, id);
+            SelectInHierarchy(id);
         }
     }
 
@@ -157,7 +157,7 @@ public partial class MainWindow
         }
 
         float start = (float)Math.Clamp(_graph.CurrentTime, 0, Math.Max(0, motion.Duration - 0.05));
-        float distance = _session.Editor.SlideFromOutside(motion.Name, node, side, start, SlideSeconds, Mt.Authoring.Rig.RigAssets.Stage, leaving);
+        float distance = _session.Editor.SlideFromOutside(motion.Name, node, side, start, SlideSeconds, Mt.Authoring.Preview.StageTree.Stage, leaving);
         _session.SetStatus($"{node}: {start:0.##}초부터 {SlideSeconds:0.##}초 동안 무대 {SideName(side)} {(leaving ? "밖으로 나간다" : "밖에서 들어온다")}({Math.Abs(distance):0}px).");
         return distance;
     }
@@ -374,7 +374,7 @@ public partial class MainWindow
 
         if (SelectedSet is not null)
         {
-            ExpandObjectNodes(ViewportView.SetObjectId, true); // 세트를 열면 그 오브젝트들이 바로 보인다
+            ExpandSetNodes(true); // 세트를 열면 그 층들이 바로 보인다
         }
 
         _viewport.ResetView(); // 무대 전체를 보인다
@@ -404,7 +404,7 @@ public partial class MainWindow
     {
         string kind = "set";
 
-        for (int i = 2; _session.Rig?.RigKinds.Contains(kind) == true || _session.Editor.Document.FindRig(kind) is not null; i++)
+        for (int i = 2; _session.Editor.Document.FindRig(kind) is not null; i++)
         {
             kind = $"set_{i.ToString(CultureInfo.InvariantCulture)}";
         }

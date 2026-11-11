@@ -16,7 +16,6 @@ using Mt.Authoring.Editing;
 using Mt.Authoring.Graph;
 using Mt.Authoring.Model;
 using Mt.Authoring.Preview;
-using Mt.Authoring.Rig;
 using Mt.Authoring.Settings;
 using Mt.Authoring.Validation;
 using Avalonia.Threading;
@@ -982,16 +981,16 @@ public partial class MainWindow : Window
 
         try
         {
-            SceneObject? o = _viewport.SelectedObject;
+            string? shown = _viewport.ShownSet;
             MotionAsset? motion = _graph.Motion;
             EnsureChannelBoxRows();
             float time = (float)(_viewport.SnapEnabled ? TimeSnap.Snap(_viewport.Time, _viewport.SnapStep) : _viewport.Time);
 
             string? node = _viewport.SelectedNode;
-            bool hasNode = node is not null && o is not null && _viewport.HasRig;
+            bool hasNode = node is not null && shown is not null && _viewport.HasRig;
             _channelBoxTitle.Text = !hasNode
-                ? "(하이어아키에서 리그 노드를 고른다)"
-                : motion is null ? $"{o!.Id} · {node} — 모션을 고르면 키를 놓을 수 있다" : $"{o!.Id} · {node}";
+                ? "(하이어아키에서 층을 고른다)"
+                : $"{shown} · {node}";
 
             foreach (((MotionChannelKind kind, Axis axis), (Border row, TextBox box)) in _channelBoxRows)
             {
@@ -1173,8 +1172,7 @@ public partial class MainWindow : Window
     private void RefreshAssets()
     {
         AssetRefreshCount++;
-        _viewport.SetRig(_session.Rig);
-        _viewport.ClearImages();
+        _viewport.ClearImages(); // 세트의 모양도 다시 세운다
 
         // 층의 그림 — 파일이 없거나 못 읽으면 null을 넣는다(자리표시로 그려진다).
         foreach ((string image, string? imagePath) in _session.LayerImages())
@@ -1293,7 +1291,7 @@ public partial class MainWindow : Window
     private Control BuildSetTab()
     {
         var panel = new StackPanel { Spacing = 4, Margin = new Avalonia.Thickness(0, 6, 0, 0) };
-        _viewport.ObjectSelected += (_, _) => RefreshObjects();
+        _viewport.StageChanged += (_, _) => RefreshObjects();
         panel.Children.Add(BuildSetNodePanel());
         return panel;
     }
@@ -1436,7 +1434,7 @@ public partial class MainWindow : Window
         "뷰포트\n" +
         "  휠  커서 축으로 확대·축소      MMB 드래그  보기 이동      F  보기 맞춤\n" +
         "  배치 토글을 켰을 때 — 오브젝트 드래그  자리      Shift+드래그  배율      Ctrl+드래그  회전   (가만히 선 자세다)\n" +
-        "  LMB  오브젝트 고르기 · 기즈모 끌기(Auto Key면 놓는 순간 키)      Home / End  처음·끝      ← / →  한 프레임\n\n" +
+        "  LMB  기즈모 끌기(Auto Key면 놓는 순간 키)      Home / End  처음·끝      ← / →  한 프레임\n\n" +
         "그래프 에디터 (마야)\n" +
         "  LMB  키 선택 · 빈 자리 드래그 박스 선택(키가 들면 키만, 커브만 지나면 커브) · Ctrl+드래그 라소\n" +
         "  MMB 드래그  선택 키 이동(핸들을 골랐으면 핸들 회전)      MMB 클릭  고른 커브에 키 끼우기\n" +
@@ -1506,8 +1504,8 @@ public partial class MainWindow : Window
 
     // ── 하이어아키 ─────────────────────────────────────────────────────
 
-    /// <summary>트리 항목의 꼬리표 — 오브젝트 또는 오브젝트의 리그 노드.</summary>
-    private sealed record HierarchyNode(string ObjectId, string? NodeId);
+    /// <summary>트리 항목의 꼬리표 — 세트의 층(노드).</summary>
+    private sealed record HierarchyNode(string NodeId);
 
     /// <summary>세트 항목의 꼬리표 — 하이어아키의 맨 위.</summary>
     private sealed record HierarchyFolder;
@@ -1515,22 +1513,42 @@ public partial class MainWindow : Window
     /// <summary>무대에 선 세트 하나와 그 층들(부모 › 자식). 펼침 상태는 키로 기억한다.</summary>
     private void RebuildHierarchy()
     {
-        SceneAsset? scene = _viewport.Scene;
-        bool nodeWasSelected = _hierarchy.SelectedItem is TreeViewItem { Tag: HierarchyNode { NodeId: not null } };
+        bool nodeWasSelected = _hierarchy.SelectedItem is TreeViewItem { Tag: HierarchyNode };
         _hierarchy.Items.Clear();
         _hierarchyParents.Clear();
 
-        if (scene is null || scene.Objects.Count == 0)
+        if (_viewport.ShownSet is not { } kind || _session.Editor.Document.FindRig(kind) is not { } set)
         {
             return;
         }
 
         TreeViewItem? selectedItem = null;
-        SceneObject shown = scene.Objects[0];
-        var setRoot = Folder($"세트  {shown.Rig}", "set:" + shown.Rig);
+        var setRoot = Folder($"세트  {kind}", "set:" + kind);
         setRoot.Tag = new HierarchyFolder();
         Attach(setRoot, null);
-        BuildObjectItem(shown, setRoot, nodeWasSelected, ref selectedItem);
+        var itemsByNode = new Dictionary<string, TreeViewItem>(StringComparer.Ordinal);
+
+        foreach (RigNodeAsset node in set.Nodes)
+        {
+            TreeViewItem nodeParent = string.IsNullOrEmpty(node.Parent) || !itemsByNode.TryGetValue(node.Parent, out TreeViewItem? found) ? setRoot : found;
+            // 따로 보기(숨김 · 솔로)의 표시.
+            bool shown = _viewport.IsSetNodeShown(node.Id);
+            string mark = _viewport.SetView is null ? "" : _viewport.SoloSetNode == node.Id ? "   ◉ 이것만" : _viewport.IsSetNodeHidden(node.Id) ? "   (숨김)" : "";
+            TreeViewItem nodeItem = Folder(node.Id + mark, $"node:{kind}/{node.Id}");
+            nodeItem.Opacity = shown ? 1 : 0.45;
+            nodeItem.Tag = new HierarchyNode(node.Id);
+            nodeItem.FontWeight = FontWeight.Normal;
+            nodeItem.Foreground = ActingNodeBrush;
+            ToolTip.SetTip(nodeItem, node.Id);
+            Attach(nodeItem, nodeParent);
+            itemsByNode[node.Id] = nodeItem;
+
+            if (nodeWasSelected && node.Id == _viewport.SelectedNode)
+            {
+                selectedItem = nodeItem;
+            }
+        }
+
         _hierarchy.Items.Add(setRoot);
 
         // 고른 항목이 보이도록 조상을 펼친다.
@@ -1546,45 +1564,6 @@ public partial class MainWindow : Window
     {
         _hierarchyParents[item] = parent;
         parent?.Items.Add(item);
-    }
-
-    /// <summary>오브젝트 항목 + 리그 노드 트리.</summary>
-    private void BuildObjectItem(SceneObject o, TreeViewItem parentItem, bool nodeWasSelected, ref TreeViewItem? selectedItem)
-    {
-        TreeViewItem objectItem = parentItem;
-
-        var itemsByNode = new Dictionary<string, TreeViewItem>(StringComparer.Ordinal);
-        if (_session.Rig is { } rig && rig.TryGetRig(o.Rig, out RigSchemaRigDto dto))
-        {
-            foreach (RigSchemaNodeDto node in dto.nodes)
-            {
-                if (node.id == RigSchemaLoader.RootKey)
-                {
-                    continue; // 오브젝트 항목이 곧 루트다.
-                }
-
-                TreeViewItem nodeParent = string.IsNullOrEmpty(node.parent) || node.parent == RigSchemaLoader.RootKey || !itemsByNode.TryGetValue(node.parent, out TreeViewItem? found)
-                    ? objectItem
-                    : found;
-                // 세트 보기 — 따로 보기(숨김 · 솔로)의 표시.
-                bool shown = _viewport.IsSetNodeShown(node.id);
-                string mark = _viewport.SetView is null ? "" : _viewport.SoloSetNode == node.id ? "   ◉ 이것만" : _viewport.IsSetNodeHidden(node.id) ? "   (숨김)" : "";
-                TreeViewItem nodeItem = Folder(node.id + mark, $"node:{o.Id}/{node.id}");
-                nodeItem.Opacity = shown ? 1 : 0.45;
-                nodeItem.Tag = new HierarchyNode(o.Id, node.id);
-                nodeItem.FontWeight = FontWeight.Normal;
-                nodeItem.Foreground = ActingNodeBrush;
-                ToolTip.SetTip(nodeItem, node.id);
-                Attach(nodeItem, nodeParent);
-                itemsByNode[node.id] = nodeItem;
-
-                if (nodeWasSelected && o.Id == _viewport.SelectedObjectId && node.id == _viewport.SelectedNode)
-                {
-                    selectedItem = nodeItem;
-                }
-            }
-        }
-
     }
 
     private TreeViewItem Folder(string header, string key, bool defaultExpanded = true)
@@ -1613,10 +1592,10 @@ public partial class MainWindow : Window
         return item;
     }
 
-    /// <summary>오브젝트의 노드 항목을 전부 펼치거나 접는다(유니티 Alt+클릭).</summary>
-    private void ExpandObjectNodes(string objectId, bool expand)
+    /// <summary>세트의 층 항목을 전부 펼치거나 접는다.</summary>
+    private void ExpandSetNodes(bool expand)
     {
-        foreach (TreeViewItem item in _hierarchyParents.Keys.Where(i => ObjectIdOf(i.Tag) == objectId).ToList())
+        foreach (TreeViewItem item in _hierarchyParents.Keys.Where(i => i.Tag is HierarchyNode or HierarchyFolder).ToList())
         {
             item.IsExpanded = expand;
         }
@@ -1649,29 +1628,11 @@ public partial class MainWindow : Window
     private void RebuildHierarchyMenu()
     {
         _hierarchyMenu.Items.Clear();
-        SceneAsset? scene = _viewport.Scene;
-        object? target = _menuTarget;
-        SceneObject? o = ObjectIdOf(target) is { } targetId && scene is not null ? scene.Find(targetId) : null;
 
-        MenuItem Item(string header, Action action, KeyGesture? gesture = null, bool enabled = true)
-        {
-            var item = new MenuItem { Header = header, FontSize = 11, InputGesture = gesture, IsEnabled = enabled };
-            item.Click += (_, _) => Guard(header, action);
-            _hierarchyMenu.Items.Add(item);
-            return item;
-        }
-
-        // 세트를 열었으면 층을 짓는 메뉴 — 애니메이션으로 선 세트는 보기만 한다.
+        // 세트를 열었으면 층을 짓는 메뉴.
         if (_viewport.SetView is not null)
         {
-            AddSetMenu(target);
-            return;
-        }
-
-        if (o is not null)
-        {
-            Item("노드 전부 펼치기", () => ExpandObjectNodes(o.Id, true));
-            Item("노드 전부 접기", () => ExpandObjectNodes(o.Id, false));
+            AddSetMenu(_menuTarget);
         }
     }
 
@@ -1684,19 +1645,13 @@ public partial class MainWindow : Window
 
         switch (_hierarchy.SelectedItem)
         {
-            case TreeViewItem { Tag: HierarchyNode { NodeId: null } node }:
-                _viewport.SelectedObjectId = node.ObjectId;
-                break;
             case TreeViewItem { Tag: HierarchyNode node }:
                 SelectNodeInHierarchy(node);
                 break;
         }
     }
 
-    /// <summary>항목 꼬리표가 가리키는 오브젝트 — 오브젝트·노드. 폴더·뼈대는 null.</summary>
-    private static string? ObjectIdOf(object? tag) => tag is HierarchyNode n ? n.ObjectId : null;
-
-    /// <summary>노드 항목: 그 오브젝트를 고르고, 채널 박스·매니퓰레이터의 노드를 그 노드로. 키 따라가기는 끈다(사용자가 직접 골랐다).</summary>
+    /// <summary>노드 항목: 채널 박스·매니퓰레이터의 노드를 그 노드로. 키 따라가기는 끈다(사용자가 직접 골랐다).</summary>
     private void SelectNodeInHierarchy(HierarchyNode node)
     {
         // 세트 보기에서는 그 오브젝트가 세트 탭의 세트 칸에 뜬다.
@@ -1706,7 +1661,6 @@ public partial class MainWindow : Window
             RefreshSetNodePanel();
         }
 
-        _viewport.SelectedObjectId = node.ObjectId;
         _followSelection = false;
         _viewport.SelectedNode = node.NodeId;
         ShowCurves(_graph.Curves.Select(s => s.Curve).Where(cr => cr.Node == node.NodeId).ToList(), additive: false);
@@ -1715,24 +1669,12 @@ public partial class MainWindow : Window
         RefreshChannels();
     }
 
-    /// <summary>테스트 손잡이 — 하이어아키에서 노드(또는 오브젝트)를 고른 것과 같다.</summary>
-    internal void SelectInHierarchy(string objectId, string? nodeId)
-    {
-        var node = new HierarchyNode(objectId, nodeId);
+    /// <summary>테스트 손잡이 — 하이어아키에서 층을 고른 것과 같다.</summary>
+    internal void SelectInHierarchy(string nodeId) => SelectNodeInHierarchy(new HierarchyNode(nodeId));
 
-        if (nodeId is null)
-        {
-            _viewport.SelectedObjectId = objectId;
-        }
-        else
-        {
-            SelectNodeInHierarchy(node);
-        }
-    }
-
-    /// <summary>테스트 손잡이 — 하이어아키 항목의 경로(Scene부터 헤더 순). 없으면 빈 목록.</summary>
-    internal IReadOnlyList<string> HierarchyPathOf(string objectId, string? nodeId)
-        => PathOf(_hierarchyParents.Keys.FirstOrDefault(i => i.Tag is HierarchyNode n && n.ObjectId == objectId && n.NodeId == nodeId));
+    /// <summary>테스트 손잡이 — 하이어아키 항목의 경로(세트부터 헤더 순). 없으면 빈 목록.</summary>
+    internal IReadOnlyList<string> HierarchyPathOf(string nodeId)
+        => PathOf(_hierarchyParents.Keys.FirstOrDefault(i => i.Tag is HierarchyNode n && n.NodeId == nodeId));
 
     private IReadOnlyList<string> PathOf(TreeViewItem? item)
     {
@@ -1870,24 +1812,20 @@ public partial class MainWindow : Window
     {
         _unkeyedRows.Clear();
 
-        if (_session.Rig is not { } rig || !rig.NodeIds.TryGetValue(motion.Rig, out ICollection<string>? nodes) || nodes.Count > UnkeyedRowsMaxNodes)
+        if (_session.Editor.Document.FindRig(motion.Rig) is not { } set || set.Nodes.Count > UnkeyedRowsMaxNodes)
         {
             return;
         }
 
-        rig.AlphaNodeIds.TryGetValue(motion.Rig, out ICollection<string>? alphaNodes);
         bool headed = false;
 
-        foreach (string node in nodes)
+        foreach (RigNodeAsset layer in set.Nodes)
         {
-            if (node == RigAssetCodec.RootId)
-            {
-                continue;
-            }
+            string node = layer.Id;
 
             foreach (MotionChannelKind kind in new[] { MotionChannelKind.Position, MotionChannelKind.Scale, MotionChannelKind.Euler, MotionChannelKind.Alpha })
             {
-                if (motion.FindChannel(node, kind) is not null || (kind == MotionChannelKind.Alpha && alphaNodes?.Contains(node) != true))
+                if (motion.FindChannel(node, kind) is not null || (kind == MotionChannelKind.Alpha && !layer.Alpha))
                 {
                     continue;
                 }

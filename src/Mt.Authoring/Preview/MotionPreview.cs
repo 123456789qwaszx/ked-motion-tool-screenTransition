@@ -13,16 +13,14 @@ namespace Mt.Authoring.Preview;
 public static class MotionPreview
 {
     /// <param name="isMuted">뮤트된 성분(재생에서 뺀다 — 시작값 그대로). null이면 없음.</param>
-    /// <param name="keyPrefix">오브젝트 접두사(예: "set/") — 무대의 오브젝트 하나에 얹을 때. 비면 접두사 없는 트리.</param>
     /// <param name="alphas">
     /// 노드 키 → 불투명도(없는 키는 1). 알파 채널은 트리가 아니라 이 표에 얹힌다 — 불투명도는 <c>RectNodeState</c>에 없다(코어도 따로 든다).
     /// 받은 표를 **그 자리에서 고친다**. null이면 알파 채널은 건너뛴다.
     /// </param>
-    public static RectNodeTree Pose(RectNodeTree template, MotionAsset motion, double seconds, Func<Graph.CurveRef, bool>? isMuted = null, string keyPrefix = "", IDictionary<string, float>? alphas = null)
+    public static RectNodeTree Pose(RectNodeTree template, MotionAsset motion, double seconds, Func<Graph.CurveRef, bool>? isMuted = null, IDictionary<string, float>? alphas = null)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(motion);
-        keyPrefix ??= "";
 
         RectNodeTree tree = template.Clone();
         MotionClip clip = MotionAssetCodec.ToClip(motion);
@@ -60,7 +58,7 @@ public static class MotionPreview
         foreach (MotionChannel channel in channels)
         {
             // 세트에 없는 노드는 건너뛴다 — 검증이 이미 소리를 낸다. 여기서 던지면 편집 중 화면이 죽는다.
-            string key = keyPrefix + channel.Node;
+            string key = channel.Node;
 
             if (string.IsNullOrEmpty(channel.Node) || !tree.Contains(key))
             {

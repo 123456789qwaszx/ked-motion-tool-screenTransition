@@ -1,6 +1,5 @@
 using Mt.Authoring.Editing;
 using Mt.Authoring.Model;
-using Mt.Authoring.Rig;
 
 namespace Mt.App.Tests;
 
@@ -25,15 +24,6 @@ public static class RigTemplates
             new RigNodeAsset { Id = "Panel", Parent = "Pivot", Width = 400f, Height = 600f, Color = "#808080" },
         },
     };
-
-    /// <summary>발판 세트 둘(인형 · 이모지)로 지은 리그 스키마 — 미리보기·검증이 서는 바탕.</summary>
-    public static RigSchemaFile File()
-    {
-        var document = new MotionDocument();
-        document.Rigs.Add(Figure());
-        document.Rigs.Add(Emoji());
-        return RigAssets.Compose(document);
-    }
 
     public static RigAsset Emoji(string kind = EmojiKind, int parts = DefaultParts, float partSize = DefaultPartSize)
     {

@@ -3,13 +3,11 @@ using Mt.Authoring.Editing;
 using Mt.Authoring.Graph;
 using Mt.Authoring.Model;
 using Mt.Authoring.Preview;
-using Mt.Authoring.Rig;
 
 namespace Mt.Authoring.Tests;
 
 public class PoseEditTests
 {
-    private static readonly RigSchemaFile RigFile = RigTemplates.File();
 
     [Fact]
     public void 회전은_반시계_양수이고_감긴다_배율은_팔_방향_투영이라_가운데를_넘어도_뒤집히지_않는다()

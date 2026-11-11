@@ -8,7 +8,6 @@ using Mt.App.Views;
 using Mt.Authoring.Editing;
 using Mt.Authoring.Model;
 using Mt.Authoring.Preview;
-using Mt.Authoring.Rig;
 
 namespace Mt.App.Tests;
 
@@ -20,7 +19,6 @@ public class ViewportViewTests
         var view = new ViewportView { SnapStep = 1.0 / 60 }; // 기대값은 1/60 스냅 기준(기본값은 1/24)
         var window = new Window { Width = 900, Height = 600, Content = view };
         window.Show();
-        view.SetRig(Mt.Authoring.Rig.RigAssets.Compose(editor.Document));
         view.Bind(editor, "nod");
         Avalonia.Threading.Dispatcher.UIThread.RunJobs();
         return (window, view, editor);
@@ -91,16 +89,16 @@ public class ViewportViewTests
         try
         {
             Assert.True(view.HasRig);
-            Quad rest = view.ObjectQuad(ViewportView.SetObjectId) ?? throw new InvalidOperationException("세트가 없다");
+            Quad rest = view.SetQuad() ?? throw new InvalidOperationException("세트가 없다");
             Assert.Equal(0f, rest.Center.Y, 2);
 
             view.ScrubTo(0.3);
-            Quad dipped = view.ObjectQuad(ViewportView.SetObjectId)!.Value;
+            Quad dipped = view.SetQuad()!.Value;
             Assert.Equal(-18f, dipped.Center.Y, 2);
 
             // 길이에서는 restore라 시작 상태.
             view.ScrubTo(0.6);
-            Assert.Equal(0f, view.ObjectQuad(ViewportView.SetObjectId)!.Value.Center.Y, 2);
+            Assert.Equal(0f, view.SetQuad()!.Value.Center.Y, 2);
         }
         finally
         {
@@ -350,13 +348,13 @@ public class ViewportViewTests
         {
             var y = new Mt.Authoring.Graph.CurveRef("MoverY", MotionChannelKind.Position, Mt.Authoring.Model.Axis.Y);
             view.ScrubTo(0.3);
-            Assert.Equal(-18f, view.ObjectQuad(ViewportView.SetObjectId)!.Value.Center.Y, 2);
+            Assert.Equal(-18f, view.SetQuad()!.Value.Center.Y, 2);
 
             view.Flags.SetMuted(y, true);
-            Assert.Equal(0f, view.ObjectQuad(ViewportView.SetObjectId)!.Value.Center.Y, 2);
+            Assert.Equal(0f, view.SetQuad()!.Value.Center.Y, 2);
 
             view.Flags.SetMuted(y, false);
-            Assert.Equal(-18f, view.ObjectQuad(ViewportView.SetObjectId)!.Value.Center.Y, 2);
+            Assert.Equal(-18f, view.SetQuad()!.Value.Center.Y, 2);
         }
         finally
         {
@@ -382,7 +380,7 @@ public class ViewportViewTests
     });
 
     [Fact]
-    public void 리그가_없거나_묶인_타임라인이_없으면_무대가_비고_그래도_그려진다() => HeadlessUi.Run(() =>
+    public void 묶인_타임라인이_없으면_무대가_비고_그래도_그려진다() => HeadlessUi.Run(() =>
     {
         MotionEditor editor = TestDocuments.Nod();
         var view = new ViewportView { SnapStep = 1.0 / 60 }; // 기대값은 1/60 스냅 기준(기본값은 1/24)
@@ -391,18 +389,16 @@ public class ViewportViewTests
 
         try
         {
-            view.Bind(editor, "nod");
             Assert.False(view.HasRig);
-            Assert.Null(view.ObjectQuad(ViewportView.SetObjectId));
+            Assert.Null(view.SetQuad());
 
-            view.SetRig(Mt.Authoring.Rig.RigAssets.Compose(editor.Document));
+            view.Bind(editor, "nod");
             Assert.True(view.HasRig);
-
-            Assert.NotNull(view.ObjectQuad(ViewportView.SetObjectId));
+            Assert.NotNull(view.SetQuad());
 
             // 묶인 타임라인이 없으면 무대가 빈다.
             view.Bind(editor, null);
-            Assert.Null(view.ObjectQuad(ViewportView.SetObjectId));
+            Assert.Null(view.SetQuad());
             view.InvalidateVisual();
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();
         }
