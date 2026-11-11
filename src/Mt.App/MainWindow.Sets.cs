@@ -96,6 +96,15 @@ public partial class MainWindow
     /// <summary>테스트 손잡이 — 세트 목록에서 고른 것과 같다.</summary>
     internal void SelectSet(string? kind) => _setList.SelectedItem = kind;
 
+    private readonly Avalonia.Controls.Primitives.ToggleButton _layoutToggle = new() { Content = "배치", FontSize = 10, Padding = new Avalonia.Thickness(6, 2) };
+
+    /// <summary>테스트 손잡이 — "배치" 토글.</summary>
+    internal bool LayoutModeChecked
+    {
+        get => _layoutToggle.IsChecked == true;
+        set => _layoutToggle.IsChecked = value;
+    }
+
     /// <summary>테스트 손잡이 — 연 세트, 고른 오브젝트(노드), 목록의 세트들, 오브젝트 칸이 열려 있는가.</summary>
     internal (string? Set, string? Node, IReadOnlyList<string> Sets, bool Editable) SetEditorState
         => (SelectedSet, _rigNodeSelected, (_setList.ItemsSource as IEnumerable<string> ?? Array.Empty<string>()).ToList(), _setNodePanel.IsVisible && _rigNodeFields.IsEnabled);
@@ -209,11 +218,13 @@ public partial class MainWindow
         ToolTip.SetTip(importLayers, "그림 한 묶음을 한 번에 — 층 표(layers.tsv: 파일 ⇥ 왼쪽 ⇥ 위 ⇥ 너비 ⇥ 높이, 뒤에서 앞으로)를 읽어 층마다 그림 오브젝트를 그 자리에 세운다. 표의 설명 줄에 #RRGGBB가 있으면 맨 뒤에 그 색의 바탕이 선다. 되돌리기 한 번");
         ToolTip.SetTip(import, "PNG를 연 세트의 그림 오브젝트로 — 이름은 파일 이름에서, 크기는 그림의 크기. 되돌리기 한 번. 뷰포트에 파일을 끌어다 놓아도 된다");
         ToolTip.SetTip(add, "빈 세트(오브젝트 Body 하나)를 만들어 연다 — 이름 set, set_2…. 하이어아키에서 우클릭해 오브젝트를 더한다");
-        ToolTip.SetTip(remove, "연 세트를 지운다. 그 세트의 애니메이션은 남고 문제 목록이 알린다(되돌리기 한 번)");
+        ToolTip.SetTip(remove, "연 세트를 지운다 — 그 타임라인도 함께(되돌리기 한 번)");
         ToolTip.SetTip(close, "세트를 닫는다");
-        LeftPanel.Children.Insert(2, new WrapPanel { Orientation = Orientation.Horizontal, Children = { add, remove, close, import, importLayers } });
+        ToolTip.SetTip(_layoutToggle, "배치 모드 — 켜면 무대가 움직임 없이 가만히 선 자세를 보이고, 끌기가 그 자세를 바꾼다(자리 · Shift 배율 · Ctrl 회전). 끄면 끌기가 타임라인의 키가 된다");
+        _layoutToggle.IsCheckedChanged += (_, _) => _viewport.LayoutMode = _layoutToggle.IsChecked == true;
+        LeftPanel.Children.Insert(2, new WrapPanel { Orientation = Orientation.Horizontal, Children = { add, remove, close, _layoutToggle, import, importLayers } });
         LeftPanel.Children.Insert(3, Labeled("세트 이름", _setName));
-        ToolTip.SetTip(_setName, "연 세트의 이름 — 고치고 Enter. 그 세트의 애니메이션이 따라온다(되돌리기 한 번). 영문자로 시작하는 영문·숫자·_");
+        ToolTip.SetTip(_setName, "연 세트의 이름 — 고치고 Enter(되돌리기 한 번). 타임라인의 이름도 이것이다. 영문 소문자로 시작하는 소문자·숫자·_");
         OnCommit(_setName, text =>
         {
             if (!_refreshing && SelectedSet is { } kind && text.Trim() != kind)
@@ -334,20 +345,10 @@ public partial class MainWindow
             return;
         }
 
-        if (SelectedSet is { } kind)
-        {
-            // 그 세트의 것이 아닌 모션은 풀린다(이 세트가 연기할 수 없다).
-
-            if (SelectedMotion is { } motion && _session.Editor.Document.Find(motion)?.Rig != kind)
-            {
-                _motionList.SelectedItem = null;
-            }
-        }
-
         ApplySetView();
     }
 
-    /// <summary>목록의 선택을 뷰포트에 — 세트 보기를 켜거나 끄고, 하이어아키와 칸을 다시 세운다.</summary>
+    /// <summary>목록의 선택을 뷰포트에 — 그 세트를 무대에 세우고 그 타임라인을 묶는다. 하이어아키와 칸을 다시 세운다.</summary>
     private void ApplySetView()
     {
         if (!_setName.IsFocused)
@@ -357,50 +358,26 @@ public partial class MainWindow
 
         _setName.IsEnabled = SelectedSet is not null;
 
-        if (_viewport.SetView == SelectedSet)
+        if (_viewport.SetView == SelectedSet && _graph.MotionName == SelectedSet)
         {
             return;
         }
 
         _rigNodeSelected = null;
         _viewport.SetView = SelectedSet;
-        BindMotion(SelectedMotion); // 뷰포트의 무대가 바뀌었다 — 묶인 것을 그 무대에서 다시 본다
+        BindMotion(SelectedSet); // 세트의 타임라인
         RefreshAssets();
         RefreshObjects();
         RefreshSetNodePanel();
-        RefreshMotionList(); // 세트의 애니메이션만 / 전부
+        RefreshMotionInspector();
+        RefreshKeyInspector();
 
         if (SelectedSet is not null)
         {
             ExpandObjectNodes(ViewportView.SetObjectId, true); // 세트를 열면 그 오브젝트들이 바로 보인다
-            _viewport.FitToSet();                              // 작은 세트가 무대 한가운데의 점으로 서지 않게
-        }
-        else
-        {
-            _viewport.ResetView();
-        }
-    }
-
-    /// <summary>세트 보기를 떠난다 — 다른 리그의 모션을 골랐을 때.</summary>
-    private void DeselectSet()
-    {
-        if (SelectedSet is null)
-        {
-            return;
         }
 
-        _refreshDepth++;
-
-        try
-        {
-            _setList.SelectedItem = null;
-        }
-        finally
-        {
-            _refreshDepth--;
-        }
-
-        ApplySetView();
+        _viewport.ResetView(); // 무대 전체를 보인다
     }
 
     private void RefreshSets()
@@ -435,6 +412,7 @@ public partial class MainWindow
         _session.Editor.AddRig(new RigAsset { Kind = kind, Nodes = { new RigNodeAsset { Id = "Body", Alpha = true } } });
         RefreshSets();
         _setList.SelectedItem = kind;
+        LayoutModeChecked = true; // 새 세트는 층부터 놓는다
         SelectSetNode("Body");
         return kind;
     }

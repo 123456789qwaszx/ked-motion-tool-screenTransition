@@ -37,7 +37,7 @@ public class KeySelectionTests
     public void 문서가_바뀌면_없는_키를_턴다()
     {
         MotionDocument document = Fixtures.NodBowDocument();
-        var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+        var y = new CurveRef("MoverY", MotionChannelKind.Position, Axis.Y);
         var selection = new KeySelection();
         selection.Set(new[] { new KeyRef(y, 2), new KeyRef(y, 9) });
 
@@ -50,7 +50,7 @@ public class KeySelectionTests
 
 public class KeyOpsTests
 {
-    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+    private static readonly CurveRef Y = new("MoverY", MotionChannelKind.Position, Axis.Y);
 
     private static MotionAsset Nod() => Fixtures.NodBowDocument().Find("nod")!;
 
@@ -148,7 +148,7 @@ public class DopeSheetRowsTests
 
         Assert.Equal(5, rows.Count); // 노드 · 채널 · x · y · z
         Assert.Equal(DopeRowLevel.Node, rows[0].Level);
-        Assert.Equal("CharacterPortrait_SwayPivot", rows[0].Label);
+        Assert.Equal("Pivot", rows[0].Label);
         Assert.Equal(DopeRowLevel.Channel, rows[1].Level);
         Assert.Equal("rotate", rows[1].Label); // 화면 이름은 rotate, 파일 규약은 euler
         Assert.Equal(new[] { "x", "y", "z" }, rows.Skip(2).Select(r => r.Label));
@@ -169,7 +169,7 @@ public class DopeSheetRowsTests
 
         DopeRow only = Assert.Single(rows);
         Assert.Equal(DopeRowLevel.Node, only.Level);
-        var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+        var y = new CurveRef("MoverY", MotionChannelKind.Position, Axis.Y);
         Assert.True(only.Covers(new KeyRef(y, 1)));
         Assert.False(only.Covers(new KeyRef(new CurveRef("Other", MotionChannelKind.Position, Axis.Y), 1)));
 
@@ -181,7 +181,7 @@ public class DopeSheetRowsTests
     [Fact]
     public void 채널이_없으면_행이_없다()
     {
-        Assert.Empty(DopeSheetRows.Build(new MotionAsset { Name = "a", Rig = "character", Duration = 1f }));
+        Assert.Empty(DopeSheetRows.Build(new RigAsset { Kind = "a" }.Timeline));
     }
 }
 
@@ -213,7 +213,7 @@ public class RelativeInputTests
 
 public class KeyValueOpsTests
 {
-    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+    private static readonly CurveRef Y = new("MoverY", MotionChannelKind.Position, Axis.Y);
 
     [Fact]
     public void 값만_바꾸고_시각은_그대로라_선택이_유효하다()
@@ -243,8 +243,8 @@ public class KeyValueOpsTests
 
 public class KeyClipboardTests
 {
-    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
-    private static readonly CurveRef Z = new("CharacterPortrait_SwayPivot", MotionChannelKind.Euler, Axis.Z);
+    private static readonly CurveRef Y = new("MoverY", MotionChannelKind.Position, Axis.Y);
+    private static readonly CurveRef Z = new("Pivot", MotionChannelKind.Euler, Axis.Z);
 
     [Fact]
     public void 복사는_사본이고_기준은_가장_이른_키다()

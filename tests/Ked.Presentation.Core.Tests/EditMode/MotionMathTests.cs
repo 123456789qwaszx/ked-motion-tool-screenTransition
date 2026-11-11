@@ -14,7 +14,7 @@ public class MotionMathTests
     private static CurveKey[] From5To7 => new[] { new CurveKey(0f, 5f, 0f, 0f), new CurveKey(1f, 7f, 0f, 0f) };
 
     private static MotionChannel Channel(MotionChannelKind kind, CurveKey[] x = null, CurveKey[] y = null, CurveKey[] z = null)
-        => new() { Node = "CharacterPortrait_Track_Move", Kind = kind, X = x, Y = y, Z = z };
+        => new() { Node = "Mover", Kind = kind, X = x, Y = y, Z = z };
 
     [Test]
     public void 샘플은_성분마다_CurveFunctions이고_없는_성분은_0이다()

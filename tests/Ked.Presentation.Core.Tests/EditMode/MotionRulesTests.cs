@@ -16,21 +16,21 @@ public class MotionRulesTests
         return result;
     }
 
-    private static MotionChannel Channel(string node = "CharacterPortrait_Track_Move_Y", MotionChannelKind kind = MotionChannelKind.Position,
+    private static MotionChannel Channel(string node = "MoverY", MotionChannelKind kind = MotionChannelKind.Position,
         CurveKey[] x = null, CurveKey[] y = null, CurveKey[] z = null)
         => new() { Node = node, Kind = kind, X = x, Y = y, Z = z };
 
     private static MotionClip Clip(float duration = 0.6f, params MotionChannel[] channels)
-        => new() { Name = "nod", Rig = "character", Duration = duration, Channels = channels };
+        => new() { Name = "nod", Rig = "figure", Duration = duration, Channels = channels };
 
     private static MotionChannel Nod => Channel(y: Keys((0f, 0f), (0.3f, -18f), (0.6f, 0f)));
 
-    private static readonly HashSet<string> Rig = new() { "CharacterPortrait_Track_Move_Y", "CharacterPortrait_SwayPivot", "CharSlot_Track_X" };
+    private static readonly HashSet<string> Rig = new() { "MoverY", "Pivot", "SlideX" };
 
     [Test]
     public void 유효한_클립은_통과한다_스키마가_있어도_없어도()
     {
-        MotionClip clip = Clip(0.6f, Nod, Channel("CharacterPortrait_SwayPivot", MotionChannelKind.Euler, z: Keys((0f, 3f), (0.6f, 0f))));
+        MotionClip clip = Clip(0.6f, Nod, Channel("Pivot", MotionChannelKind.Euler, z: Keys((0f, 3f), (0.6f, 0f))));
 
         Assert.IsTrue(MotionRules.TryValidate(clip, null, out string reason), reason);
         Assert.IsTrue(MotionRules.TryValidate(clip, Rig, out reason), reason);

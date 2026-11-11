@@ -3,7 +3,7 @@ using Avalonia.Controls;
 
 namespace Mt.App;
 
-// 불투명도 값 칸 — "모션" 탭, 불투명도를 받을 수 있는 노드를 골랐을 때만. 값을 넣으면 그 시각에 알파 채널의 키.
+// 불투명도 값 칸 — "타임라인" 탭, 불투명도를 받을 수 있는 노드를 골랐을 때만. 값을 넣으면 그 시각에 알파 채널의 키.
 public partial class MainWindow
 {
     private readonly StackPanel _alphaPanel = new() { Spacing = 4, IsVisible = false };

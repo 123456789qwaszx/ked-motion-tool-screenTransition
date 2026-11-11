@@ -7,7 +7,7 @@ namespace Mt.Authoring.Tests;
 
 /// <summary>
 /// 예시 문서 <c>examples/transitions/station/station.motion-authoring.json</c> — 화면 전환 하나를 세트와 타임라인 하나로 지은 것.
-/// 층 표(<c>art/layers.tsv</c>)를 세트로 들이고, 등장·머묾·퇴장을 따로 짓고 한 타임라인으로 잇는다(<see cref="Join"/>). 편집기의 명령으로만 짓는다.
+/// 층 표(<c>art/layers.tsv</c>)를 세트로 들이고, 등장·머묾·퇴장을 사본 세트에서 따로 짓고(<see cref="Section"/>) 한 타임라인으로 잇는다(<see cref="Join"/>). 편집기의 명령으로만 짓는다.
 /// </summary>
 internal static class TransitionExamples
 {
@@ -105,7 +105,7 @@ internal static class TransitionExamples
         // 전부 상대값이다: 가만히 선 자세(배치 모드에서 놓은 자리)에서 얼마나 떨어져 있는가. 끝에서 0이라 제자리에 선다.
         const string In = "station_in";
         const float D = 1.2f;
-        editor.AddMotion(In, Station, D);
+        Section(editor, Station, In, D);
         Curve(editor, In, MotionEditor.BackdropNode, MotionChannelKind.Alpha, Axis.X, L(0f, 0f), L(0.25f, 1f), L(D, 1f));
         editor.AddMotionEvent(In, 0.25f, "covered");
 
@@ -137,7 +137,7 @@ internal static class TransitionExamples
 
         // ── 머묾(2초, 되풀이) — 미생물이 떠다니고 끝의 빛이 숨쉰다.
         const string Hold = "station_hold";
-        editor.AddMotion(Hold, Station, 2f);
+        Section(editor, Station, Hold, 2f);
         Curve(editor, Hold, "microbe_sun", MotionChannelKind.Position, Axis.Y, K(0f, 0f), K(1f, 16f), K(2f, 0f));
         Curve(editor, Hold, "microbe_sun", MotionChannelKind.Euler, Axis.Z, K(0f, 0f), K(1f, 20f), K(2f, 0f));
         Curve(editor, Hold, "microbe_leaf", MotionChannelKind.Position, Axis.Y, K(0f, 0f), K(0.7f, -12f), K(1.4f, 8f), K(2f, 0f));
@@ -148,7 +148,7 @@ internal static class TransitionExamples
         // ── 퇴장(0.9초) — 층들이 들어온 길로 물러나고 바탕색이 걷힌다.
         const string Out = "station_out";
         const float E = 0.9f;
-        editor.AddMotion(Out, Station, E);
+        Section(editor, Station, Out, E);
 
         foreach ((string node, _) in microbes)
         {
@@ -187,7 +187,7 @@ internal static class TransitionExamples
         // ── 등장(1.5초) ──
         const string In = "pillar_in";
         const float D = 1.5f;
-        editor.AddMotion(In, Pillar, D);
+        Section(editor, Pillar, In, D);
         Curve(editor, In, MotionEditor.BackdropNode, MotionChannelKind.Alpha, Axis.X, L(0f, 0f), L(0.25f, 1f), L(D, 1f));
         editor.AddMotionEvent(In, 0.25f, "covered");
 
@@ -225,7 +225,7 @@ internal static class TransitionExamples
 
         // ── 머묾(3초, 되풀이) — 꽃잎이 흔들리고 구름이 천천히 숨쉰다.
         const string Hold = "pillar_hold";
-        editor.AddMotion(Hold, Pillar, 3f);
+        Section(editor, Pillar, Hold, 3f);
 
         for (int i = 0; i < petals.Length; i++)
         {
@@ -241,7 +241,7 @@ internal static class TransitionExamples
         // ── 퇴장(1초) — 해가 지고, 지평선이 가라앉고(시차 — 앞의 것부터), 기둥이 기울어 나가고, 바탕색이 걷힌다.
         const string Out = "pillar_out";
         const float E = 1f;
-        editor.AddMotion(Out, Pillar, E);
+        Section(editor, Pillar, Out, E);
 
         foreach (string petal in petals)
         {
@@ -302,6 +302,16 @@ internal static class TransitionExamples
         => Curve(editor, motion, node, MotionChannelKind.Position, axis, Ramp(duration, from, to, a, b));
 
     /// <summary>
+    /// 구간 하나(등장 · 머묾 · 퇴장)를 지을 자리 — 그 세트의 사본(<paramref name="section"/>)을 만들어 거기 타임라인에 짓는다.
+    /// 세트마다 타임라인은 하나라, 구간은 사본에서 짓고 <see cref="Join"/>이 본 세트의 타임라인으로 잇고 사본을 지운다.
+    /// </summary>
+    private static void Section(MotionEditor editor, string kind, string section, float duration)
+    {
+        editor.AddRig(new RigAsset { Kind = section, Nodes = editor.Document.FindRig(kind)!.Nodes });
+        editor.SetDuration(section, duration);
+    }
+
+    /// <summary>
     /// 등장 › 머묾(한 바퀴) › 퇴장을 그 세트의 타임라인 하나로 잇는다 — 셋 다 상대값이고, 머묾은 등장이 끝난 자세에서, 퇴장은 머묾이 끝난 자세에서 시작한다.
     /// 키를 굽지 않는다: 구간마다 시작값을 얹는다(위치·회전은 더하고 배율·불투명도는 곱한다 — 탄젠트도 같이). 구간이 만나는 키는 양쪽 탄젠트를 그대로 지닌다.
     /// 표지 — 등장의 <c>covered</c>(덮였다)는 그대로, 머묾의 끝에 <c>release</c>(걷기 시작)를 둔다.
@@ -309,7 +319,7 @@ internal static class TransitionExamples
     private static void Join(MotionEditor editor, string kind, string enter, string hold, string exit)
     {
         MotionAsset[] parts = { editor.Document.Find(enter)!, editor.Document.Find(hold)!, editor.Document.Find(exit)! };
-        editor.AddMotion(kind, kind, parts.Sum(p => p.Duration));
+        editor.SetDuration(kind, parts.Sum(p => p.Duration));
 
         foreach (MotionEventAsset e in parts[0].Events)
         {
@@ -375,7 +385,7 @@ internal static class TransitionExamples
 
         foreach (MotionAsset part in parts)
         {
-            editor.RemoveMotion(part.Name);
+            editor.RemoveRig(part.Name);
         }
     }
 
@@ -390,7 +400,7 @@ internal static class TransitionExamples
         // ── 등장(1.4초)
         const string In = "lapis_in";
         const float D = 1.4f;
-        editor.AddMotion(In, Lapis, D);
+        Section(editor, Lapis, In, D);
         Cover(editor, In, D);
         Fade(editor, In, "light_band", D, 0.2f, 0.9f, 0f, 1f);
         string[] rising = { "seabed_far", "pillars_far", "pillars_mid", "seabed_near" };
@@ -412,7 +422,7 @@ internal static class TransitionExamples
 
         // ── 머묾(2초, 되풀이)
         const string Hold = "lapis_hold";
-        editor.AddMotion(Hold, Lapis, 2f);
+        Section(editor, Lapis, Hold, 2f);
         Curve(editor, Hold, "fish_school", MotionChannelKind.Position, Axis.X, K(0f, 0f), K(1f, -46f), K(2f, 0f));
         Curve(editor, Hold, "ray", MotionChannelKind.Position, Axis.Y, K(0f, 0f), K(1f, 20f), K(2f, 0f));
         Curve(editor, Hold, "stars", MotionChannelKind.Alpha, Axis.X, K(0f, 1f), K(1f, 0.55f), K(2f, 1f));
@@ -422,7 +432,7 @@ internal static class TransitionExamples
         // ── 퇴장(1초)
         const string Out = "lapis_out";
         const float E = 1f;
-        editor.AddMotion(Out, Lapis, E);
+        Section(editor, Lapis, Out, E);
         Scale(editor, Out, "orb", At(E, 0f, F(0f, 1f), F(0.3f, 0.5f))); // 사그라든다
         Fade(editor, Out, "orb", E, 0f, 0.3f, 1f, 0f);
         Fade(editor, Out, "stars", E, 0f, 0.3f, 1f, 0f);
@@ -455,7 +465,7 @@ internal static class TransitionExamples
         // ── 등장(1.5초)
         const string In = "heredity_in";
         const float D = 1.5f;
-        editor.AddMotion(In, Heredity, D);
+        Section(editor, Heredity, In, D);
         Cover(editor, In, D);
         Fade(editor, In, "moon", D, 0.2f, 0.8f, 0f, 1f);
         Scale(editor, In, "moon", Ramp(D, 0.2f, 1.0f, 0.6f, 1f));
@@ -499,7 +509,7 @@ internal static class TransitionExamples
 
         // ── 머묾(3초, 되풀이) — 씨앗의 소용돌이가 두 바퀴 돌고 수정이 두 번 반짝인다.
         const string Hold = "heredity_hold";
-        editor.AddMotion(Hold, Heredity, 3f);
+        Section(editor, Heredity, Hold, 3f);
         // 한 방향으로 계속 돈다 — 되풀이 머묾(복원)의 끝에서 처음으로 돌아가도 한 바퀴의 배수라 이어져 보인다.
         Curve(editor, Hold, "orb_swirl", MotionChannelKind.Euler, Axis.Z, L(0f, 0f), L(3f, -720f));
         Scale(editor, Hold, "orb", Loop(2, K(0f, 1f), K(0.75f, 1.05f), K(1.5f, 1f)));
@@ -516,7 +526,7 @@ internal static class TransitionExamples
         // ── 퇴장(1초)
         const string Out = "heredity_out";
         const float E = 1f;
-        editor.AddMotion(Out, Heredity, E);
+        Section(editor, Heredity, Out, E);
 
         foreach (string leaf in leaves)
         {
@@ -552,7 +562,7 @@ internal static class TransitionExamples
         // ── 등장(1.5초)
         const string In = "mercury_in";
         const float D = 1.5f;
-        editor.AddMotion(In, Mercury, D);
+        Section(editor, Mercury, In, D);
         Cover(editor, In, D);
         string[] air = { "atmosphere", "atmosphere_inner" };
 
@@ -579,7 +589,7 @@ internal static class TransitionExamples
 
         // ── 머묾(2.5초, 되풀이) — 고래가 느리게 헤엄치고 별이 두 번 깜빡인다.
         const string Hold = "mercury_hold";
-        editor.AddMotion(Hold, Mercury, 2.5f);
+        Section(editor, Mercury, Hold, 2.5f);
         Curve(editor, Hold, "whale_big", MotionChannelKind.Position, Axis.Y, K(0f, 0f), K(1.25f, 26f), K(2.5f, 0f));
         Curve(editor, Hold, "whale_big", MotionChannelKind.Euler, Axis.Z, K(0f, 0f), K(1.25f, -3f), K(2.5f, 0f));
         Curve(editor, Hold, "whale_small", MotionChannelKind.Position, Axis.Y, K(0f, 0f), K(1.25f, -18f), K(2.5f, 0f));
@@ -590,7 +600,7 @@ internal static class TransitionExamples
         // ── 퇴장(1초)
         const string Out = "mercury_out";
         const float E = 1f;
-        editor.AddMotion(Out, Mercury, E);
+        Section(editor, Mercury, Out, E);
         Scale(editor, Out, "star", At(E, 0f, F(0f, 1f), F(0.4f, 0.1f))); // 꺼진다
         Fade(editor, Out, "star_glow", E, 0f, 0.3f, 1f, 0f);
         Fade(editor, Out, "star", E, 0.2f, 0.4f, 1f, 0f);

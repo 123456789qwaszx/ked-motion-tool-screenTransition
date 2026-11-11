@@ -15,13 +15,13 @@ public class MotionEditorTests
         var kinds = new List<MotionChangeKind>();
         editor.Changed += (_, e) => kinds.Add(e.Kind);
 
-        editor.AddMotion("a", "character", 1f);
+        editor.AddTimeline("a", 2f, RigTemplates.Figure());
         editor.AddChannel("a", "N", MotionChannelKind.Position);
         editor.AddKey("a", "N", MotionChannelKind.Position, Axis.X, Fixtures.Key(0f, 0f));
         editor.AddKey("a", "N", MotionChannelKind.Position, Axis.X, Fixtures.Key(1f, 5f));
 
-        Assert.Equal(4, editor.Revision);
-        Assert.Equal(new[] { MotionChangeKind.Structure, MotionChangeKind.Structure, MotionChangeKind.Keys, MotionChangeKind.Keys }, kinds);
+        Assert.Equal(5, editor.Revision); // 세트 · 길이 · 채널 · 키 · 키
+        Assert.Equal(new[] { MotionChangeKind.Document, MotionChangeKind.Metadata, MotionChangeKind.Structure, MotionChangeKind.Keys, MotionChangeKind.Keys }, kinds);
         Assert.Equal(2, editor.Document.Find("a")!.Channels[0].X!.Keys.Count);
 
         editor.Undo();
@@ -46,11 +46,11 @@ public class MotionEditorTests
     public void 새_조작은_다시하기_기록을_지운다()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddMotion("a", "character", 1f);
+        editor.AddTimeline("a", 1f, RigTemplates.Figure());
         editor.Undo();
         Assert.True(editor.CanRedo);
 
-        editor.AddMotion("b", "character", 1f);
+        editor.AddTimeline("b", 1f, RigTemplates.Figure());
         Assert.False(editor.CanRedo);
         Assert.Null(editor.Document.Find("a"));
         Assert.NotNull(editor.Document.Find("b"));
@@ -60,7 +60,7 @@ public class MotionEditorTests
     public void 같은_시각의_키는_하나다_더하면_바뀌고_시각_순서를_지킨다()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddMotion("a", "character", 1f);
+        editor.AddTimeline("a", 1f, RigTemplates.Figure());
         editor.AddChannel("a", "N", MotionChannelKind.Position);
         editor.AddKey("a", "N", MotionChannelKind.Position, Axis.X, Fixtures.Key(1f, 1f));
         editor.AddKey("a", "N", MotionChannelKind.Position, Axis.X, Fixtures.Key(0f, 0f));
@@ -82,7 +82,7 @@ public class MotionEditorTests
     public void 호출자의_키_객체는_문서에_꽂히지_않는다()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddMotion("a", "character", 1f);
+        editor.AddTimeline("a", 1f, RigTemplates.Figure());
         editor.AddChannel("a", "N", MotionChannelKind.Position);
         KeyAsset mine = Fixtures.Key(0f, 0f);
         KeyAsset stored = editor.AddKey("a", "N", MotionChannelKind.Position, Axis.X, mine);
@@ -97,25 +97,20 @@ public class MotionEditorTests
     public void 중복_이름과_중복_채널은_거부한다()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddMotion("a", "character", 1f);
+        editor.AddTimeline("a", 1f, RigTemplates.Figure());
         editor.AddChannel("a", "N", MotionChannelKind.Position);
 
-        Assert.Throws<InvalidOperationException>(() => editor.AddMotion("a", "character", 2f));
+        Assert.Throws<InvalidOperationException>(() => editor.AddTimeline("a", 2f, RigTemplates.Figure()));
         Assert.Throws<InvalidOperationException>(() => editor.AddChannel("a", "N", MotionChannelKind.Position));
         Assert.Throws<KeyNotFoundException>(() => editor.SetDuration("zzz", 1f));
         Assert.Throws<KeyNotFoundException>(() => editor.RemoveChannel("a", "M", MotionChannelKind.Position));
-
-        editor.AddMotion("b", "character", 1f);
-        Assert.Throws<InvalidOperationException>(() => editor.RenameMotion("b", "a"));
-        editor.RenameMotion("b", "c");
-        Assert.NotNull(editor.Document.Find("c"));
     }
 
     [Fact]
     public void Replace는_기록을_버린다()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddMotion("a", "character", 1f);
+        editor.AddTimeline("a", 1f, RigTemplates.Figure());
 
         editor.Replace(Fixtures.NodBowDocument());
 
@@ -124,7 +119,7 @@ public class MotionEditorTests
         Assert.NotNull(editor.Document.Find("nod"));
     }
 
-    private static readonly CurveRef NodY = new("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+    private static readonly CurveRef NodY = new("MoverY", MotionChannelKind.Position, Axis.Y);
 
     [Fact]
     public void 바뀐_것이_없는_명령은_기록도_다시하기_삭제도_Revision도_없다()

@@ -37,56 +37,7 @@ public sealed partial class MotionEditor
 
     public bool CanRedo => _redo.Count > 0;
 
-    // ── 모션 ──────────────────────────────────────────────────────────
-
-    public MotionAsset AddMotion(string name, string rig, float duration)
-    {
-        ArgumentNullException.ThrowIfNull(name);
-        ArgumentNullException.ThrowIfNull(rig);
-
-        if (!MotionNames.IsValid(name))
-        {
-            throw new InvalidOperationException(MotionNames.RuleMessage(name));
-        }
-
-        if (Document.Find(name) is not null)
-        {
-            throw new InvalidOperationException($"모션 '{name}'이 이미 있다 — 이름은 하나뿐이어야 한다.");
-        }
-
-        var motion = new MotionAsset { Name = name, Rig = rig, Duration = duration };
-        Mutate(MotionChangeKind.Structure, () => Document.Motions.Add(motion));
-        return motion;
-    }
-
-    public void RemoveMotion(string name)
-    {
-        MotionAsset motion = Require(name);
-        Mutate(MotionChangeKind.Structure, () => Document.Motions.Remove(motion));
-    }
-
-    public void RenameMotion(string name, string newName)
-    {
-        ArgumentNullException.ThrowIfNull(newName);
-        MotionAsset motion = Require(name);
-
-        if (string.Equals(name, newName, StringComparison.Ordinal))
-        {
-            return;
-        }
-
-        if (!MotionNames.IsValid(newName))
-        {
-            throw new InvalidOperationException(MotionNames.RuleMessage(newName));
-        }
-
-        if (Document.Find(newName) is not null)
-        {
-            throw new InvalidOperationException($"모션 '{newName}'이 이미 있다.");
-        }
-
-        Mutate(MotionChangeKind.Metadata, () => motion.Name = newName);
-    }
+    // ── 타임라인 ──────────────────────────────────────────────────────
 
     /// <summary>
     /// 길이를 바꾼다. 키는 옮기지 않는다 — "끝 키를 길이로 옮기기"는 따로 있는 돕는 손이고,
@@ -812,7 +763,7 @@ public sealed partial class MotionEditor
     private MotionAsset Require(string name)
     {
         ArgumentNullException.ThrowIfNull(name);
-        return Document.Find(name) ?? throw new KeyNotFoundException($"모션 '{name}'이 없다.");
+        return Document.Find(name) ?? throw new KeyNotFoundException($"세트 '{name}'가 없다.");
     }
 
     private static ChannelAsset RequireChannel(MotionAsset motion, string node, MotionChannelKind kind)

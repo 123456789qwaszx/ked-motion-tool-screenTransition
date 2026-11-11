@@ -10,10 +10,9 @@ internal static class TestDocuments
     public static MotionEditor Nod()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddRig(RigTemplates.Character());
-        editor.AddMotion("nod", "character", 0.6f);
-        editor.AddChannel("nod", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position);
-        editor.SetKeys("nod", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y, new[]
+        editor.AddTimeline("nod", 0.6f, RigTemplates.Figure());
+        editor.AddChannel("nod", "MoverY", MotionChannelKind.Position);
+        editor.SetKeys("nod", "MoverY", MotionChannelKind.Position, Axis.Y, new[]
         {
             Key(0f, 0f), Key(0.3f, -18f), Key(0.6f, 0f),
         });

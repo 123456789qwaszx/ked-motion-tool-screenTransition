@@ -13,7 +13,7 @@ public class RigPartTests
     public void 조각은_그림을_든_오브젝트이고_캐릭터에는_없다()
     {
         Assert.Equal(new[] { "Emoji_Part1", "Emoji_Part2", "Emoji_Part3", "Emoji_Part4" }, RigParts.Of(RigFile, RigTemplates.EmojiKind));
-        Assert.Empty(RigParts.Of(RigFile, "character"));
+        Assert.Empty(RigParts.Of(RigFile, "figure"));
         Assert.Empty(RigParts.Of(RigFile, "nope"));
         Assert.Empty(RigParts.Of(null, RigTemplates.EmojiKind));
 

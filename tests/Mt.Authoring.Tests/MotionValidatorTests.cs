@@ -9,42 +9,30 @@ namespace Mt.Authoring.Tests;
 
 public class MotionValidatorTests
 {
-    private static readonly RigSchemaFile RigFile = RigTemplates.File();
-
     [Fact]
     public void nod_bow는_발판_세트로_검증하면_문제가_0건이다()
     {
-        Assert.Empty(MotionValidator.Validate(Fixtures.NodBowDocument(), RigFile.NodeIds));
+        MotionDocument document = Fixtures.NodBowDocument();
+        Assert.Empty(MotionValidator.Validate(document, RigAssets.Compose(document).NodeIds));
     }
 
     [Fact]
     public void 세트에_없는_노드는_거부하고_노드_표가_없으면_노드_검사는_생략한다()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddMotion("a", "character", 1f);
+        editor.AddTimeline("a", 1f, RigTemplates.Figure());
         editor.AddChannel("a", "NoSuchNode", MotionChannelKind.Position);
         // relative 전 구간 중립값이면 성분이 내보내기에서 빠지므로 가운데 키를 둔다 — 보려는 것은 노드 검사뿐이다.
         editor.SetKeys("a", "NoSuchNode", MotionChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(0.5f, 5f), Fixtures.Key(1f, 0f) });
 
-        Assert.Contains("리그 스키마에 없는 노드", Assert.Single(MotionValidator.Validate(editor.Document, RigFile.NodeIds)).Message, StringComparison.Ordinal);
+        Assert.Contains("리그 스키마에 없는 노드", Assert.Single(MotionValidator.Validate(editor.Document, RigAssets.Compose(editor.Document).NodeIds)).Message, StringComparison.Ordinal);
         Assert.Empty(MotionValidator.Validate(editor.Document));
-    }
-
-    [Fact]
-    public void 모르는_세트는_문서_수준_문제다()
-    {
-        var editor = new MotionEditor(new MotionDocument());
-        editor.AddMotion("a", "robot", 1f);
-
-        MotionProblem problem = Assert.Single(MotionValidator.Validate(editor.Document, RigFile.NodeIds));
-        Assert.Contains("세트 'robot'", problem.Message, StringComparison.Ordinal);
-        Assert.Contains("character", problem.Message, StringComparison.Ordinal);
     }
 }
 
 public class MotionFixesTests
 {
-    private static readonly CurveRef Y = new("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
+    private static readonly CurveRef Y = new("MoverY", MotionChannelKind.Position, Axis.Y);
 
     [Fact]
     public void 문구에서_돕는_손을_고른다()
@@ -103,51 +91,6 @@ public class MotionFixesTests
         Assert.True(MotionFixes.Apply(editor, "nod", MotionFix.FirstKeysToZero));
 
         Assert.Equal(new[] { 0f, 0.3f, 0.6f }, Y.Resolve(editor.Document.Find("nod")!)!.Keys.Select(k => (float)Math.Round(k.T, 4)));
-    }
-}
-
-public class MotionNamesTests
-{
-    [Fact]
-    public void 이름은_소문자_숫자_밑줄만이고_고치면_규칙에_맞고_겹치지_않는다()
-    {
-        Assert.True(MotionNames.IsValid("nod_2"));
-        Assert.False(MotionNames.IsValid(""));
-        Assert.False(MotionNames.IsValid("Nod"));
-        Assert.False(MotionNames.IsValid("끄덕"));
-
-        Assert.Equal("nod bow".Replace(" ", "_"), MotionNames.Sanitize("Nod Bow"));
-        Assert.Equal("motion", MotionNames.Sanitize(""));
-        Assert.Equal("motion", MotionNames.Sanitize("끄덕"));
-        Assert.Equal("a_b", MotionNames.Sanitize("--a--b--"));
-
-        var document = new MotionDocument();
-        document.Motions.Add(new MotionAsset { Name = "motion", Rig = "character", Duration = 1 });
-        document.Motions.Add(new MotionAsset { Name = "motion_2", Rig = "character", Duration = 1 });
-        Assert.Equal("motion_3", MotionNames.Unique(document, "motion"));
-        Assert.Equal("motion", MotionNames.Unique(document, "motion", except: "motion"));
-    }
-
-    [Fact]
-    public void 편집기는_규칙_밖_이름을_거부하고_돕는_손이_빈_이름을_고친다()
-    {
-        var editor = new MotionEditor(new MotionDocument());
-        Assert.Throws<InvalidOperationException>(() => editor.AddMotion("", "character", 1f));
-        Assert.Throws<InvalidOperationException>(() => editor.AddMotion("Nod", "character", 1f));
-        editor.AddMotion("nod", "character", 1f);
-        Assert.Throws<InvalidOperationException>(() => editor.RenameMotion("nod", "Nod!"));
-
-        // 이미 빈 이름으로 저장된 문서(예전 버전)는 돕는 손으로 고친다.
-        var document = new MotionDocument();
-        document.Motions.Add(new MotionAsset { Name = "", Rig = "character", Duration = 1 });
-        var old = new MotionEditor(document);
-        MotionProblem problem = Assert.Single(MotionValidator.Validate(old.Document), p => p.Message.Contains("이름은", StringComparison.Ordinal));
-        Assert.Equal(new[] { MotionFix.NameToValid }, MotionFixes.Suggest(problem));
-
-        Assert.True(MotionFixes.Apply(old, problem.MotionName, MotionFix.NameToValid));
-
-        Assert.Equal("motion", old.Document.Motions[0].Name);
-        Assert.DoesNotContain(MotionValidator.Validate(old.Document), p => p.Message.Contains("이름은", StringComparison.Ordinal));
     }
 }
 

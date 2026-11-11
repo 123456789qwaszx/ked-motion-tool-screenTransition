@@ -9,7 +9,8 @@ public sealed partial class MotionEditor
     /// <summary>새 그림 오브젝트의 처음 크기(px) — 그림을 주면 그림의 크기로 바뀐다.</summary>
     public const float DefaultImageSize = 160f;
 
-    private static readonly Regex RigKindRule = new("^[a-zA-Z][a-zA-Z0-9_]*$", RegexOptions.Compiled);
+    /// <summary>세트 이름 = 그 타임라인의 이름 — 코어의 이름 규칙(<c>[a-z0-9_]+</c>)을 지키고 영문자로 시작한다.</summary>
+    private static readonly Regex RigKindRule = new("^[a-z][a-z0-9_]*$", RegexOptions.Compiled);
 
     /// <summary>리그를 문서에 더한다. 노드는 사본으로 들어간다. id가 겹치거나 부모가 앞에 없으면 막는다(세울 수 없는 리그다).</summary>
     public RigAsset AddRig(RigAsset rig)
@@ -18,7 +19,7 @@ public sealed partial class MotionEditor
 
         if (!RigKindRule.IsMatch(rig.Kind ?? ""))
         {
-            throw new InvalidOperationException($"리그 이름은 영문자로 시작하는 영문·숫자·_ 다 ('{rig.Kind}')");
+            throw new InvalidOperationException($"세트 이름은 영문 소문자로 시작하는 소문자·숫자·_ 다 ('{rig.Kind}')");
         }
 
         if (Document.FindRig(rig.Kind) is not null)
@@ -32,7 +33,7 @@ public sealed partial class MotionEditor
         return copy;
     }
 
-    /// <summary>리그를 지운다. 그 세트의 모션은 남는다 — 검증이 "없는 세트"로 알린다.</summary>
+    /// <summary>세트를 지운다 — 그 타임라인도 함께.</summary>
     public void RemoveRig(string kind)
     {
         RigAsset rig = RequireRig(kind);
@@ -294,17 +295,19 @@ public sealed partial class MotionEditor
         }
     }
 
-    private static RigAsset CloneRig(RigAsset rig) => new()
+    /// <summary>세트의 사본 — 타임라인까지(저작본 글자로 한 바퀴 돌린다). 노드의 부모 · 색은 고른 꼴로.</summary>
+    private static RigAsset CloneRig(RigAsset rig)
     {
-        Kind = rig.Kind,
-        Nodes = rig.Nodes.Select(n =>
+        RigAsset copy = Serialization.MotionDocumentJson.Read(Serialization.MotionDocumentJson.Write(new MotionDocument { Rigs = { rig } })).Rigs[0];
+
+        foreach (RigNodeAsset node in copy.Nodes)
         {
-            RigNodeAsset copy = n.Clone();
-            copy.Parent = n.Parent ?? "";
-            copy.Color = NormalizeColor(n.Color);
-            return copy;
-        }).ToList(),
-    };
+            node.Parent ??= "";
+            node.Color = NormalizeColor(node.Color);
+        }
+
+        return copy;
+    }
 
     private RigAsset RequireRig(string kind)
     {

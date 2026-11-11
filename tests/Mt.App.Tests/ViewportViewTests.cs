@@ -20,7 +20,7 @@ public class ViewportViewTests
         var view = new ViewportView { SnapStep = 1.0 / 60 }; // 기대값은 1/60 스냅 기준(기본값은 1/24)
         var window = new Window { Width = 900, Height = 600, Content = view };
         window.Show();
-        view.SetRig(RigTemplates.File());
+        view.SetRig(Mt.Authoring.Rig.RigAssets.Compose(editor.Document));
         view.Bind(editor, "nod");
         Avalonia.Threading.Dispatcher.UIThread.RunJobs();
         return (window, view, editor);
@@ -176,7 +176,7 @@ public class ViewportViewTests
 
         try
         {
-            const string node = "CharacterPortrait_Track_Move_Y";
+            const string node = "MoverY";
             view.SelectedNode = node;
             view.Manipulator = ManipulatorMode.Move;
             view.AutoKey = true;
@@ -213,7 +213,7 @@ public class ViewportViewTests
 
         try
         {
-            const string node = "CharacterPortrait_Track_Move_Y";
+            const string node = "MoverY";
             view.SelectedNode = node;
             view.Manipulator = ManipulatorMode.Move;
             view.AutoKey = false;
@@ -272,7 +272,7 @@ public class ViewportViewTests
 
         try
         {
-            const string node = "CharacterPortrait_ActingScale";
+            const string node = "Panel";
             view.SelectedNode = node;
             view.Manipulator = ManipulatorMode.Scale;
             view.AutoKey = true;
@@ -314,7 +314,7 @@ public class ViewportViewTests
 
         try
         {
-            const string node = "CharacterPortrait_SwayPivot";
+            const string node = "Pivot";
             view.SelectedNode = node;
             view.Manipulator = ManipulatorMode.Rotate;
             view.AutoKey = true;
@@ -348,7 +348,7 @@ public class ViewportViewTests
 
         try
         {
-            var y = new Mt.Authoring.Graph.CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Mt.Authoring.Model.Axis.Y);
+            var y = new Mt.Authoring.Graph.CurveRef("MoverY", MotionChannelKind.Position, Mt.Authoring.Model.Axis.Y);
             view.ScrubTo(0.3);
             Assert.Equal(-18f, view.ObjectQuad(ViewportView.SetObjectId)!.Value.Center.Y, 2);
 
@@ -382,10 +382,9 @@ public class ViewportViewTests
     });
 
     [Fact]
-    public void 리그가_없거나_모션의_세트가_없으면_무대가_비고_그래도_그려진다() => HeadlessUi.Run(() =>
+    public void 리그가_없거나_묶인_타임라인이_없으면_무대가_비고_그래도_그려진다() => HeadlessUi.Run(() =>
     {
         MotionEditor editor = TestDocuments.Nod();
-        editor.AddMotion("robot_wave", "robot", 1f);
         var view = new ViewportView { SnapStep = 1.0 / 60 }; // 기대값은 1/60 스냅 기준(기본값은 1/24)
         var window = new Window { Width = 600, Height = 400, Content = view };
         window.Show();
@@ -396,13 +395,13 @@ public class ViewportViewTests
             Assert.False(view.HasRig);
             Assert.Null(view.ObjectQuad(ViewportView.SetObjectId));
 
-            view.SetRig(RigTemplates.File());
+            view.SetRig(Mt.Authoring.Rig.RigAssets.Compose(editor.Document));
             Assert.True(view.HasRig);
 
             Assert.NotNull(view.ObjectQuad(ViewportView.SetObjectId));
 
-            // 정의되지 않은 세트(robot)의 모션: 무대가 빈다.
-            view.Bind(editor, "robot_wave");
+            // 묶인 타임라인이 없으면 무대가 빈다.
+            view.Bind(editor, null);
             Assert.Null(view.ObjectQuad(ViewportView.SetObjectId));
             view.InvalidateVisual();
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();
@@ -420,7 +419,7 @@ public class ViewportViewTests
 
         try
         {
-            const string node = "CharacterPortrait_Track_Move_Y";
+            const string node = "MoverY";
             view.SelectedNode = node;
             view.Manipulator = ManipulatorMode.Move;
             view.AutoKey = false;

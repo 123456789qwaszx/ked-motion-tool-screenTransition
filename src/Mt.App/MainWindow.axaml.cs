@@ -128,7 +128,6 @@ public partial class MainWindow : Window
     private readonly HashSet<string> _expandedHierarchy = new();
     private readonly Dictionary<TreeViewItem, TreeViewItem?> _hierarchyParents = new();
     private readonly ContextMenu _hierarchyMenu = new();
-    private readonly TextBlock _motionHeader = Header("모션");
     private object? _menuTarget;
     private static readonly IBrush ActingNodeBrush = new SolidColorBrush(Color.FromRgb(0xC8, 0xE0, 0xFF));
 
@@ -138,7 +137,6 @@ public partial class MainWindow : Window
 
 
     // 왼쪽
-    private readonly ListBox _motionList = new() { MinHeight = 120 };
     private readonly StackPanel _channelRows = new() { Spacing = 0 };
     private Grid? _centerGrid;
     private readonly TextBox _outlinerSearch = new() { PlaceholderText = "검색…", FontSize = 11, Margin = new Avalonia.Thickness(2) };
@@ -150,7 +148,6 @@ public partial class MainWindow : Window
     private TimeDisplay Display => _settings.TimeDisplay;
 
     // 오른쪽 — 모션
-    private readonly TextBox _motionName = new() { FontSize = 11 };
     private readonly TextBox _motionDuration = new() { FontSize = 11 };
 
     // 오른쪽 — 키
@@ -617,27 +614,6 @@ public partial class MainWindow : Window
         set => _autoKeyToggle.IsChecked = value;
     }
 
-    internal string? SelectedMotion => _motionList.SelectedItem as string;
-
-    /// <summary>테스트 손잡이 — 모션 목록에 보이는 이름들과 그 머리글.</summary>
-    internal (string Header, IReadOnlyList<string> Names) MotionListState => (_motionHeader.Text ?? "", (_motionList.ItemsSource as IEnumerable<string> ?? Array.Empty<string>()).ToList());
-
-    /// <summary>테스트 손잡이 — "모션 추가" 버튼(이름·리그는 툴이 정한다).</summary>
-    internal void AddMotionFromButton() => AddMotion();
-
-    /// <summary>테스트 손잡이 — 목록에서 모션을 고른 것과 같다.</summary>
-    internal void SelectMotion(string name) => _motionList.SelectedItem = name;
-
-    /// <summary>헤드리스 테스트가 폼을 채우는 손잡이 — 화면과 같은 명령 경로를 지난다.</summary>
-    internal void AddMotionFromForm(string name, string rig, string duration)
-    {
-        if (!TryFloat(duration, out float seconds))
-        {
-            throw new InvalidOperationException("길이는 초 단위 숫자다.");
-        }
-
-        AddMotion(name, rig, seconds);
-    }
 
     /// <summary>테스트 손잡이 — 채널을 바로 더한다(UI에는 "채널 추가"가 없다: 채널 박스·매니퓰레이터가 첫 키에서 만든다).</summary>
     internal void AddChannelFromForm(string node, MotionChannelKind kind)
@@ -1163,13 +1139,6 @@ public partial class MainWindow : Window
 
     private void BindMotion(string? name)
     {
-        // 세트 보기는 그 세트의 모션만 연기한다 — 다른 리그의 모션을 골랐으면 세트를 닫는다.
-        if (SelectedSet is { } openSet && name is not null && _session.Editor.Document.Find(name)?.Rig != openSet)
-        {
-            DeselectSet();
-            return; // DeselectSet이 다시 묶는다
-        }
-
         _followSelection = true; // 모션을 바꾸면 다시 따라간다
         _graph.Bind(_session.Editor, name);
         _dope.Bind(_session.Editor, name);
@@ -1264,19 +1233,6 @@ public partial class MainWindow : Window
         LeftPanel.Children.Add(_hierarchy);
         ToolTip.SetTip(_hierarchy, "무대에 선 세트의 층. 클릭 = 고르기(채널 박스·매니퓰레이터가 그 층을 잡는다). 세트를 열었으면 우클릭으로 층을 짓고 고친다");
 
-        LeftPanel.Children.Add(_motionHeader);
-        _motionList.SelectionChanged += (_, _) => OnMotionSelected();
-        LeftPanel.Children.Add(_motionList);
-
-        var addMotionButton = SmallButton("모션 추가", (_, _) => Guard("모션 추가", () => AddMotion()));
-        ToolTip.SetTip(addMotionButton, "이름(motion, motion_2…)·리그(선택 오브젝트의 rigKind)·길이 1초로 만든다 — 오른쪽 인스펙터에서 바꾼다");
-        LeftPanel.Children.Add(new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            Spacing = 4,
-            Children = { addMotionButton, SmallButton("모션 삭제", (_, _) => Guard("모션 삭제", RemoveMotion)) },
-        });
-
         BuildSetLeft();
     }
 
@@ -1290,7 +1246,7 @@ public partial class MainWindow : Window
         {
             new TabItem { Header = "채널 박스", Content = BuildChannelBoxTab(), FontSize = 12 },
             new TabItem { Header = "세트", Content = BuildSetTab(), FontSize = 12 },
-            new TabItem { Header = "모션", Content = BuildMotionTab(), FontSize = 12 },
+            new TabItem { Header = "타임라인", Content = BuildMotionTab(), FontSize = 12 },
         };
         _inspectorTabs.SelectionChanged += (_, _) =>
         {
@@ -1345,20 +1301,11 @@ public partial class MainWindow : Window
     private Control BuildMotionTab()
     {
         var panel = new StackPanel { Spacing = 4, Margin = new Avalonia.Thickness(0, 6, 0, 0) };
-        panel.Children.Add(Labeled("이름", _motionName));
         panel.Children.Add(Labeled("길이(초)", _motionDuration));
 
         panel.Children.Add(BuildAlphaPanel());
         panel.Children.Add(BuildEventPanel());
 
-        OnCommit(_motionName, text => WithMotion(m =>
-        {
-            if (text != m.Name)
-            {
-                _session.Editor.RenameMotion(m.Name, text);
-                _motionList.SelectedItem = text;
-            }
-        }));
         OnCommit(_motionDuration, text => WithMotion(m => { if (TryFloat(text, out float v) && v != m.Duration) _session.Editor.SetDuration(m.Name, v); }));
         return panel;
     }
@@ -1488,7 +1435,7 @@ public partial class MainWindow : Window
         "  F1  이 창\n\n" +
         "뷰포트\n" +
         "  휠  커서 축으로 확대·축소      MMB 드래그  보기 이동      F  보기 맞춤\n" +
-        "  세트를 열고 모션을 안 골랐을 때(배치) — 오브젝트 드래그  자리      Shift+드래그  배율      Ctrl+드래그  회전   (가만히 선 자세다)\n" +
+        "  배치 토글을 켰을 때 — 오브젝트 드래그  자리      Shift+드래그  배율      Ctrl+드래그  회전   (가만히 선 자세다)\n" +
         "  LMB  오브젝트 고르기 · 기즈모 끌기(Auto Key면 놓는 순간 키)      Home / End  처음·끝      ← / →  한 프레임\n\n" +
         "그래프 에디터 (마야)\n" +
         "  LMB  키 선택 · 빈 자리 드래그 박스 선택(키가 들면 키만, 커브만 지나면 커브) · Ctrl+드래그 라소\n" +
@@ -1532,7 +1479,7 @@ public partial class MainWindow : Window
     private void OnEditorChanged()
     {
         RefreshSets();
-        RefreshMotionList();
+        ApplySetView(); // 세트가 지워지거나(되돌리기) 이름이 바뀌었으면 무대와 타임라인이 따라온다
         RefreshMotionInspector();
         RefreshKeyInspector();
         RefreshProblems();
@@ -1804,67 +1751,11 @@ public partial class MainWindow : Window
     private void RefreshAll()
     {
         RefreshSets();
-        RefreshMotionList();
         RefreshChannels();
         RefreshMotionInspector();
         RefreshKeyInspector();
         RefreshProblems();
         StatusText.Text = _session.Status;
-    }
-
-    private void RefreshMotionList()
-    {
-        _refreshDepth++;
-
-        try
-        {
-            string? selected = SelectedMotion ?? _graph.MotionName;
-            // rigKind로 묶어 보인다(모션의 주인은 rigKind) — 같은 리그끼리 이름순.
-            // 세트를 열었으면 그 세트의 애니메이션만 — 다른 리그의 모션은 이 세트가 연기할 수 없다.
-            string? openSet = SelectedSet;
-            _motionHeader.Text = openSet is null ? "모션" : $"애니메이션 — 세트 {openSet}";
-            List<string> names = _session.Editor.Document.Motions
-                .Where(m => openSet is null || m.Rig == openSet)
-                .OrderBy(m => m.Rig, StringComparer.Ordinal).ThenBy(m => m.Name, StringComparer.Ordinal)
-                .Select(m => m.Name).ToList();
-            _motionList.ItemsSource = names;
-            _motionList.ItemTemplate ??= new Avalonia.Controls.Templates.FuncDataTemplate<string>((name, _) =>
-            {
-                MotionAsset? motion = _session.Editor.Document.Find(name);
-                bool fits = motion is null || _viewport.SelectedObject is not { } o || _session.Rig is null || ScenePreview.CanWear(_session.Rig, o, motion);
-                var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Opacity = string.IsNullOrEmpty(name) ? 0.6 : fits ? 1 : 0.5 };
-                row.Children.Add(new TextBlock { Text = string.IsNullOrEmpty(name) ? "(이름 없음 — 아래 문제 칸의 '이름 고치기')" : name, FontSize = 11 });
-                row.Children.Add(new TextBlock { Text = motion is null ? "" : motion.Rig + (fits ? "" : " · 안 맞음"), FontSize = 10, Opacity = 0.6, VerticalAlignment = VerticalAlignment.Center });
-                return row;
-            });
-            int index = selected is null ? -1 : names.IndexOf(selected);
-            _motionList.SelectedIndex = index;
-
-            if (index < 0 && _graph.MotionName is not null)
-            {
-                BindMotion(null);
-            }
-            else if (index >= 0 && _graph.MotionName != names[index])
-            {
-                BindMotion(names[index]);
-            }
-        }
-        finally
-        {
-            _refreshDepth--;
-        }
-    }
-
-    private void OnMotionSelected()
-    {
-        if (_refreshing)
-        {
-            return;
-        }
-
-        BindMotion(SelectedMotion);
-        RefreshMotionInspector();
-        RefreshKeyInspector();
     }
 
     /// <summary>
@@ -2188,10 +2079,8 @@ public partial class MainWindow : Window
         {
             MotionAsset? motion = _graph.Motion;
             bool has = motion is not null;
-            _motionName.IsEnabled = has;
             _motionDuration.IsEnabled = has;
 
-            _motionName.Text = motion?.Name ?? "";
             _motionDuration.Text = motion is null ? "" : motion.Duration.ToString("0.###", CultureInfo.InvariantCulture);
         }
         finally
@@ -2263,33 +2152,6 @@ public partial class MainWindow : Window
     internal int ProblemRowsShown => ProblemsPanel.Children.Count;
 
     // ── 명령 ──────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// 모션 추가 — 이름은 motion, motion_2…, 리그는 선택 오브젝트의 rigKind(없으면 열린 세트 · 첫 세트), 길이 1초.
-    /// 전부 오른쪽 인스펙터에서 바꾼다. 테스트 손잡이는 값을 준다.
-    /// </summary>
-    private void AddMotion(string? name = null, string? rig = null, float duration = 1f)
-    {
-        name = (name ?? "").Trim();
-
-        // 이름을 비우면 motion, motion_2…로 만든다 — 빈 이름의 모션은 목록에서 안 보여 규칙 위반이 "안 없어지는" 것처럼 보인다.
-        if (name.Length == 0)
-        {
-            name = MotionNames.Unique(_session.Editor.Document, MotionNames.Fallback);
-        }
-
-        rig ??= _viewport.SelectedObject?.Rig ?? SelectedSet ?? _session.Editor.Document.Rigs.FirstOrDefault()?.Kind ?? "set";
-        _session.Editor.AddMotion(name, rig, duration);
-        _motionList.SelectedItem = name;
-    }
-
-    private void RemoveMotion()
-    {
-        if (SelectedMotion is { } name)
-        {
-            _session.Editor.RemoveMotion(name);
-        }
-    }
 
     /// <summary>
     /// 시각·값 칸: 숫자는 절대값, <c>+=</c>·<c>-=</c>·<c>*=</c>·<c>/=</c>는 상대. 선택 키 전부에 적용한다.

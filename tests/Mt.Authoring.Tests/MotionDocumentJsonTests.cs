@@ -27,7 +27,7 @@ public class MotionDocumentJsonTests
     {
         var document = new MotionDocument();
         var editor = new MotionEditor(document);
-        editor.AddMotion("a", "character", 1f);
+        editor.AddTimeline("a", 1f);
         editor.AddChannel("a", "N", MotionChannelKind.Euler);
         editor.SetKeys("a", "N", MotionChannelKind.Euler, Axis.Z, new[]
         {
@@ -39,7 +39,7 @@ public class MotionDocumentJsonTests
 
         Assert.DoesNotContain("\"end\"", json, StringComparison.Ordinal);
         Assert.DoesNotContain("\"previewMode\"", json, StringComparison.Ordinal);
-        Assert.Contains("\"schema\": \"motion-authoring/3\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"schema\": \"motion-authoring/4\"", json, StringComparison.Ordinal);
         Assert.Contains("\"kind\": \"euler\"", json, StringComparison.Ordinal);
         Assert.Contains("\"tangent\": \"auto\"", json, StringComparison.Ordinal);
         Assert.Contains("\"broken\": true", json, StringComparison.Ordinal);
@@ -57,7 +57,7 @@ public class MotionDocumentJsonTests
     public void 새_탄젠트_모드도_소문자로_왕복한다()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddMotion("a", "character", 1f);
+        editor.AddTimeline("a", 1f, RigTemplates.Figure());
         editor.AddChannel("a", "N", MotionChannelKind.Position);
         editor.SetKeys("a", "N", MotionChannelKind.Position, Axis.X, new[]
         {
@@ -84,9 +84,9 @@ public class MotionDocumentJsonTests
     public void 빈_성분_목록은_없음으로_읽는다()
     {
         string json = """
-            { "schema": "motion-authoring/3",
-              "motions": [ { "name": "a", "rig": "character", "duration": 1,
-                             "channels": [ { "node": "N", "kind": "position", "x": { "keys": [] } } ] } ] }
+            { "schema": "motion-authoring/4",
+              "rigs": [ { "kind": "a", "nodes": [], "timeline": { "duration": 1,
+                             "channels": [ { "node": "N", "kind": "position", "x": { "keys": [] } } ] } } ] }
             """;
 
         MotionDocument read = MotionDocumentJson.Read(json);

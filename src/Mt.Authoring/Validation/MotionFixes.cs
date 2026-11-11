@@ -18,9 +18,6 @@ public enum MotionFix
     /// <summary>길이를 가장 늦은 키에 맞춘다.</summary>
     DurationToLastKey,
 
-    /// <summary>이름을 규칙(소문자·숫자·_)에 맞게, 겹치지 않게 고친다. 빈 이름은 motion.</summary>
-    NameToValid,
-
     /// <summary>길이 자리에 키를 하나 넣는다(값은 곡선 위 — 마지막 키 값). 길이 밖의 키는 사라진다.</summary>
     KeyAtDuration,
 }
@@ -32,7 +29,6 @@ public static class MotionFixes
         MotionFix.FirstKeysToZero => "첫 키를 0초로",
         MotionFix.EndKeysToDuration => "끝 키를 길이로 옮기기",
         MotionFix.DurationToLastKey => "길이를 마지막 키에 맞추기",
-        MotionFix.NameToValid => "이름 고치기 (소문자·숫자·_)",
         MotionFix.KeyAtDuration => "길이 자리에 키 넣기",
         _ => fix.ToString(),
     };
@@ -42,11 +38,6 @@ public static class MotionFixes
     {
         ArgumentNullException.ThrowIfNull(problem);
         string m = problem.Message;
-
-        if (m.Contains("이름은 [a-z0-9_]+ 여야 한다", StringComparison.Ordinal))
-        {
-            return new[] { MotionFix.NameToValid };
-        }
 
         if (m.Contains("마지막 키 시각이 길이와 다르다", StringComparison.Ordinal))
         {
@@ -65,23 +56,10 @@ public static class MotionFixes
     public static bool Apply(MotionEditor editor, string motionName, MotionFix fix)
     {
         ArgumentNullException.ThrowIfNull(editor);
-        MotionAsset motion = editor.Document.Find(motionName) ?? throw new KeyNotFoundException($"모션 '{motionName}'이 없다.");
+        MotionAsset motion = editor.Document.Find(motionName) ?? throw new KeyNotFoundException($"세트 '{motionName}'가 없다.");
 
         switch (fix)
         {
-            case MotionFix.NameToValid:
-            {
-                string fixedName = MotionNames.Unique(editor.Document, MotionNames.Sanitize(motion.Name), except: motion.Name);
-
-                if (fixedName == motion.Name)
-                {
-                    return false;
-                }
-
-                editor.RenameMotion(motionName, fixedName);
-                return true;
-            }
-
             case MotionFix.DurationToLastKey:
             {
                 List<float> times = KeyTimes.All(motion);

@@ -23,11 +23,11 @@ public class AlphaChannelTests
     {
         var editor = new MotionEditor(new MotionDocument());
 
-        editor.AddMotion("fade", RigTemplates.EmojiKind, 1f);
+        editor.AddTimeline("fade", 1f, RigTemplates.Emoji());
         editor.AddChannel("fade", Part, MotionChannelKind.Alpha);
         editor.SetKeys("fade", Part, MotionChannelKind.Alpha, Axis.X, new[] { Linear(0f, 1f), Linear(1f, 0f) });
 
-        editor.AddMotion("dim", RigTemplates.EmojiKind, 1f);
+        editor.AddTimeline("dim", 1f, RigTemplates.Emoji());
         editor.AddChannel("dim", Body, MotionChannelKind.Alpha);
         editor.SetKeys("dim", Body, MotionChannelKind.Alpha, Axis.X, new[] { Linear(0f, 1f), Linear(1f, 0.5f) });
         return editor;

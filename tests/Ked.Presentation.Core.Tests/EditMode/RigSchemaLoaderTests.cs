@@ -39,7 +39,7 @@ namespace Ked.Presentation.Core.Tests
         /// 루트 + 자식 둘의 최소 리그. parent 표기는 실제 스키마 규약 그대로다:
         /// __root만 빈 문자열이고, 그 자식들은 "__root"를 명시한다.
         /// </summary>
-        private static RigSchemaRigDto SampleRig(string rigKind = "character")
+        private static RigSchemaRigDto SampleRig(string rigKind = "figure")
         {
             RigSchemaNodeDto track = Node("Track", RigSchemaLoader.RootKey);
             track.anchoredPosition = F2(10f, 0f);
@@ -75,7 +75,7 @@ namespace Ked.Presentation.Core.Tests
         [Test]
         public void 스키마_순서대로_부모_자식_트리가_선다()
         {
-            RectNodeTree tree = RigSchemaLoader.BuildTree(SampleFile(SampleRig()), "character");
+            RectNodeTree tree = RigSchemaLoader.BuildTree(SampleFile(SampleRig()), "figure");
 
             Assert.That(tree.Count, Is.EqualTo(3));
             Assert.That(tree.GetParentKey(RigSchemaLoader.RootKey), Is.Null, "리그 루트는 루트 공간 직속");
@@ -90,7 +90,7 @@ namespace Ked.Presentation.Core.Tests
             //   parent ""       → 루트 공간 직속 (리그 루트 자신)
             //   parent "__root" → 리그 루트의 자식
             // 둘을 같이 취급하면 리그 루트가 사슬에서 빠져 좌표가 조용히 어긋난다.
-            RectNodeTree tree = RigSchemaLoader.BuildTree(SampleFile(SampleRig()), "character");
+            RectNodeTree tree = RigSchemaLoader.BuildTree(SampleFile(SampleRig()), "figure");
 
             Assert.That(tree.GetParentKey(RigSchemaLoader.RootKey), Is.Null);
             Assert.That(tree.GetParentKey("Track"), Is.EqualTo(RigSchemaLoader.RootKey));
@@ -99,7 +99,7 @@ namespace Ked.Presentation.Core.Tests
         [Test]
         public void capturedUnderParentSize가_루트_공간이_된다()
         {
-            RectNodeTree tree = RigSchemaLoader.BuildTree(SampleFile(SampleRig()), "character");
+            RectNodeTree tree = RigSchemaLoader.BuildTree(SampleFile(SampleRig()), "figure");
 
             // 이게 어긋나면 스트레치 노드의 rect 크기가 전부 어긋난다.
             Assert.That(tree.RootSpace.Size, Is.EqualTo(new Vec2(1920f, 1080f)));
@@ -109,7 +109,7 @@ namespace Ked.Presentation.Core.Tests
         [Test]
         public void 세운_트리의_좌표가_기대값이다()
         {
-            RectNodeTree tree = RigSchemaLoader.BuildTree(SampleFile(SampleRig()), "character");
+            RectNodeTree tree = RigSchemaLoader.BuildTree(SampleFile(SampleRig()), "figure");
 
             // __root(스트레치 풀, 변위 0) → Track(+10, 0) → Scale(바닥 pivot)
             // 바닥 pivot이므로 Scale의 로컬 원점은 부모 바닥 = -540.
@@ -122,7 +122,7 @@ namespace Ked.Presentation.Core.Tests
         [Test]
         public void keyPrefix가_노드_키와_부모_참조_양쪽에_붙는다()
         {
-            RectNodeTree tree = RigSchemaLoader.BuildTree(SampleFile(SampleRig()), "character", "c1/");
+            RectNodeTree tree = RigSchemaLoader.BuildTree(SampleFile(SampleRig()), "figure", "c1/");
 
             Assert.That(tree.Contains("c1/" + RigSchemaLoader.RootKey), Is.True);
             Assert.That(tree.Contains("c1/Track"), Is.True);
@@ -159,7 +159,7 @@ namespace Ked.Presentation.Core.Tests
         [Test]
         public void 여러_리그_중_고른_것만_세운다()
         {
-            RigSchemasFileDto file = SampleFile(SampleRig("character"), SampleRig("background"));
+            RigSchemasFileDto file = SampleFile(SampleRig("figure"), SampleRig("background"));
 
             RectNodeTree tree = RigSchemaLoader.BuildTree(file, "background");
 
@@ -171,13 +171,13 @@ namespace Ked.Presentation.Core.Tests
         [Test]
         public void 모르는_rigKind는_있는_것을_나열하며_거부한다()
         {
-            RigSchemasFileDto file = SampleFile(SampleRig("character"), SampleRig("overlay"));
+            RigSchemasFileDto file = SampleFile(SampleRig("figure"), SampleRig("overlay"));
 
             ArgumentException ex = Assert.Throws<ArgumentException>(
                 () => RigSchemaLoader.BuildTree(file, "charater")); // 오타
 
             // "비슷한 이름"으로 잇지 않는다. 대신 무엇이 있었는지 말한다.
-            Assert.That(ex.Message, Does.Contain("character"));
+            Assert.That(ex.Message, Does.Contain("figure"));
             Assert.That(ex.Message, Does.Contain("overlay"));
         }
 
@@ -185,25 +185,25 @@ namespace Ked.Presentation.Core.Tests
         public void 빈_스키마는_거부한다()
         {
             Assert.Throws<ArgumentNullException>(
-                () => RigSchemaLoader.BuildTree(null, "character"));
+                () => RigSchemaLoader.BuildTree(null, "figure"));
 
             Assert.Throws<ArgumentException>(
-                () => RigSchemaLoader.BuildTree(new RigSchemasFileDto(), "character"));
+                () => RigSchemaLoader.BuildTree(new RigSchemasFileDto(), "figure"));
 
             RigSchemasFileDto noSize = SampleFile(SampleRig());
             noSize.capturedUnderParentSize = null;
 
             Assert.Throws<ArgumentException>(
-                () => RigSchemaLoader.BuildTree(noSize, "character"));
+                () => RigSchemaLoader.BuildTree(noSize, "figure"));
         }
 
         [Test]
         public void 노드가_없는_리그는_거부한다()
         {
-            RigSchemaRigDto empty = new() { rigKind = "character", nodes = new List<RigSchemaNodeDto>() };
+            RigSchemaRigDto empty = new() { rigKind = "figure", nodes = new List<RigSchemaNodeDto>() };
 
             Assert.Throws<ArgumentException>(
-                () => RigSchemaLoader.BuildTree(SampleFile(empty), "character"));
+                () => RigSchemaLoader.BuildTree(SampleFile(empty), "figure"));
         }
 
         [Test]
@@ -213,7 +213,7 @@ namespace Ked.Presentation.Core.Tests
             rig.nodes[1].id = "";
 
             ArgumentException ex = Assert.Throws<ArgumentException>(
-                () => RigSchemaLoader.BuildTree(SampleFile(rig), "character"));
+                () => RigSchemaLoader.BuildTree(SampleFile(rig), "figure"));
 
             Assert.That(ex.Message, Does.Contain("[1]"), "몇 번째 노드인지 알려야 한다");
         }
@@ -227,10 +227,10 @@ namespace Ked.Presentation.Core.Tests
             rig.nodes[2].pivot = null;
 
             ArgumentException ex = Assert.Throws<ArgumentException>(
-                () => RigSchemaLoader.BuildTree(SampleFile(rig), "character"));
+                () => RigSchemaLoader.BuildTree(SampleFile(rig), "figure"));
 
             Assert.That(ex.Message, Does.Contain("Scale"));
-            Assert.That(ex.Message, Does.Contain("character"));
+            Assert.That(ex.Message, Does.Contain("figure"));
         }
 
         [Test]
@@ -241,7 +241,7 @@ namespace Ked.Presentation.Core.Tests
             (rig.nodes[1], rig.nodes[2]) = (rig.nodes[2], rig.nodes[1]);
 
             Assert.Throws<ArgumentException>(
-                () => RigSchemaLoader.BuildTree(SampleFile(rig), "character"));
+                () => RigSchemaLoader.BuildTree(SampleFile(rig), "figure"));
         }
     }
 }

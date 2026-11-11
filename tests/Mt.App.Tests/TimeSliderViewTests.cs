@@ -14,7 +14,7 @@ namespace Mt.App.Tests;
 
 public class TimeSliderViewTests
 {
-    private const string Node = "CharacterPortrait_Track_Move_Y";
+    private const string Node = "MoverY";
     private static readonly CurveRef Y = new(Node, MotionChannelKind.Position, Axis.Y);
     private const double Frame = 1.0 / 24.0;
 
@@ -26,7 +26,7 @@ public class TimeSliderViewTests
         var panel = new StackPanel { Children = { viewport, slider } };
         var window = new Window { Width = 900, Height = 400, Content = panel };
         window.Show();
-        viewport.SetRig(RigTemplates.File());
+        viewport.SetRig(Mt.Authoring.Rig.RigAssets.Compose(editor.Document));
         viewport.Bind(editor, "nod");
         slider.Viewport = viewport;
         slider.Bind(editor, "nod");

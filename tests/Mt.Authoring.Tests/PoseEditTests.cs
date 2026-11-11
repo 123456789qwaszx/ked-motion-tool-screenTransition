@@ -47,7 +47,7 @@ public class PoseEditTests
     public void 포즈_키는_채널과_성분을_만들고_같은_시각을_바꾸며_한_번의_조작이다()
     {
         var editor = new MotionEditor(new MotionDocument());
-        editor.AddMotion("a", "character", 1f);
+        editor.AddTimeline("a", 1f, RigTemplates.Figure());
         long before = editor.Revision;
 
         List<KeyRef> keys = editor.KeyComponents("a", "N", MotionChannelKind.Position, 0.5f, new[] { (Axis.X, 10f), (Axis.Y, 20f) }, TangentMode.Auto);

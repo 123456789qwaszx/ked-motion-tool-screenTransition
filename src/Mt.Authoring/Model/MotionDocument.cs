@@ -14,10 +14,12 @@ public sealed class MotionDocument
 {
     public string Schema { get; set; } = AuthoringFormat.AuthoringSchema;
 
-    public List<MotionAsset> Motions { get; set; } = new();
+    /// <summary>세트마다 하나인 타임라인들(세트의 차례대로) — 세트가 든다(<see cref="RigAsset.Timeline"/>).</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public IEnumerable<MotionAsset> Motions => Rigs.Select(r => r.Timeline);
 
     /// <summary>
-    /// 세트들 — 층(오브젝트)의 사각형 · 그림 · 색. 미리보기는 이것만으로 선다(<see cref="Rig.RigAssets.Compose"/>).
+    /// 세트들 — 층(오브젝트)의 사각형 · 그림 · 색과 그 타임라인. 미리보기는 이것만으로 선다(<see cref="Rig.RigAssets.Compose"/>).
     /// 저작본에는 <see cref="RigsOrNull"/>로 실린다(없으면 안 적는다).
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
@@ -33,20 +35,30 @@ public sealed class MotionDocument
     public RigAsset? FindRig(string? kind)
         => kind is null ? null : Rigs.FirstOrDefault(r => string.Equals(r.Kind, kind, StringComparison.Ordinal));
 
-    public MotionAsset? Find(string name)
-        => Motions.FirstOrDefault(m => string.Equals(m.Name, name, StringComparison.Ordinal));
+    /// <summary>그 세트의 타임라인.</summary>
+    public MotionAsset? Find(string name) => FindRig(name)?.Timeline;
 }
 
-/// <summary>모션 하나의 저작본. 수치는 코어 <see cref="MotionClip"/>과 같고, 제작 정보만 더 든다.</summary>
+/// <summary>
+/// 세트의 타임라인 — 세트마다 하나다. 수치는 코어 <see cref="MotionClip"/>과 같고, 제작 정보만 더 든다.
+/// 이름과 세트는 주인 세트의 것이다(<see cref="RigAsset.Timeline"/>가 이어 준다) — 따로 적지 않는다.
+/// </summary>
 public sealed class MotionAsset
 {
-    public string Name { get; set; } = "";
+    /// <summary>주인 세트. 세트에 놓이면 정해진다.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public RigAsset? Owner { get; internal set; }
 
-    /// <summary>이 모션이 움직이는 세트(rigKind).</summary>
-    public string Rig { get; set; } = "";
+    /// <summary>타임라인의 이름 = 주인 세트의 이름.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string Name => Owner?.Kind ?? "";
+
+    /// <summary>이 타임라인이 움직이는 세트(rigKind) = 주인 세트.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string Rig => Owner?.Kind ?? "";
 
     /// <summary>초.</summary>
-    public float Duration { get; set; }
+    public float Duration { get; set; } = 1f;
 
     public List<ChannelAsset> Channels { get; set; } = new();
 

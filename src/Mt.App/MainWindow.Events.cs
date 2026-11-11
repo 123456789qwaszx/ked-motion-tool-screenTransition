@@ -4,7 +4,7 @@ using Mt.Authoring.Model;
 
 namespace Mt.App;
 
-// 이벤트 키의 셸 — "모션" 탭 아래. 재생이 그 시각을 지나는 순간 런타임이 이름과 값으로 알리는 표시다(예: <c>covered</c> — 화면이 다 덮였다).
+// 이벤트 키의 셸 — "타임라인" 탭 아래. 재생이 그 시각을 지나는 순간 런타임이 이름과 값으로 알리는 표시다(예: <c>covered</c> — 화면이 다 덮였다).
 // 그래프가 묶은 모션의 것을 보인다.
 public partial class MainWindow
 {

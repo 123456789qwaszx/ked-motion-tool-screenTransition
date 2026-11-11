@@ -16,6 +16,25 @@ public sealed class RigAsset
     /// <summary>부모가 자식보다 먼저 온다. 그리는 순서도 이 순서다(뒤의 것이 위).</summary>
     public List<RigNodeAsset> Nodes { get; set; } = new();
 
+    private MotionAsset _timeline;
+
+    public RigAsset()
+    {
+        _timeline = new MotionAsset { Owner = this };
+    }
+
+    /// <summary>이 세트의 타임라인 — 세트마다 하나. 놓는 순간 주인이 이 세트가 된다.</summary>
+    public MotionAsset Timeline
+    {
+        get => _timeline;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _timeline = value;
+            value.Owner = this;
+        }
+    }
+
     public RigNodeAsset? Find(string id) => Nodes.FirstOrDefault(n => string.Equals(n.Id, id, StringComparison.Ordinal));
 }
 

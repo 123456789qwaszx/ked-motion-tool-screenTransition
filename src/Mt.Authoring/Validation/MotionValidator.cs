@@ -19,7 +19,7 @@ public sealed record MotionProblem(string MotionName, string Message, bool Block
 /// 편집 중 계속 돌리는 검증. 규칙은 코어 <see cref="MotionRules"/> 한 벌뿐이다 — 런타임 로더와 Unity 내보내기가
 /// 같은 규칙을 쓰므로 "툴에서는 되는데 재생에서 사라지는" 모션이 안 생긴다. 문구도 코어의 것을 그대로 보인다.
 ///
-/// 여기서 더 보는 것은 문서 수준(같은 이름 둘, 없는 세트)이다.
+/// 여기서 더 보는 것은 알파 채널이 불투명도를 받는 노드에 놓였는가다.
 /// 키의 **값**은 알리지 않는다 — 첫 키가 중립값이 아닌 것("제자리 +140에서 시작")도 작가의 뜻이다.
 /// </summary>
 public static class MotionValidator
@@ -33,20 +33,7 @@ public static class MotionValidator
     {
         ArgumentNullException.ThrowIfNull(document);
 
-        var problems = new List<MotionProblem>();
-        var seen = new HashSet<string>(StringComparer.Ordinal);
-
-        foreach (MotionAsset motion in document.Motions)
-        {
-            if (!string.IsNullOrEmpty(motion.Name) && !seen.Add(motion.Name))
-            {
-                problems.Add(new MotionProblem(motion.Name, "같은 이름이 둘이다"));
-            }
-
-            problems.AddRange(ValidateMotion(motion, rigNodeIds, alphaNodeIds));
-        }
-
-        return problems;
+        return document.Motions.SelectMany(m => ValidateMotion(m, rigNodeIds, alphaNodeIds)).ToList();
     }
 
     public static IReadOnlyList<MotionProblem> ValidateMotion(
@@ -58,17 +45,7 @@ public static class MotionValidator
 
         var problems = new List<MotionProblem>();
         ICollection<string>? nodeIds = null;
-
-        if (rigNodeIds is not null)
-        {
-            if (!rigNodeIds.TryGetValue(motion.Rig ?? "", out nodeIds))
-            {
-                problems.Add(new MotionProblem(
-                    motion.Name,
-                    $"세트 '{motion.Rig}'가 없다. 있는 것: [{string.Join(", ", rigNodeIds.Keys)}]"));
-                return problems;
-            }
-        }
+        rigNodeIds?.TryGetValue(motion.Rig, out nodeIds);
 
         MotionClip clip = MotionAssetCodec.ToClip(motion);
 
@@ -78,7 +55,7 @@ public static class MotionValidator
         }
 
         // 알파 채널은 불투명도를 받을 수 있는 노드에만 — 호스트가 쓸 CanvasGroup이 없으면 재생에서 아무 일도 안 일어난다.
-        if (alphaNodeIds is not null && alphaNodeIds.TryGetValue(motion.Rig ?? "", out ICollection<string>? alphaNodes))
+        if (alphaNodeIds is not null && alphaNodeIds.TryGetValue(motion.Rig, out ICollection<string>? alphaNodes))
         {
             for (int i = 0; i < motion.Channels.Count; i++)
             {

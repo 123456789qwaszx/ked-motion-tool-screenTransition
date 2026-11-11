@@ -44,7 +44,7 @@ public class RigAssetTests
         Assert.Throws<InvalidOperationException>(() => editor.AddRigNode(RigTemplates.EmojiKind, "1bad"));
         Assert.Throws<InvalidOperationException>(() => editor.AddRigNode(RigTemplates.EmojiKind, "a/b"));
         Assert.Throws<KeyNotFoundException>(() => editor.AddRigNode(RigTemplates.EmojiKind, "X", "Nope"));
-        Assert.Throws<KeyNotFoundException>(() => editor.AddRigNode("character", "X"));                                 // 없는 세트
+        Assert.Throws<KeyNotFoundException>(() => editor.AddRigNode("figure", "X"));                                 // 없는 세트
         Assert.Throws<InvalidOperationException>(() => editor.SetRigNodeParent(RigTemplates.EmojiKind, "Emoji_Glow", "Emoji_Spark")); // 제 밑으로
         Assert.Throws<InvalidOperationException>(() => editor.UpdateRigNode(RigTemplates.EmojiKind, "Extra", new RigNodeAsset { Width = -1f }));
         Assert.Equal(revision, editor.Revision);
@@ -102,9 +102,8 @@ public class RigAssetTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddRig(RigTemplates.Emoji(parts: 2));
-        editor.AddMotion("pop", RigTemplates.EmojiKind, 0.2f);
-        editor.AddChannel("pop", "Emoji_Part1", MotionChannelKind.Position);
-        editor.AddChannel("pop", "Emoji_Body", MotionChannelKind.Position);
+        editor.AddChannel(RigTemplates.EmojiKind, "Emoji_Part1", MotionChannelKind.Position);
+        editor.AddChannel(RigTemplates.EmojiKind, "Emoji_Body", MotionChannelKind.Position);
 
         long revision = editor.Revision;
         editor.RenameRigNode(RigTemplates.EmojiKind, "Emoji_Part1", "Drop");
@@ -114,7 +113,7 @@ public class RigAssetTests
 
         Assert.Equal(new[] { "Pin", "Emoji_Body", "Drop", "Emoji_Part2" }, Ids(editor));
         Assert.Equal("Pin", editor.Document.FindRig(RigTemplates.EmojiKind)!.Find("Emoji_Body")!.Parent);
-        Assert.Equal(new[] { "Drop", "Emoji_Body" }, editor.Document.Find("pop")!.Channels.Select(c => c.Node));
+        Assert.Equal(new[] { "Drop", "Emoji_Body" }, editor.Document.Find(RigTemplates.EmojiKind)!.Channels.Select(c => c.Node));
         Assert.Equal("art/part1.png", editor.Document.FindRig(RigTemplates.EmojiKind)!.Find("Drop")!.Image); // 그림은 층의 것이라 함께 간다
 
         // 이름이 겹치거나 규칙에 안 맞으면 막는다. 되돌리면 전부 함께 돌아온다.
@@ -122,7 +121,7 @@ public class RigAssetTests
         Assert.Throws<InvalidOperationException>(() => editor.RenameRigNode(RigTemplates.EmojiKind, "Drop", "물방울"));
         editor.Undo();
         editor.Undo();
-        Assert.Equal("Emoji_Part1", editor.Document.Find("pop")!.Channels[0].Node);
+        Assert.Equal("Emoji_Part1", editor.Document.Find(RigTemplates.EmojiKind)!.Channels[0].Node);
         Assert.Equal("Emoji_Anchor", Ids(editor)[0]);
     }
 
@@ -133,7 +132,7 @@ public class RigAssetTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddRig(RigTemplates.Emoji(parts: 3));
-        editor.AddMotion("in", RigTemplates.EmojiKind, 1f);
+        editor.AddTimeline("in", 1f, RigTemplates.Emoji());
         KeyAsset Lin(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Linear };
 
         foreach (string part in new[] { "Emoji_Part1", "Emoji_Part2", "Emoji_Part3" })
@@ -187,7 +186,7 @@ public class RigAssetTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddRig(RigTemplates.Emoji(parts: 3));
-        editor.AddMotion("in", RigTemplates.EmojiKind, 1f);
+        editor.AddTimeline("in", 1f, RigTemplates.Emoji());
         KeyAsset Lin(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Linear };
         editor.AddChannel("in", "Emoji_Part1", MotionChannelKind.Position); // 0.4초에 움직이기 시작해 0.8초에 선다
         editor.SetKeys("in", "Emoji_Part1", MotionChannelKind.Position, Axis.X, new[] { Lin(0f, -100f), Lin(0.4f, -100f), Lin(0.8f, 0f), Lin(1f, 0f) });
@@ -228,36 +227,36 @@ public class RigAssetTests
     private static KeyAsset Lin(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Linear };
 
     [Fact]
-    public void 세트의_이름을_바꾸면_애니메이션이_따라오고_이름을_딴_것들도_함께_바뀐다()
+    public void 세트의_이름을_바꾸면_타임라인의_이름도_함께_바뀐다()
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddRig(new RigAsset { Kind = "star" });
         editor.AddRigNode("star", "Sun");
-        editor.AddMotion("star_in", "star", 1f);
-        editor.AddChannel("star_in", "Sun", MotionChannelKind.Position);
-        editor.SetKeys("star_in", "Sun", MotionChannelKind.Position, Axis.Y, new[] { Lin(0f, -100f), Lin(1f, 0f) });
-        editor.AddMotion("star", "star", 1f);
-        editor.AddMotion("rise", "star", 1f);
+        editor.SetDuration("star", 1f);
+        editor.AddChannel("star", "Sun", MotionChannelKind.Position);
+        editor.SetKeys("star", "Sun", MotionChannelKind.Position, Axis.Y, new[] { Lin(0f, -100f), Lin(1f, 0f) });
         editor.AddRig(new RigAsset { Kind = "town" });
 
-        // 한 칸 — 세트의 이름을 딴 이름들(애니메이션 star · star_x)도 함께 바뀐다. 다른 이름(rise)은 그대로 그 세트를 가리킨다.
+        // 한 칸 — 타임라인은 세트의 것이라 이름이 함께 간다.
         long revision = editor.Revision;
         editor.RenameRig("star", "sol");
         Assert.Equal(revision + 1, editor.Revision);
         Assert.Null(editor.Document.FindRig("star"));
-        Assert.Equal(("sol", "sol", "sol"), (editor.Document.Find("sol_in")!.Rig, editor.Document.Find("sol")!.Rig, editor.Document.Find("rise")!.Rig));
-        Assert.Null(editor.Document.Find("star_in"));
+        Assert.Null(editor.Document.Find("star"));
+        Assert.Equal(("sol", "sol"), (editor.Document.Find("sol")!.Name, editor.Document.Find("sol")!.Rig));
+        Assert.Single(editor.Document.Find("sol")!.Channels);
 
-        // 막는 것: 있는 이름 · 규칙에 안 맞는 이름. 같은 이름은 기록이 없다.
+        // 막는 것: 있는 이름 · 규칙에 안 맞는 이름(대문자 · 숫자로 시작). 같은 이름은 기록이 없다.
         revision = editor.Revision;
         Assert.Throws<InvalidOperationException>(() => editor.RenameRig("sol", "town"));
         Assert.Throws<InvalidOperationException>(() => editor.RenameRig("sol", "1sol"));
+        Assert.Throws<InvalidOperationException>(() => editor.RenameRig("sol", "Sol"));
         editor.RenameRig("sol", "sol");
         Assert.Equal(revision, editor.Revision);
 
         // 되돌리면 통째로 돌아간다.
         editor.Undo();
-        Assert.Equal(("star", "star"), (editor.Document.Find("star_in")!.Rig, editor.Document.Find("star")!.Rig));
+        Assert.Equal("star", editor.Document.Find("star")!.Name);
     }
 
     // ── 화면 밖에서 들어온다 ───────────────────────────────────────────
@@ -272,25 +271,25 @@ public class RigAssetTests
         editor.UpdateRigNode("town", "Sun", new RigNodeAsset { X = 300f, Y = 200f, Width = 100f, Height = 100f, Image = "art/sun.png", Alpha = true });
         editor.AddRigNode("town", "Leaf", "Group");
         editor.UpdateRigNode("town", "Leaf", new RigNodeAsset { X = 10f, Y = 20f, Width = 60f, Height = 80f, Rotation = 30f, Image = "art/leaf.png", Alpha = true });
-        editor.AddMotion("town_in", "town", 1f);
+        editor.SetDuration("town", 1f);
 
         // 왼쪽에서: 무대의 반(960) + 자리(300) + 너비의 반(50) = 1310만큼 왼쪽에서 출발한다. 0.2초부터 0.5초 동안 — 앞뒤로는 가만히. 한 칸.
         long revision = editor.Revision;
-        Assert.Equal(-1310f, editor.SlideFromOutside("town_in", "Sun", StageSide.Left, 0.2f, 0.5f, stage));
+        Assert.Equal(-1310f, editor.SlideFromOutside("town", "Sun", StageSide.Left, 0.2f, 0.5f, stage));
         Assert.Equal(revision + 1, editor.Revision);
-        Assert.Equal(new[] { (0f, -1310f), (0.2f, -1310f), (0.7f, 0f), (1f, 0f) }, editor.Document.Find("town_in")!.FindChannel("Sun", MotionChannelKind.Position)!.X!.Keys.Select(k => (k.T, k.V)));
+        Assert.Equal(new[] { (0f, -1310f), (0.2f, -1310f), (0.7f, 0f), (1f, 0f) }, editor.Document.Find("town")!.FindChannel("Sun", MotionChannelKind.Position)!.X!.Keys.Select(k => (k.T, k.V)));
 
         // 위에서: 540 − 200 + 50 = 390. 나가는 것은 거꾸로(제자리 → 밖), 끝까지면 끝 키 하나로.
-        Assert.Equal(390f, editor.SlideFromOutside("town_in", "Sun", StageSide.Top, 0.6f, 0.5f, stage, leaving: true));
-        Assert.Equal(new[] { (0f, 0f), (0.6f, 0f), (1f, 390f) }, editor.Document.Find("town_in")!.FindChannel("Sun", MotionChannelKind.Position)!.Y!.Keys.Select(k => (k.T, k.V)));
+        Assert.Equal(390f, editor.SlideFromOutside("town", "Sun", StageSide.Top, 0.6f, 0.5f, stage, leaving: true));
+        Assert.Equal(new[] { (0f, 0f), (0.6f, 0f), (1f, 390f) }, editor.Document.Find("town")!.FindChannel("Sun", MotionChannelKind.Position)!.Y!.Keys.Select(k => (k.T, k.V)));
 
         // 부모의 자리를 더하고, 돈 오브젝트는 감싸는 원으로 넉넉히: 960 − (100 + 10) + √(30² + 40²) = 900.
-        Assert.Equal(900f, editor.SlideFromOutside("town_in", "Leaf", StageSide.Right, 0f, 0.5f, stage));
+        Assert.Equal(900f, editor.SlideFromOutside("town", "Leaf", StageSide.Right, 0f, 0.5f, stage));
 
         // 길이 밖의 시작 · 없는 오브젝트는 막힌다.
         revision = editor.Revision;
-        Assert.Throws<InvalidOperationException>(() => editor.SlideFromOutside("town_in", "Sun", StageSide.Left, 1f, 0.5f, stage));
-        Assert.Throws<KeyNotFoundException>(() => editor.SlideFromOutside("town_in", "Nope", StageSide.Left, 0f, 0.5f, stage));
+        Assert.Throws<InvalidOperationException>(() => editor.SlideFromOutside("town", "Sun", StageSide.Left, 1f, 0.5f, stage));
+        Assert.Throws<KeyNotFoundException>(() => editor.SlideFromOutside("town", "Nope", StageSide.Left, 0f, 0.5f, stage));
         Assert.Equal(revision, editor.Revision);
         RigSchemaFile rig = RigAssets.Compose(editor.Document);
         Assert.Empty(MotionValidator.Validate(editor.Document, rig.NodeIds, rig.AlphaNodeIds));

@@ -267,11 +267,30 @@ public sealed class ViewportView : Control
 
     private string? _setView;
 
+    private bool _layoutMode;
+
     /// <summary>
-    /// 배치 모드인가(스파인의 Setup) — 세트를 열었고 고른 애니메이션이 없다. 뷰포트의 끌기가 오브젝트의 **가만히 선 자세**를 바꾼다.
-    /// 그 세트의 모션을 고르면 애니메이션 모드다(끌기 = 키).
+    /// 배치 모드 토글(스파인의 Setup) — 켜면 무대는 움직임 없이 가만히 선 자세를 보이고, 끌기가 오브젝트의 **가만히 선 자세**를 바꾼다.
+    /// 끄면 애니메이션 모드다(끌기 = 키). 무대 보기 상태다 — 문서에 없다.
     /// </summary>
-    public bool IsLayoutMode => _setView is not null && Motion is null;
+    public bool LayoutMode
+    {
+        get => _layoutMode;
+        set
+        {
+            if (_layoutMode == value)
+            {
+                return;
+            }
+
+            DiscardPending();
+            _layoutMode = value;
+            InvalidateVisual();
+        }
+    }
+
+    /// <summary>배치 모드인가 — 세트를 열었고 <see cref="LayoutMode"/>가 켜져 있다.</summary>
+    public bool IsLayoutMode => _setView is not null && _layoutMode;
 
     /// <summary>
     /// 연 세트(rigKind) — 뷰포트와 하이어아키가 **그 세트만** 보인다. 그 리그의 모션을 고르면 이 오브젝트가 연기한다.
@@ -1219,7 +1238,7 @@ public sealed class ViewportView : Control
             return null;
         }
 
-        return motion is not null && SelectedObject is { } o && CanWear(o)
+        return motion is not null && !IsLayoutMode && SelectedObject is { } o && CanWear(o)
             ? MotionPreview.Pose(_template, motion, seconds, _flags.IsMuted, o.Prefix, alphas)
             : _template.Clone();
     }
@@ -1388,7 +1407,7 @@ public sealed class ViewportView : Control
         if (IsLayoutMode)
         {
             DrawLayout(context, pose);
-            DrawLabel(context, $"세트 {_setView} · 배치 — 끌기: 자리 · Shift+끌기: 배율 · Ctrl+끌기: 회전 (가만히 선 자세다. 애니메이션을 고르면 끌기가 키가 된다)", new Point(stage.X + 8, stage.Y + 6));
+            DrawLabel(context, $"세트 {_setView} · 배치 — 끌기: 자리 · Shift+끌기: 배율 · Ctrl+끌기: 회전 (가만히 선 자세다. 배치를 끄면 끌기가 키가 된다)", new Point(stage.X + 8, stage.Y + 6));
             return;
         }
 

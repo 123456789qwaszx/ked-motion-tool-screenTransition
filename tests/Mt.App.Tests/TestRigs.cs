@@ -8,10 +8,17 @@ internal static class TestRigs
     {
         if (window.Session.Editor.Document.Rigs.All(r => r.Kind != rig))
         {
-            window.Session.Editor.AddRig(rig == RigTemplates.CharacterKind ? RigTemplates.Character() : RigTemplates.Emoji(rig));
+            window.Session.Editor.AddRig(rig == RigTemplates.FigureKind ? RigTemplates.Figure() : RigTemplates.Emoji(rig));
         }
 
         window.SelectSet(rig);
         return Views.ViewportView.SetObjectId;
+    }
+
+    /// <summary>인형 세트 하나(= 타임라인 하나)를 더하고 고른다 — 그 타임라인이 묶인다(애니메이션 모드).</summary>
+    public static void AddFigureTimeline(this MainWindow window, string name, float duration)
+    {
+        window.Session.Editor.AddTimeline(name, duration, RigTemplates.Figure());
+        window.SelectSet(name);
     }
 }

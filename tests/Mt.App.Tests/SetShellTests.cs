@@ -31,14 +31,13 @@ public class SetShellTests
 
             try
             {
-                window.Session.Editor.AddRig(RigTemplates.Emoji());
                 MotionEditor editor = window.Session.Editor;
-                string id = window.PlaceRig(RigTemplates.EmojiKind);
-                editor.AddMotion("vanish", RigTemplates.EmojiKind, 1f);
-                window.SelectMotion("vanish");
+                editor.AddTimeline("vanish", 1f, RigTemplates.Emoji());
+                window.SelectSet("vanish");
+                string id = ViewportView.SetObjectId;
                 window.Viewport.SelectedObjectId = id;
                 window.Viewport.SnapEnabled = false;
-                window.InspectorTab = 2; // 모션 탭
+                window.InspectorTab = 2; // 타임라인 탭
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
 
                 // 불투명도를 받을 수 없는 노드(Anchor)를 고르면 칸이 없다. 조각을 고르면 선다.
@@ -152,7 +151,7 @@ public class SetShellTests
                 window.MouseUp(At(drop), MouseButton.Left);
                 Assert.Equal(revision + 1, editor.Revision);
                 Assert.Equal((160f, 10f), (Rig().Find("alert")!.X, Rig().Find("alert")!.Y));
-                Assert.Empty(editor.Document.Motions);
+                Assert.Empty(editor.Document.Find("set")!.Channels); // 키가 아니다
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 Assert.Equal("160", window.RigNodeBoxes.X.Text);
 
@@ -201,10 +200,11 @@ public class SetShellTests
                 window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
                 Assert.Equal(path, Rig().Find("alert_2")!.Image);
 
-                // 그 세트의 애니메이션을 고르면 배치 모드가 아니다 — 끌기는 키가 된다(전부터 있던 길).
-                editor.AddMotion("in", "set", 0.5f);
-                window.SelectMotion("in");
+                // 배치를 끄면 배치 모드가 아니다 — 끌기는 세트의 타임라인의 키가 된다.
+                Assert.True(view.IsLayoutMode);
+                window.LayoutModeChecked = false;
                 Assert.False(view.IsLayoutMode);
+                Assert.Equal("set", window.Graph.MotionName);
                 Assert.Equal("set", window.SelectedSet);
             }
             finally
@@ -226,7 +226,7 @@ public class SetShellTests
             {
                 MotionEditor editor = window.Session.Editor;
                 ViewportView view = window.Viewport;
-                editor.AddMotion("nod", "character", 0.6f);
+                editor.AddTimeline("nod", 0.6f, RigTemplates.Figure());
                 window.NewSetFromForm();
                 string a = window.AddSetNodeFromForm()!;   // Node1 — Body 밑
                 window.SelectSetNode("Body");
@@ -242,14 +242,10 @@ public class SetShellTests
                 IReadOnlyList<string> Drawn() => view.DrawnParts(view.SelectedObject!);
                 Assert.Equal(new[] { a, b, c }, Drawn());
 
-                // 목록은 이 세트의 애니메이션만 — 캐릭터의 nod는 안 보인다. "모션 추가"는 이 세트의 것을 만든다.
-                Assert.Equal(("애니메이션 — 세트 set", 0), (window.MotionListState.Header, window.MotionListState.Names.Count));
-                window.AddMotionFromButton();
-                Assert.Equal("set", editor.Document.Find("motion")!.Rig);
-                Assert.Equal(new[] { "motion" }, window.MotionListState.Names);
-                Assert.Equal("motion", window.SelectedMotion);
-                Assert.Equal("set", window.SelectedSet);  // 세트는 열린 채다
-                Assert.False(view.IsLayoutMode);          // 애니메이션 모드
+                // 세트를 고르면 그 타임라인이 묶인다. 배치를 끄면 애니메이션 모드.
+                window.LayoutModeChecked = false;
+                Assert.Equal("set", window.Graph.MotionName);
+                Assert.False(view.IsLayoutMode);
 
                 // 이것만 보기 — 그 오브젝트와 그 밑의 것만 그려진다. 문서는 안 바뀐다.
                 long revision = editor.Revision;
@@ -268,11 +264,11 @@ public class SetShellTests
                 Assert.Empty(Drawn());
 
                 // 움직임 밀기 · 차례로(시차) — 고른 애니메이션에서 오브젝트의 키를 통째로. 각각 한 칸.
-                editor.AddChannel("motion", a, MotionChannelKind.Position);
-                editor.SetKeys("motion", a, MotionChannelKind.Position, Axis.X, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.2f, 0f), TestDocuments.Key(0.6f, 50f), TestDocuments.Key(1f, 50f) });
-                editor.AddChannel("motion", b, MotionChannelKind.Position);
-                editor.SetKeys("motion", b, MotionChannelKind.Position, Axis.X, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.2f, 0f), TestDocuments.Key(0.6f, 50f), TestDocuments.Key(1f, 50f) });
-                float SecondKey(string node) => editor.Document.Find("motion")!.FindChannel(node, MotionChannelKind.Position)!.X!.Keys[1].T;
+                editor.AddChannel("set", a, MotionChannelKind.Position);
+                editor.SetKeys("set", a, MotionChannelKind.Position, Axis.X, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.2f, 0f), TestDocuments.Key(0.6f, 50f), TestDocuments.Key(1f, 50f) });
+                editor.AddChannel("set", b, MotionChannelKind.Position);
+                editor.SetKeys("set", b, MotionChannelKind.Position, Axis.X, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.2f, 0f), TestDocuments.Key(0.6f, 50f), TestDocuments.Key(1f, 50f) });
+                float SecondKey(string node) => editor.Document.Find("set")!.FindChannel(node, MotionChannelKind.Position)!.X!.Keys[1].T;
                 long before = editor.Revision;
                 window.ShiftSetNodeKeysFromMenu(a, 0.1f);
                 Assert.Equal(before + 1, editor.Revision);
@@ -293,11 +289,10 @@ public class SetShellTests
                 window.SetSetNodeViewFromMenu(null, null, null);
                 Assert.Equal(new[] { a, b, c }, Drawn());
 
-                // 세트를 닫으면 따로 보기가 풀리고 목록이 전부로 돌아온다.
+                // 세트를 닫으면 따로 보기가 풀리고 타임라인도 풀린다.
                 window.SetSetNodeViewFromMenu(a, solo: null, hidden: true);
                 window.SelectSet(null);
-                Assert.Equal("모션", window.MotionListState.Header);
-                Assert.Equal(new[] { "nod", "motion" }, window.MotionListState.Names);
+                Assert.Null(window.Graph.MotionName);
                 window.SelectSet("set");
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 Assert.Equal(new[] { a, b, c }, Drawn());
@@ -427,7 +422,7 @@ public class SetShellTests
     }
 
     [Fact]
-    public void 세트_이름_칸에서_이름을_바꾸면_세트와_그것을_딴_이름들이_한_칸에_따라온다()
+    public void 세트_이름_칸에서_이름을_바꾸면_세트와_타임라인이_한_칸에_따라온다()
     {
         HeadlessUi.Run(() =>
         {
@@ -438,7 +433,6 @@ public class SetShellTests
             {
                 MotionEditor editor = window.Session.Editor;
                 window.NewSetFromForm();
-                editor.AddMotion("set_in", "set", 1f);
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 long revision = editor.Revision;
                 window.SetNameBox.Focus();
@@ -448,7 +442,8 @@ public class SetShellTests
 
                 Assert.Equal(revision + 1, editor.Revision);
                 Assert.Null(editor.Document.FindRig("set"));
-                Assert.Equal("lamp", editor.Document.Find("lamp_in")!.Rig);
+                Assert.Equal("lamp", editor.Document.Find("lamp")!.Name); // 타임라인의 이름도 함께
+                Assert.Equal("lamp", window.Graph.MotionName);
                 Assert.Equal("lamp", window.SelectedSet); // 연 세트는 그대로 열려 있다
             }
             finally
@@ -472,21 +467,17 @@ public class SetShellTests
                 window.NewSetFromForm();
                 window.SelectSetNode(null);
                 window.AddColorNodeFromForm(); // Color1 — 400×300, 무대 가운데
-                editor.AddMotion("set_in", "set", 1f);
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
 
-                // 애니메이션을 고르지 않았으면 할 일이 없다.
-                Assert.Null(window.SlideSetNodeFromMenu("Color1", StageSide.Left, leaving: false));
-
                 // 0.25초에서 "왼쪽에서" — 한 칸. 무대의 반(960) + 너비의 반(200) = 1160만큼 왼쪽에서 0.5초 동안 들어온다.
-                window.SelectMotion("set_in");
+                window.LayoutModeChecked = false;
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 window.Graph.CurrentTime = 0.25;
                 long revision = editor.Revision;
                 Assert.Equal(-1160f, window.SlideSetNodeFromMenu("Color1", StageSide.Left, leaving: false));
                 Assert.Equal(revision + 1, editor.Revision);
                 Assert.Equal(new[] { (0f, -1160f), (0.25f, -1160f), (0.75f, 0f), (1f, 0f) },
-                    editor.Document.Find("set_in")!.FindChannel("Color1", MotionChannelKind.Position)!.X!.Keys.Select(k => (k.T, k.V)));
+                    editor.Document.Find("set")!.FindChannel("Color1", MotionChannelKind.Position)!.X!.Keys.Select(k => (k.T, k.V)));
                 Assert.Equal(0, window.ProblemRowsShown);
 
                 // 뷰포트: 0.1초에는 무대 밖(왼쪽), 끝에는 제자리.
