@@ -21,7 +21,7 @@
 ## 구조
 
 ```
-Ked.Presentation.Core (런타임 코어의 사본 — 순수 C#, netstandard2.1)  ──►  Mt.Authoring (도메인)  ──►  Mt.App (Avalonia 화면)
+Ked.Presentation.Core (재생의 계산 — 순수 C#, netstandard2.1)  ──►  Mt.Authoring (도메인)  ──►  Mt.App (Avalonia 화면)
 tests: Ked.Presentation.Core.Tests (NUnit) · Mt.Authoring.Tests (xunit) · Mt.App.Tests (xunit + Avalonia.Headless)
 ```
 

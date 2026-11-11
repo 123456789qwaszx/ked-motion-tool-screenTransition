@@ -5,10 +5,10 @@ using System.Text.RegularExpressions;
 namespace Ked.Presentation.Core
 {
     // ─────────────────────────────────────────────────────────────────
-    // 모션 검증 — 내보내기(에디터)와 런타임 로더와 저작 도구가 같은 규칙을 써야 한다.
-    // 한쪽만 알면 "툴에서는 되는데 재생에서 사라지는" 모션이 생긴다(CurveKindRules와 같은 사정).
+    // 모션 검증 — 런타임 로더와 저작 도구가 같은 규칙을 써야 한다.
+    // 한쪽만 알면 "툴에서는 되는데 재생에서 사라지는" 모션이 생긴다.
     //
-    // 규칙은 **모양**만 본다(이름·길이·노드·종류·성분·키 시각). 값의 뜻(relative/absolute)은 재생하는 커맨드가
+    // 규칙은 **모양**만 본다(이름·길이·노드·종류·성분·키 시각). 값의 뜻(relative/absolute)은 재생하는 쪽이
     // 정하므로 "첫 키가 중립값"·"restore의 마지막 키가 중립값" 같은 값 규칙은 없다 — 튀는 모션은 작가의 선택이고
     // 저작 도구가 경고한다.
     //
@@ -16,7 +16,7 @@ namespace Ked.Presentation.Core
     // ─────────────────────────────────────────────────────────────────
     public static class MotionRules
     {
-        /// <summary>이름은 커맨드 토큰에 실린다 — 이징 곡선과 같은 규칙.</summary>
+        /// <summary>이름 규칙 — 호스트가 이 이름으로 부른다.</summary>
         public static readonly Regex NameRule = new("^[a-z0-9_]+$", RegexOptions.Compiled);
 
         /// <summary>시각·값 판정 허용 오차. JSON 왕복의 부동소수 잡음만 흡수한다.</summary>

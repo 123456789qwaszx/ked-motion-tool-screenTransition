@@ -147,7 +147,7 @@ namespace Ked.Presentation.Core.Tests
             clone.SetState("a", RectNodeState.StretchFull.WithAnchoredPosition(new Vec2(99f, 0f)));
             clone.Add("c", "b", RectNodeState.StretchFull);
 
-            // 사본을 접어도 원본은 그대로여야 한다 — 리듀서의 순수성이 이것 위에 선다.
+            // 사본을 고쳐도 원본은 그대로여야 한다 — 미리보기가 템플릿을 사본으로 포즈한다.
             Assert.That(tree.GetState("a").AnchoredPosition, Is.EqualTo(Vec2.Zero));
             Assert.That(tree.Contains("c"), Is.False);
             Assert.That(tree.Count, Is.EqualTo(2));

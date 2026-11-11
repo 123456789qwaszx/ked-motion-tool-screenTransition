@@ -52,38 +52,6 @@ namespace Ked.Presentation.Core.Tests
         }
 
         [Test]
-        public void Rgba_저장과_알파_교체()
-        {
-            Rgba c = new Rgba(0.1f, 0.2f, 0.3f, 0.4f);
-
-            Assert.That(c.R, Is.EqualTo(0.1f));
-            Assert.That(c.G, Is.EqualTo(0.2f));
-            Assert.That(c.B, Is.EqualTo(0.3f));
-            Assert.That(c.A, Is.EqualTo(0.4f));
-
-            Assert.That(c.WithAlpha(1f), Is.EqualTo(new Rgba(0.1f, 0.2f, 0.3f, 1f)));
-
-            // 알파 기본값은 1 — 불투명이 기본이다.
-            Assert.That(new Rgba(1f, 1f, 1f), Is.EqualTo(Rgba.White));
-            Assert.That(Rgba.Black, Is.EqualTo(new Rgba(0f, 0f, 0f, 1f)));
-            Assert.That(Rgba.Clear, Is.EqualTo(new Rgba(0f, 0f, 0f, 0f)));
-        }
-
-        [Test]
-        public void 값_동등성은_정확_일치다()
-        {
-            // ε가 들어 있지 않다는 것이 규약이다. 근사 비교는 StageStateComparer의 일이다.
-            Assert.That(new Vec2(1f, 2f) == new Vec2(1f, 2f), Is.True);
-            Assert.That(new Vec2(1f, 2f) != new Vec2(1f, 2.0001f), Is.True);
-
-            Assert.That(new Vec3(1f, 2f, 3f) == new Vec3(1f, 2f, 3f), Is.True);
-            Assert.That(new Vec3(1f, 2f, 3f) != new Vec3(1f, 2f, 3.0001f), Is.True);
-
-            Assert.That(Rgba.Clear == new Rgba(0f, 0f, 0f, 0f), Is.True);
-            Assert.That(Rgba.White != Rgba.Black, Is.True);
-        }
-
-        [Test]
         public void 같은_값은_같은_해시다()
         {
             // Dictionary 키로 쓰이는 자리가 있다(트리 조회는 문자열이지만 값 캐시는 이쪽).

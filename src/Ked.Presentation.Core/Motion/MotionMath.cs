@@ -3,15 +3,15 @@ namespace Ked.Presentation.Core
     // ─────────────────────────────────────────────────────────────────
     // 모션 샘플링과 합성 — 정본은 여기다.
     //
-    // 재생(호스트의 샘플러)과 툴 프리뷰와 정지 프레임(리듀서)이 전부 이 함수를 지난다.
+    // 재생(호스트의 샘플러)과 툴 미리보기가 전부 이 함수를 지난다.
     // 성분마다 CurveFunctions.Evaluate를 부르므로 AnimationCurve.Evaluate와 같은 값이다
     // (CurveFunctionsAnimationCurveParityTests).
     //
-    // mode는 채널이 아니라 **호출부(커맨드)**가 준다 — 같은 클립을 relative로도 absolute로도 재생한다.
+    // mode는 채널이 아니라 **호출부**가 준다 — 같은 클립을 relative로도 absolute로도 재생한다.
     // relative의 뜻은 종류마다 다르다: 위치·회전은 start + v, 배율은 start × v.
     // 그래서 중립값(Neutral)이 위치·회전은 0, 배율은 1이고, 없는 성분은 중립값으로 친다 — 시작값이 그대로 남는다.
     //
-    // 규칙(EaseFunctions·CurveFunctions와 같다): 순수 함수, UnityEngine 타입 금지.
+    // 규칙(CurveFunctions와 같다): 순수 함수, UnityEngine 타입 금지.
     // ─────────────────────────────────────────────────────────────────
     public static class MotionMath
     {
@@ -70,26 +70,7 @@ namespace Ked.Presentation.Core
         }
 
         /// <summary>
-        /// 채널의 클레임 — 장부 게시·트윈 종점·상태 폴드 세 갈래가 같은 값을 본다. commit 모션에서만 뜻이 있다
-        /// (restore는 남기는 것이 없다 — 호출부가 End를 보고 부르지 않는다).
-        /// 종류가 StageNodeClaimKind로 가는 자리는 여기 하나다.
-        /// </summary>
-        public static StageNodeClaim ClaimFor(in MotionChannel channel, MotionChannelMode mode, string nodeKey, Vec3 start)
-        {
-            Vec3 end = EndValue(channel, mode, start);
-
-            return channel.Kind switch
-            {
-                MotionChannelKind.Position => StageNodeClaim.AnchoredPosition(nodeKey, end.XY),
-                MotionChannelKind.Scale => StageNodeClaim.LocalScaleXY(nodeKey, end.XY),
-                MotionChannelKind.Euler => StageNodeClaim.LocalEuler(nodeKey, end),
-                MotionChannelKind.Alpha => StageNodeClaim.CanvasAlpha(nodeKey, System.Math.Clamp(end.X, 0f, 1f)),
-                _ => throw new System.ArgumentOutOfRangeException(nameof(channel), channel.Kind, "모르는 채널 종류"),
-            };
-        }
-
-        /// <summary>
-        /// 시작값 — alpha까지. Alpha 채널의 시작값은 노드 상태가 아니라 무대 상태의 alpha 저장소에 있다(StageState.GetAlpha).
+        /// 시작값 — alpha까지. Alpha 채널의 시작값은 노드 상태가 아니라 호출부가 든 불투명도다.
         /// 그 밖의 종류는 alpha 인자를 보지 않는다. Alpha의 Y·Z는 1로 둔다(곱의 중립값 — 없는 성분).
         /// </summary>
         public static Vec3 StartOf(in MotionChannel channel, in RectNodeState state, float alpha)

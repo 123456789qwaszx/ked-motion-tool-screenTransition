@@ -54,7 +54,7 @@ public sealed class PlaybackClock
     public bool WholeFrames { get; set; }
 
     /// <summary>24fps 프레임 길이(초).</summary>
-    public static double Frame => 1.0 / Ked.Presentation.Core.DurationToken.FramesPerSecond;
+    public static double Frame => 1.0 / Ked.Presentation.Core.Timing.FramesPerSecond;
 
     // 1프레임 단위 재생일 때 실제로 흐른 시각 — Time은 이것을 프레임에 맞춘 값이다.
     private double _exact;

@@ -5,14 +5,14 @@ using NUnit.Framework;
 namespace Ked.Presentation.Core.Tests
 {
     /// <summary>
-    /// 덤프 → 트리 변환의 규율. 여기서는 합성 덤프를 쓴다 —
-    /// 실제 덤프와 실제 리그의 대조는 UnityParity 하네스의 일이다.
+    /// 스키마 → 트리 변환의 규율. 여기서는 합성 스키마를 쓴다 —
+    /// 실제 RectTransform과의 대조는 게임 쪽(UGUI 재생기, T5)의 일이다.
     /// </summary>
     public sealed class RigSchemaLoaderTests
     {
         private const float Eps = 1e-4f;
 
-        // ── 합성 덤프 ────────────────────────────────────────────────
+        // ── 합성 스키마 ────────────────────────────────────────────────
 
         private static Float2Dto F2(float x, float y) => new() { x = x, y = y };
         private static Float3Dto F3(float x, float y, float z) => new() { x = x, y = y, z = z };
@@ -36,7 +36,7 @@ namespace Ked.Presentation.Core.Tests
         }
 
         /// <summary>
-        /// 루트 + 자식 둘의 최소 리그. parent 표기는 실제 덤프 규약 그대로다:
+        /// 루트 + 자식 둘의 최소 리그. parent 표기는 실제 스키마 규약 그대로다:
         /// __root만 빈 문자열이고, 그 자식들은 "__root"를 명시한다.
         /// </summary>
         private static RigSchemaRigDto SampleRig(string rigKind = "character")
@@ -73,7 +73,7 @@ namespace Ked.Presentation.Core.Tests
         // ── 정상 경로 ────────────────────────────────────────────────
 
         [Test]
-        public void 덤프_순서대로_부모_자식_트리가_선다()
+        public void 스키마_순서대로_부모_자식_트리가_선다()
         {
             RectNodeTree tree = RigSchemaLoader.BuildTree(SampleFile(SampleRig()), "character");
 
@@ -86,7 +86,7 @@ namespace Ked.Presentation.Core.Tests
         [Test]
         public void 빈_parent만_루트_공간_직속이다()
         {
-            // 덤프 규약 두 겹을 구분해야 한다:
+            // 스키마 규약 두 겹을 구분해야 한다:
             //   parent ""       → 루트 공간 직속 (리그 루트 자신)
             //   parent "__root" → 리그 루트의 자식
             // 둘을 같이 취급하면 리그 루트가 사슬에서 빠져 좌표가 조용히 어긋난다.
@@ -182,7 +182,7 @@ namespace Ked.Presentation.Core.Tests
         }
 
         [Test]
-        public void 빈_덤프는_거부한다()
+        public void 빈_스키마는_거부한다()
         {
             Assert.Throws<ArgumentNullException>(
                 () => RigSchemaLoader.BuildTree(null, "character"));
@@ -236,7 +236,7 @@ namespace Ked.Presentation.Core.Tests
         [Test]
         public void 부모가_자식보다_뒤에_오면_거부한다()
         {
-            // 덤프 규약은 "부모 먼저"다. 어긋나면 트리가 조용히 반쪽으로 서는 대신 터진다.
+            // 스키마 규약은 "부모 먼저"다. 어긋나면 트리가 조용히 반쪽으로 서는 대신 터진다.
             RigSchemaRigDto rig = SampleRig();
             (rig.nodes[1], rig.nodes[2]) = (rig.nodes[2], rig.nodes[1]);
 

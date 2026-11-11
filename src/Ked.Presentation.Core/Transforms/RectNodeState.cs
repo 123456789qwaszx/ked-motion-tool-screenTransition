@@ -9,15 +9,12 @@ namespace Ked.Presentation.Core
     /// 그 중, 필요한 것 5종만 담음.(근거: RigBuilder, RigPolicy)
     ///
     /// 담은 것
-    /// - AnchoredPosition : 커맨드가 위치를 쓰는 자리 (Ledger.PublishAnchoredPosition)
-    /// - AnchorMin/Max    : 리그 기본은 스트레치 (0,0)-(1,1)(빌더 StretchFull)이지만
-    ///                      고정 앵커 (0.5,0.5)를 쓰는 노드도 있다.
-    /// - Pivot            : 기본 (0.5,0.5). NeedsBottomPivot 노드는 (0.5,0).
-    ///                      CharRigImageSizingPolicy가 정렬 때문에 pivot.x를 바꾸기도 함.
-    /// - SizeDelta        : CharRigImageSizingPolicy가 초상 폭(y=0)에 씀.
-    ///                      스트레치 앵커면 "앵커 간격 대비 증감", 고정 앵커면 "크기 그 자체"
-    /// - LocalScale       : 스케일 커맨드 (Ledger.PublishLocalScale). z는 유니티 기본값 1을 유지.
-    /// - LocalEulerAngles : 회전 커맨드. Ledger.PublishLocalEuler가 Vector3를 게시하므로 3축 전부 가져옴.
+    /// - AnchoredPosition : 위치 채널이 쓰는 자리
+    /// - AnchorMin/Max    : 스트레치 (0,0)-(1,1) 또는 고정 앵커 (0.5,0.5)
+    /// - Pivot            : 기본 (0.5,0.5)
+    /// - SizeDelta        : 스트레치 앵커면 "앵커 간격 대비 증감", 고정 앵커면 "크기 그 자체"
+    /// - LocalScale       : 배율 채널. z는 유니티 기본값 1을 유지.
+    /// - LocalEulerAngles : 회전 채널. 3축 전부 가져옴.
     ///
     /// 뺀 것
     /// - localPosition.z  : 리그 코드 어디에서도 쓰지 않는다. 항상 0으로 취급.
@@ -86,8 +83,7 @@ namespace Ked.Presentation.Core
     /// <summary>
     /// 체인이 딛고 서는 최상위 공간(예: RigSpaceRoot)의 rect.
     ///
-    /// 코어의 "월드"는 절대 월드가 아니라 이 공간의 로컬 좌표다 —
-    /// CharacterPlacementTargetLedger의 stopRoot가 하던 역할과 같다.
+    /// 코어의 "월드"는 절대 월드가 아니라 이 공간의 로컬 좌표다.
     /// 호스트가 리그를 화면 어디에 놓든 코어 계산은 영향받지 않는다.
     /// </summary>
     public readonly struct RectSpace

@@ -4,15 +4,14 @@ using System.Collections.Generic;
 namespace Ked.Presentation.Core
 {
     // ─────────────────────────────────────────────────────────────────
-    // ExportedTuning/rig-schemas.json의 전송 타입.
+    // 리그 스키마의 전송 타입 — 툴은 문서의 세트에서 이것을 짓는다.
     //
-    // 필드 이름이 JSON 키와 1:1이다 — 바꾸면 덤프를 못 읽는다.
+    // 필드 이름이 JSON 키와 1:1이다 — 바꾸면 스키마를 못 읽는다.
     // 코어는 외부 의존성이 0이라 JSON 파서를 갖지 않는다. 역직렬화는 호스트가 한다:
     //   유니티  : JsonUtility.FromJson<RigSchemasFileDto>(text)
     //   VNTool  : System.Text.Json (IncludeFields = true 필요 — 프로퍼티가 아니라 필드다)
     //
     // 필드의 "해석"은 RigSchemaLoader 한 곳이다 — 해석 사본을 만들지 말 것.
-    // 각 필드의 의미·단위는 ExportedTuning/schema.md가 규범이다.
     // ─────────────────────────────────────────────────────────────────
 
     [Serializable]
@@ -59,7 +58,7 @@ namespace Ked.Presentation.Core
         public Float2Dto measuredRectSize;
 
         /// <summary>
-        /// 가시성 축 대상인가. 구덤프(필드 없음)는 역직렬화 기본값 false로 안전하게 떨어진다 —
+        /// 가시성 축 대상인가. 옛 스키마(필드 없음)는 역직렬화 기본값 false로 안전하게 떨어진다 —
         /// JsonUtility가 없는 필드를 0/false로 채우기 때문에, alpha만 두면
         /// "CanvasGroup이 없다"와 "alpha가 0이다"가 구분되지 않는다.
         /// </summary>
@@ -69,14 +68,14 @@ namespace Ked.Presentation.Core
         public float canvasGroupAlpha;
 
         /// <summary>
-        /// 그림을 그리는 노드인가(Image가 붙는 자리). 조각 여럿으로 된 리그(이모지)에서 "어느 노드가 그림인가"를 덤프가 말한다.
-        /// 없는 필드는 false로 읽힌다 — 예전 덤프는 그대로다.
+        /// 그림을 그리는 노드인가(Image가 붙는 자리). 조각 여럿으로 된 리그(이모지)에서 "어느 노드가 그림인가"를 스키마가 말한다.
+        /// 없는 필드는 false로 읽힌다 — 예전 스키마는 그대로다.
         /// </summary>
         public bool hasImage;
 
         /// <summary>
         /// 단색 사각형의 색("#RRGGBB" 또는 "#RRGGBBAA") — 스프라이트 없이 노드의 rect를 이 색으로 채운다(화면 전환의 패널 등).
-        /// 없거나 비면 색 노드가 아니다 — 예전 덤프는 그대로다.
+        /// 없거나 비면 색 노드가 아니다 — 예전 스키마는 그대로다.
         /// </summary>
         public string fillColor;
     }

@@ -23,7 +23,7 @@ public sealed class SceneObject
     /// <summary>입힌 스킨의 이름. null이면 조각을 안 그린다(색 사각형은 그린다).</summary>
     public string? Skin { get; set; }
 
-    /// <summary>노드 키 접두사 — 코어 <c>StageState.NodeKeyOf</c>와 같은 꼴.</summary>
+    /// <summary>노드 키 접두사 — 오브젝트 id + "/".</summary>
     public string Prefix => Id + "/";
 
     public string KeyOf(string nodeId) => Prefix + nodeId;
