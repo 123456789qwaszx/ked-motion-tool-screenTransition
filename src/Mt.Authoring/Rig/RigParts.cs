@@ -2,7 +2,7 @@ using Ked.Presentation.Core;
 
 namespace Mt.Authoring.Rig;
 
-/// <summary>리그의 조각 — 그림을 하나씩 그리는 노드들(세트에서 "그림"으로 표시한 오브젝트). 스킨이 조각마다 그림을 붙인다.</summary>
+/// <summary>리그의 조각 — 그림을 하나씩 그리는 노드들(세트에서 그림을 든 오브젝트).</summary>
 public static class RigParts
 {
     /// <summary>리그의 조각 노드 id — 세트에 적힌 순서(= 그리는 순서: 뒤의 것이 위).</summary>

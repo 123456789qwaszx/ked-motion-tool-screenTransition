@@ -5,12 +5,12 @@ namespace Mt.Authoring.Model;
 /// <summary>
 /// 세트 — 툴에서 정의한 리그(오브젝트들의 계층). Spine처럼 **툴이 원본**이고 미리보기·런타임은 이것으로 세운다.
 ///
-/// 노드는 단순하다: 부모의 가운데에 앵커·피벗을 둔 사각형(위치 · 크기) + 그림을 그리는가 + 불투명도를 받는가.
+/// 노드는 단순하다: 부모의 가운데에 앵커·피벗을 둔 사각형(위치 · 크기) + 그림 · 색 + 불투명도를 받는가.
 /// 루트(<c>__root</c>)는 적지 않는다 — 내보낼 때 붙는다(부모를 꽉 채운다). 부모가 빈 노드는 루트 밑이다.
 /// </summary>
 public sealed class RigAsset
 {
-    /// <summary>rigKind — 모션·스킨이 이 이름으로 가리킨다. 영문자로 시작하는 영문·숫자·_.</summary>
+    /// <summary>rigKind — 모션이 이 이름으로 가리킨다. 영문자로 시작하는 영문·숫자·_.</summary>
     public string Kind { get; set; } = "";
 
     /// <summary>부모가 자식보다 먼저 온다. 그리는 순서도 이 순서다(뒤의 것이 위).</summary>
@@ -49,8 +49,8 @@ public sealed class RigNodeAsset
     /// </summary>
     public string? Color { get; set; }
 
-    /// <summary>그림을 그리는 노드(조각)인가 — 스킨이 여기에 그림을 준다.</summary>
-    public bool Image { get; set; }
+    /// <summary>그리는 그림(문서 기준 상대 경로) — 사각형 안에 종횡비로 맞춰진다. null이면 그림 노드가 아니다.</summary>
+    public string? Image { get; set; }
 
     /// <summary>불투명도를 받는가(CanvasGroup) — 알파 채널을 놓을 수 있다.</summary>
     public bool Alpha { get; set; }
@@ -103,7 +103,7 @@ public static class RigAssetCodec
                 measuredRectSize = F2(node.Width, node.Height),
                 hasCanvasGroup = node.Alpha,
                 canvasGroupAlpha = 1f,
-                hasImage = node.Image,
+                hasImage = node.Image is not null,
                 fillColor = node.Color,
             });
         }

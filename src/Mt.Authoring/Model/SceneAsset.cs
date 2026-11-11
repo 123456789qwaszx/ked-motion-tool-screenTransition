@@ -12,16 +12,13 @@ public sealed class SceneAsset
         => Objects.FirstOrDefault(o => string.Equals(o.Id, id, StringComparison.Ordinal));
 }
 
-/// <summary>무대에 선 세트 하나 — 그 세트(<see cref="Rig"/>)와 입힌 스킨.</summary>
+/// <summary>무대에 선 세트 하나(<see cref="Rig"/>).</summary>
 public sealed class SceneObject
 {
     public string Id { get; set; } = "";
 
     /// <summary>세트(rigKind).</summary>
     public string Rig { get; set; } = "";
-
-    /// <summary>입힌 스킨의 이름. null이면 조각을 안 그린다(색 사각형은 그린다).</summary>
-    public string? Skin { get; set; }
 
     /// <summary>노드 키 접두사 — 오브젝트 id + "/".</summary>
     public string Prefix => Id + "/";

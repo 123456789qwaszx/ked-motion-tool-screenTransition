@@ -19,22 +19,18 @@ public sealed class DocumentSession
     {
         Editor = new MotionEditor(new MotionDocument());
         Editor.Changed += OnEditorChanged;
-        _assetFingerprint = AssetFingerprintOf(Editor.Document);
+        _assetFingerprint = RigsKeyOf(Editor.Document);
     }
 
     // ── 문서 ↔ 실은 그림 ──────────────────────────────────────────────
     //
-    // 세트의 모양과 스킨이 가리키는 그림은 되돌리기·다시하기로도 바뀐다. 뷰포트의 리그·비트맵이 문서와 어긋나지 않도록 지문을 두고
+    // 세트의 모양과 층의 그림은 되돌리기·다시하기로도 바뀐다. 뷰포트의 리그·비트맵이 문서와 어긋나지 않도록 지문을 두고
     // 달라진 때만 AssetsChanged를 올린다. 키 편집(Keys·Metadata)은 보지도 않는다.
 
     private string _assetFingerprint = "";
 
     /// <summary>테스트 손잡이 — 문서를 따라 세트·그림을 다시 실은 횟수.</summary>
     internal int AssetSyncCount { get; private set; }
-
-    private static string AssetFingerprintOf(MotionDocument document)
-        => "rigs " + RigsKeyOf(document)
-           + "\n" + string.Join("\n", document.Skins.Select(s => $"skin {s.Name}:{s.Rig}:" + string.Join(",", s.Parts.Keys.Select(node => node + "=" + string.Join("|", s.ImagesOf(node))))));
 
     private void OnEditorChanged(object? sender, MotionChangedEventArgs e)
     {
@@ -43,7 +39,7 @@ public sealed class DocumentSession
             return;
         }
 
-        string fingerprint = AssetFingerprintOf(Editor.Document);
+        string fingerprint = RigsKeyOf(Editor.Document);
 
         if (fingerprint == _assetFingerprint)
         {
@@ -92,23 +88,22 @@ public sealed class DocumentSession
     private string _rigKey = "";
 
     private static string RigsKeyOf(MotionDocument document)
-        => string.Join("|", document.Rigs.Select(r => r.Kind + ":" + string.Join(",", r.Nodes.Select(n => $"{n.Id}<{n.Parent}@{n.X},{n.Y}#{n.Width}x{n.Height}r{n.Rotation}s{n.ScaleX},{n.ScaleY}c{n.Color}{(n.Image ? "i" : "")}{(n.Alpha ? "a" : "")}"))));
+        => string.Join("|", document.Rigs.Select(r => r.Kind + ":" + string.Join(",", r.Nodes.Select(n => $"{n.Id}<{n.Parent}@{n.X},{n.Y}#{n.Width}x{n.Height}r{n.Rotation}s{n.ScaleX},{n.ScaleY}c{n.Color}i{n.Image}{(n.Alpha ? "a" : "")}"))));
 
     public string Status { get; private set; } = "";
 
-    /// <summary>문서의 스킨들이 쓰는 그림 전부 — 문서 기준 경로 → 파일 경로(파일이 없으면 null: 자리표시로 그린다).</summary>
-    public IReadOnlyList<(string Image, string? Path)> SkinImages()
-        => Editor.Document.Skins.SelectMany(s => s.AllImages()).Distinct(StringComparer.Ordinal).Select(image =>
+    /// <summary>문서의 층들이 든 그림 전부 — 문서 기준 경로 → 파일 경로(파일이 없으면 null: 자리표시로 그린다).</summary>
+    public IReadOnlyList<(string Image, string? Path)> LayerImages()
+        => Editor.Document.Rigs.SelectMany(r => r.Nodes).Select(n => n.Image).OfType<string>().Distinct(StringComparer.Ordinal).Select(image =>
         {
             string resolved = ResolveFromDocument(image);
             return (image, File.Exists(resolved) ? resolved : (string?)null);
         }).ToList();
 
-    /// <summary>스킨의 조각 그림을 파일로 정한다 — 경로는 문서 기준 상대로 적힌다. null이면 그 조각을 비운다.</summary>
     /// <summary>
-    /// 층 표(<c>layers.tsv</c>)를 세트로 들인다 — 표 옆의 그림들이 오브젝트 여럿 + 스킨으로, 한 칸에. 그림 경로는 문서 기준으로 적힌다.
+    /// 층 표(<c>layers.tsv</c>)를 세트로 들인다 — 표 옆의 그림들이 그림 오브젝트 여럿으로, 한 칸에. 그림 경로는 문서 기준으로 적힌다.
     /// </summary>
-    public IReadOnlyList<string> ImportLayers(string kind, string sheetPath, string skin)
+    public IReadOnlyList<string> ImportLayers(string kind, string sheetPath)
     {
         ArgumentNullException.ThrowIfNull(sheetPath);
         LayerSheet sheet = LayerSheet.Load(sheetPath);
@@ -116,11 +111,9 @@ public sealed class DocumentSession
         // 표의 파일 하나를 문서 기준 경로로 바꿔 그 폴더를 얻는다(저장 전의 문서면 절대 경로로 남는다).
         string probe = RelativeToDocument(Path.Combine(folder, "x")).Replace('\\', '/');
         string relative = probe.Length > 1 ? probe[..^2] : "";
-        return Editor.ImportLayers(kind, sheet, relative, skin, RigAssets.Stage);
+        return Editor.ImportLayers(kind, sheet, relative, RigAssets.Stage);
     }
 
-    public void SetSkinPart(string skin, string node, string? path)
-        => Editor.SetSkinPart(skin, node, string.IsNullOrEmpty(path) ? null : RelativeToDocument(path));
 
     public bool IsDirty => Editor.Revision != _savedRevision;
 
@@ -129,7 +122,7 @@ public sealed class DocumentSession
 
     public event EventHandler? StatusChanged;
 
-    /// <summary>스킨의 그림이 바뀌었다. 뷰포트가 다시 싣는다.</summary>
+    /// <summary>세트의 모양이나 층의 그림이 바뀌었다. 뷰포트가 다시 싣는다.</summary>
     public event EventHandler? AssetsChanged;
 
     /// <summary>검증에 쓰는 rigKind → 노드 표.</summary>
@@ -197,11 +190,12 @@ public sealed class DocumentSession
         Editor.Changed += OnEditorChanged;
         DocumentPath = path;
         _savedRevision = Editor.Revision;
-        _assetFingerprint = AssetFingerprintOf(Editor.Document);
+        _assetFingerprint = RigsKeyOf(Editor.Document);
         DocumentReplaced?.Invoke(this, EventArgs.Empty);
     }
 
-    private string RelativeToDocument(string path)
+    /// <summary>파일 경로 → 문서 기준 상대 경로(저장 전의 문서면 절대 경로 그대로).</summary>
+    public string RelativeToDocument(string path)
     {
         string full = Path.GetFullPath(path);
 

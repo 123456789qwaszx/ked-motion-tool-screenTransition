@@ -30,9 +30,9 @@ public class RigAssetTests
         editor.AddRig(RigTemplates.Emoji(parts: 2));
         long revision = editor.Revision;
 
-        // 더하기 — 부모의 식구들 맨 뒤. 그림 노드는 본의 크기와 불투명도를 갖고 선다.
-        RigNodeAsset glow = editor.AddRigNode(RigTemplates.EmojiKind, "Emoji_Glow", "Emoji_Anchor", image: true);
-        Assert.Equal((160f, 160f, true, true), (glow.Width, glow.Height, glow.Image, glow.Alpha));
+        // 더하기 — 부모의 식구들 맨 뒤. 크기 0의 묶는 노드로 선다(그림 · 크기는 값으로 준다).
+        RigNodeAsset glow = editor.AddRigNode(RigTemplates.EmojiKind, "Emoji_Glow", "Emoji_Anchor");
+        Assert.Equal((0f, 0f, null, false), (glow.Width, glow.Height, glow.Image, glow.Alpha));
         editor.AddRigNode(RigTemplates.EmojiKind, "Emoji_Spark", "Emoji_Glow");
         editor.AddRigNode(RigTemplates.EmojiKind, "Extra"); // 루트 밑
         Assert.Equal(revision + 3, editor.Revision);
@@ -71,7 +71,7 @@ public class RigAssetTests
 
         // 값 — 한 칸, 같은 값은 무기록. 세운 나무에 그대로 선다.
         revision = editor.Revision;
-        var moved = new RigNodeAsset { X = 30f, Y = -12f, Width = 80f, Height = 40f, Image = true, Alpha = false };
+        var moved = new RigNodeAsset { X = 30f, Y = -12f, Width = 80f, Height = 40f, Image = "art/glow.png", Alpha = false };
         editor.UpdateRigNode(RigTemplates.EmojiKind, "Emoji_Glow", moved);
         editor.UpdateRigNode(RigTemplates.EmojiKind, "Emoji_Glow", moved);
         Assert.Equal(revision + 1, editor.Revision);
@@ -82,7 +82,7 @@ public class RigAssetTests
         Assert.Contains("Emoji_Glow", RigParts.Of(composed, RigTemplates.EmojiKind));
 
         // 가만히 선 자세의 회전·배율(배치 모드) — 세운 나무에 그대로 선다. 배율 0은 막는다.
-        editor.UpdateRigNode(RigTemplates.EmojiKind, "Emoji_Glow", new RigNodeAsset { X = 30f, Y = -12f, Width = 80f, Height = 40f, Image = true, Rotation = 30f, ScaleX = 2f, ScaleY = -1f });
+        editor.UpdateRigNode(RigTemplates.EmojiKind, "Emoji_Glow", new RigNodeAsset { X = 30f, Y = -12f, Width = 80f, Height = 40f, Image = "art/glow.png", Rotation = 30f, ScaleX = 2f, ScaleY = -1f });
         Assert.True(RigAssets.Compose(editor.Document).TryGetRig(RigTemplates.EmojiKind, out RigSchemaRigDto posed));
         RigSchemaNodeDto turned = posed.nodes.Single(n => n.id == "Emoji_Glow");
         Assert.Equal((30f, 2f, -1f), (turned.localEulerAngles.z, turned.localScale.x, turned.localScale.y));
@@ -98,12 +98,10 @@ public class RigAssetTests
     }
 
     [Fact]
-    public void 노드의_이름을_바꾸면_자식과_채널과_스킨이_따라온다()
+    public void 노드의_이름을_바꾸면_자식과_채널이_따라온다()
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddRig(RigTemplates.Emoji(parts: 2));
-        editor.AddSkin("땀", RigTemplates.EmojiKind);
-        editor.SetSkinPart("땀", "Emoji_Part1", "art/sweat.png");
         editor.AddMotion("pop", RigTemplates.EmojiKind, 0.2f);
         editor.AddChannel("pop", "Emoji_Part1", MotionChannelKind.Position);
         editor.AddChannel("pop", "Emoji_Body", MotionChannelKind.Position);
@@ -117,8 +115,7 @@ public class RigAssetTests
         Assert.Equal(new[] { "Pin", "Emoji_Body", "Drop", "Emoji_Part2" }, Ids(editor));
         Assert.Equal("Pin", editor.Document.FindRig(RigTemplates.EmojiKind)!.Find("Emoji_Body")!.Parent);
         Assert.Equal(new[] { "Drop", "Emoji_Body" }, editor.Document.Find("pop")!.Channels.Select(c => c.Node));
-        Assert.Equal("art/sweat.png", editor.Document.FindSkin("땀")!.Parts["Drop"]);
-        Assert.False(editor.Document.FindSkin("땀")!.Parts.ContainsKey("Emoji_Part1"));
+        Assert.Equal("art/part1.png", editor.Document.FindRig(RigTemplates.EmojiKind)!.Find("Drop")!.Image); // 그림은 층의 것이라 함께 간다
 
         // 이름이 겹치거나 규칙에 안 맞으면 막는다. 되돌리면 전부 함께 돌아온다.
         Assert.Throws<InvalidOperationException>(() => editor.RenameRigNode(RigTemplates.EmojiKind, "Drop", "Emoji_Body"));
@@ -127,7 +124,6 @@ public class RigAssetTests
         editor.Undo();
         Assert.Equal("Emoji_Part1", editor.Document.Find("pop")!.Channels[0].Node);
         Assert.Equal("Emoji_Anchor", Ids(editor)[0]);
-        Assert.True(editor.Document.FindSkin("땀")!.Parts.ContainsKey("Emoji_Part1"));
     }
 
     // ── 시차 — 오브젝트의 움직임을 통째로 민다 ─────────────────────────
@@ -232,25 +228,24 @@ public class RigAssetTests
     private static KeyAsset Lin(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Linear };
 
     [Fact]
-    public void 세트의_이름을_바꾸면_애니메이션과_스킨과_연출이_따라오고_이름을_딴_것들도_함께_바뀐다()
+    public void 세트의_이름을_바꾸면_애니메이션이_따라오고_이름을_딴_것들도_함께_바뀐다()
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddRig(new RigAsset { Kind = "star" });
-        editor.AddRigNode("star", "Sun", null, image: true);
-        editor.AddSkin("star", "star");
-        editor.SetSkinPart("star", "Sun", "art/sun.png");
+        editor.AddRigNode("star", "Sun");
         editor.AddMotion("star_in", "star", 1f, MotionEnd.Commit);
         editor.AddChannel("star_in", "Sun", MotionChannelKind.Position);
         editor.SetKeys("star_in", "Sun", MotionChannelKind.Position, Axis.Y, new[] { Lin(0f, -100f), Lin(1f, 0f) });
+        editor.AddMotion("star", "star", 1f, MotionEnd.Commit);
         editor.AddMotion("rise", "star", 1f, MotionEnd.Commit);
         editor.AddRig(new RigAsset { Kind = "town" });
 
-        // 한 칸 — 세트의 이름을 딴 이름들(애니메이션 star_x · 스킨 star)도 함께 바뀐다. 다른 이름(rise)은 그대로 그 세트를 가리킨다.
+        // 한 칸 — 세트의 이름을 딴 이름들(애니메이션 star · star_x)도 함께 바뀐다. 다른 이름(rise)은 그대로 그 세트를 가리킨다.
         long revision = editor.Revision;
         editor.RenameRig("star", "sol");
         Assert.Equal(revision + 1, editor.Revision);
         Assert.Null(editor.Document.FindRig("star"));
-        Assert.Equal(("sol", "sol", "sol"), (editor.Document.Find("sol_in")!.Rig, editor.Document.Find("rise")!.Rig, editor.Document.FindSkin("sol")!.Rig));
+        Assert.Equal(("sol", "sol", "sol"), (editor.Document.Find("sol_in")!.Rig, editor.Document.Find("sol")!.Rig, editor.Document.Find("rise")!.Rig));
         Assert.Null(editor.Document.Find("star_in"));
 
         // 막는 것: 있는 이름 · 규칙에 안 맞는 이름. 같은 이름은 기록이 없다.
@@ -262,7 +257,7 @@ public class RigAssetTests
 
         // 되돌리면 통째로 돌아간다.
         editor.Undo();
-        Assert.Equal(("star", "star"), (editor.Document.Find("star_in")!.Rig, editor.Document.FindSkin("star")!.Rig));
+        Assert.Equal(("star", "star"), (editor.Document.Find("star_in")!.Rig, editor.Document.Find("star")!.Rig));
     }
 
     // ── 화면 밖에서 들어온다 ───────────────────────────────────────────
@@ -273,10 +268,10 @@ public class RigAssetTests
         var stage = new Vec2(1920f, 1080f);
         var editor = new MotionEditor(new MotionDocument());
         editor.AddRig(new RigAsset { Kind = "town", Nodes = { new RigNodeAsset { Id = "Group", X = 100f, Y = -50f, Alpha = true } } });
-        editor.AddRigNode("town", "Sun", null, image: true);
-        editor.UpdateRigNode("town", "Sun", new RigNodeAsset { X = 300f, Y = 200f, Width = 100f, Height = 100f, Image = true, Alpha = true });
-        editor.AddRigNode("town", "Leaf", "Group", image: true);
-        editor.UpdateRigNode("town", "Leaf", new RigNodeAsset { X = 10f, Y = 20f, Width = 60f, Height = 80f, Rotation = 30f, Image = true, Alpha = true });
+        editor.AddRigNode("town", "Sun");
+        editor.UpdateRigNode("town", "Sun", new RigNodeAsset { X = 300f, Y = 200f, Width = 100f, Height = 100f, Image = "art/sun.png", Alpha = true });
+        editor.AddRigNode("town", "Leaf", "Group");
+        editor.UpdateRigNode("town", "Leaf", new RigNodeAsset { X = 10f, Y = 20f, Width = 60f, Height = 80f, Rotation = 30f, Image = "art/leaf.png", Alpha = true });
         editor.AddMotion("town_in", "town", 1f, MotionEnd.Commit);
 
         // 왼쪽에서: 무대의 반(960) + 자리(300) + 너비의 반(50) = 1310만큼 왼쪽에서 출발한다. 0.2초부터 0.5초 동안 — 앞뒤로는 가만히. 한 칸.

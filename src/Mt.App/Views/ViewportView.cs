@@ -62,8 +62,7 @@ public sealed class ViewportView : Control
     // 무대의 시작 상태(세트의 노드 키에 오브젝트 접두사). 모션은 선택 오브젝트에만 얹는다.
     private RectNodeTree? _template;
 
-    /// <summary>조각 그림 — (오브젝트 id, 조각 노드 id) → 비트맵. 스킨이 그림을 준 조각만 든다(파일을 못 읽었으면 null — 자리표시).</summary>
-    // 스킨의 그림 — 문서 기준 경로 → 비트맵. 어느 스킨의 어느 장을 그릴지는 그릴 때 고른다(입은 스킨 · 이모지 정의의 스킨 · 반전 판 · 그림 넘기기).
+    /// <summary>층의 그림 — 문서 기준 경로 → 비트맵(파일을 못 읽었으면 null — 자리표시).</summary>
     private readonly Dictionary<string, Bitmap?> _images = new(StringComparer.Ordinal);
     private string? _selectedObjectId;
     public bool ShowGrid { get; set; } = true;
@@ -243,18 +242,16 @@ public sealed class ViewportView : Control
                 return null;
             }
 
-            (string Rig, string? Skin)? shown = _setView is { } kind ? (kind, SkinOf(kind, _setSkin))
-                : Motion is { } motion ? (motion.Rig, SkinOf(motion.Rig, null))
-                : null;
+            string? shown = _setView ?? Motion?.Rig;
 
-            if (shown is not { } s)
+            if (shown is null)
             {
                 return null;
             }
 
-            if (_stageScene is null || _stageScene.Objects[0].Rig != s.Rig || _stageScene.Objects[0].Skin != s.Skin)
+            if (_stageScene is null || _stageScene.Objects[0].Rig != shown)
             {
-                _stageScene = new SceneAsset { Objects = { new SceneObject { Id = SetObjectId, Rig = s.Rig, Skin = s.Skin } } };
+                _stageScene = new SceneAsset { Objects = { new SceneObject { Id = SetObjectId, Rig = shown } } };
             }
 
             return _stageScene;
@@ -263,28 +260,12 @@ public sealed class ViewportView : Control
 
     private SceneAsset? _stageScene;
 
-    /// <summary>그 세트에 입힐 스킨 — 고른 것이 그 세트의 것이면 그것, 아니면 그 세트의 첫 스킨.</summary>
-    private string? SkinOf(string kind, string? chosen)
-        => _editor?.Document.FindSkin(chosen) is { } skin && skin.Rig == kind ? skin.Name : _editor?.Document.Skins.FirstOrDefault(s => s.Rig == kind)?.Name;
-
     // ── 세트 보기 ────────────────────────────────────
 
     /// <summary>무대에 선 세트의 오브젝트 id.</summary>
     public const string SetObjectId = "set";
 
     private string? _setView;
-    private string? _setSkin;
-
-    /// <summary>세트 보기에서 입혀 볼 스킨 — 그 세트의 것이 아니거나 null이면 첫 스킨.</summary>
-    public string? SetSkin
-    {
-        get => _setView is { } kind ? SkinOf(kind, _setSkin) : null;
-        set
-        {
-            _setSkin = value;
-            InvalidateVisual();
-        }
-    }
 
     /// <summary>
     /// 배치 모드인가(스파인의 Setup) — 세트를 열었고 고른 애니메이션이 없다. 뷰포트의 끌기가 오브젝트의 **가만히 선 자세**를 바꾼다.
@@ -406,7 +387,7 @@ public sealed class ViewportView : Control
     /// <summary>선택 노드의 트리 키(접두사 포함).</summary>
     private string? SelectedKey => SelectedNode is null ? null : Prefix + SelectedNode;
 
-    /// <summary>오브젝트를 골랐다 — 또는 무대에 선 세트(스킨)가 바뀌었다.</summary>
+    /// <summary>오브젝트를 골랐다 — 또는 무대에 선 세트가 바뀌었다.</summary>
     public event EventHandler? ObjectSelected;
 
     /// <summary>이 오브젝트에 지금 모션을 입혀 볼 수 있나(rigKind가 같거나 채널 노드가 전부 있으면).</summary>
@@ -985,7 +966,7 @@ public sealed class ViewportView : Control
     /// <summary>루트 공간 → 컨트롤 좌표. 테스트가 쓴다.</summary>
     public Point ToScreen(Vec2 root) => ToControl(root);
 
-    /// <summary>스킨의 그림 비트맵 — 문서 기준 경로로. 못 읽었으면 null을 넣는다(자리표시로 그려진다).</summary>
+    /// <summary>층의 그림 비트맵 — 문서 기준 경로로. 못 읽었으면 null을 넣는다(자리표시로 그려진다).</summary>
     public void SetImage(string image, Bitmap? bitmap)
     {
         ArgumentNullException.ThrowIfNull(image);
@@ -993,29 +974,18 @@ public sealed class ViewportView : Control
         InvalidateVisual();
     }
 
-    /// <summary>그 오브젝트가 지금 입은 것 — 스킨, 그림 넘기기의 시각.</summary>
-    private readonly record struct Worn(SkinAsset Skin, double Seconds);
+    /// <summary>그 오브젝트의 층이 든 그림(문서 기준 경로). 그림 층이 아니면 null.</summary>
+    private string? ImagePathOf(SceneObject o, string node) => _editor?.Document.FindRig(o.Rig)?.Find(node)?.Image;
 
-    /// <summary>지금 입은 스킨.</summary>
-    private Worn? WornBy(SceneObject o)
-    {
-        if (_editor is null)
-        {
-            return null;
-        }
-
-        return _editor.Document.FindSkin(o.Skin) is { } skin && skin.Rig == o.Rig ? new Worn(skin, _clock.Time) : null;
-    }
-
-    private Bitmap? ImageOf(Worn worn, string node)
-        => worn.Skin.ImageAt(node, worn.Seconds) is { } image && _images.TryGetValue(image, out Bitmap? bitmap) ? bitmap : null;
+    private Bitmap? ImageOf(SceneObject o, string node)
+        => ImagePathOf(o, node) is { } image && _images.TryGetValue(image, out Bitmap? bitmap) ? bitmap : null;
 
     /// <summary>테스트 손잡이 — 그 조각에 지금 그려지는 그림(문서 기준 경로). 안 그려지면 null.</summary>
     public string? PartImage(string objectId, string node)
-        => Scene?.Find(objectId) is { } o && WornBy(o) is { } worn ? worn.Skin.ImageAt(node, worn.Seconds) : null;
+        => Scene?.Find(objectId) is { } o && DrawnParts(o).Contains(node) ? ImagePathOf(o, node) : null;
 
     /// <summary>
-    /// 그 오브젝트에서 그려지는 조각 노드들(그리는 순서) — 리그의 조각 가운데 입은 스킨이 그림을 준 것. 조각이 없는 리그나 스킨을 안 입었으면 빈 목록.
+    /// 그 오브젝트에서 그려지는 조각 노드들(그리는 순서) — 그림을 든 층 가운데 보이는 것. 없으면 빈 목록.
     /// </summary>
     public IReadOnlyList<string> DrawnParts(SceneObject o)
     {
@@ -1024,9 +994,9 @@ public sealed class ViewportView : Control
     }
 
     private IReadOnlyList<string> DrawnParts(RectNodeTree? pose, SceneObject o)
-        => WornBy(o) is { } worn ? RigParts.Of(_rig, o.Rig).Where(worn.Skin.Parts.ContainsKey).Where(IsSetNodeShown).ToList() : Array.Empty<string>();
+        => RigParts.Of(_rig, o.Rig).Where(IsSetNodeShown).ToList();
 
-    /// <summary>조각이 지금 그려지는 사각형(루트 공간) — 노드의 rect 안에 그림의 종횡비로 맞추고 스킨의 놓임(자리·크기·회전)을 입힌 것. 없으면 null.</summary>
+    /// <summary>조각이 지금 그려지는 사각형(루트 공간) — 노드의 rect 안에 그림의 종횡비로 맞춘 것. 없으면 null.</summary>
     public Quad? PartQuad(string objectId, string node)
         => CurrentPose() is { } pose && Scene?.Find(objectId) is { } o ? PartQuadOf(pose, o, node) : null;
 
@@ -1040,8 +1010,7 @@ public sealed class ViewportView : Control
         }
 
         Quad rect = StageGeometry.RectQuad(pose, key);
-        Worn? worn = WornBy(o);
-        Bitmap? image = worn is { } w0 ? ImageOf(w0, node) : null;
+        Bitmap? image = ImageOf(o, node);
 
         float w = Norm(rect.BottomRight - rect.BottomLeft);
         float h = Norm(rect.TopLeft - rect.BottomLeft);
@@ -1067,29 +1036,6 @@ public sealed class ViewportView : Control
         }
 
         Vec2 center = rect.BottomLeft + ux * (w / 2f) + uy * (h / 2f);
-        float turn = 0f;
-
-        // 스킨의 놓임 — 조각 노드 안에서의 자리(노드의 px), 크기, 회전. 노드의 값(모션) 위에 따로 얹힌다.
-        if (worn is { } w1 && w1.Skin.SetupOf(node) is { IsPlaced: true } setup && pose.GetState(key) is var state)
-        {
-            Vec2 size = state.SizeDelta;
-            float sx = size.X > 1e-6f ? w / size.X : 1f; // 노드의 px → 루트 공간(부모들의 배율까지)
-            float sy = size.Y > 1e-6f ? h / size.Y : 1f;
-            center = center + ux * (setup.X * sx) + uy * (setup.Y * sy);
-            fitW *= setup.Scale;
-            fitH *= setup.Scale;
-            turn = setup.Rotation * MathF.PI / 180f;
-        }
-
-        if (turn != 0f)
-        {
-            // 화면에서 반시계가 +가 되게 — 축의 손잡이 방향을 따른다.
-            float handed = ux.X * uy.Y - ux.Y * uy.X < 0f ? -1f : 1f;
-            float c = MathF.Cos(turn);
-            float s = MathF.Sin(turn) * handed;
-            (ux, uy) = (ux * c + uy * s, uy * c - ux * s);
-        }
-
         Vec2 origin = center - ux * (fitW / 2f) - uy * (fitH / 2f);
         return new Quad(origin, origin + ux * fitW, origin + ux * fitW + uy * fitH, origin + uy * fitH);
     }
@@ -1153,8 +1099,8 @@ public sealed class ViewportView : Control
             _template = ScenePreview.Build(_rig, scene);
         }
 
-        // 무대에 선 세트가 바뀌면 하이어아키·스킨 칸이 따라오도록 알린다.
-        string? shown = scene?.Objects[0] is { } o ? o.Rig + "|" + o.Skin : null;
+        // 무대에 선 세트가 바뀌면 하이어아키가 따라오도록 알린다.
+        string? shown = scene?.Objects[0].Rig;
 
         if (shown != _shownStage)
         {
@@ -1561,13 +1507,11 @@ public sealed class ViewportView : Control
 
     private void DrawObject(DrawingContext context, RectNodeTree pose, SceneObject o, bool selected)
     {
-        // 조각·색이 있는 리그(세트) — 리그의 노드 순서로(뒤의 것이 위): 색 오브젝트는 사각형을 채우고, 조각은 스킨이 준 그림을 그린다.
-        // 그릴 것이 하나도 없으면(스킨을 안 입었고 색도 없다) 아래의 윤곽으로 떨어진다.
+        // 조각·색이 있는 리그(세트) — 리그의 노드 순서로(뒤의 것이 위): 색 오브젝트는 사각형을 채우고, 조각은 그 층의 그림을 그린다.
+        // 그릴 것이 하나도 없으면(그림도 색도 없다) 아래의 윤곽으로 떨어진다.
         IReadOnlyDictionary<string, string> colors = RigParts.ColorsOf(_rig, o.Rig);
         IReadOnlyList<string> parts = DrawnParts(pose, o);
-        Worn? wornNow = WornBy(o);
-
-        if (_rig is not null && _rig.TryGetRig(o.Rig, out RigSchemaRigDto drawn) && (colors.Count > 0 || (parts.Count > 0 && wornNow is not null)))
+        if (_rig is not null && _rig.TryGetRig(o.Rig, out RigSchemaRigDto drawn) && (colors.Count > 0 || parts.Count > 0))
         {
             foreach (RigSchemaNodeDto rigNode in drawn.nodes)
             {
@@ -1597,16 +1541,16 @@ public sealed class ViewportView : Control
                     }
                 }
 
-                if (wornNow is { } wearing && parts.Contains(node) && PartQuadOf(pose, o, node) is { } part)
+                if (parts.Contains(node) && PartQuadOf(pose, o, node) is { } part)
                 {
                     using (context.PushOpacity(alpha))
                     {
-                        DrawImageQuad(context, part, ImageOf(wearing, node));
+                        DrawImageQuad(context, part, ImageOf(o, node));
                     }
                 }
             }
 
-            if (wornNow is not { } worn || parts.Count == 0)
+            if (parts.Count == 0)
             {
                 return;
             }

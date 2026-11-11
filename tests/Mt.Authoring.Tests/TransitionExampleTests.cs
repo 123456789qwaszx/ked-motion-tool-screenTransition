@@ -56,7 +56,7 @@ public class TransitionExampleTests
         }
 
         Assert.Equal(json, File.ReadAllText(path));
-        Assert.All(document.Skins.SelectMany(s => s.AllImages()).Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
+        Assert.All(document.Rigs.SelectMany(r => r.Nodes).Select(n => n.Image).OfType<string>().Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
 
         // 타임라인 하나: 등장 1.2 › 머묾 2(한 바퀴) › 퇴장 0.9. 등장의 가운데에서 왼쪽 기둥은 아직 들어오는 중이고, 끝나면 제자리다.
         MotionAsset timeline = Assert.Single(document.Motions);
@@ -97,7 +97,7 @@ public class TransitionExampleTests
         }
 
         Assert.Equal(json, File.ReadAllText(path));
-        Assert.All(document.Skins.SelectMany(s => s.AllImages()).Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
+        Assert.All(document.Rigs.SelectMany(r => r.Nodes).Select(n => n.Image).OfType<string>().Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
 
         // 시차: 지평선의 층 넷이 0.12초씩 늦게 솟기 시작한다(노을 0.2 · 먼 도시 0.32 · 가까운 도시 0.44 · 언덕 0.56).
         MotionAsset timeline = Assert.Single(document.Motions);
@@ -156,7 +156,7 @@ public class TransitionExampleTests
         }
 
         Assert.Equal(json, File.ReadAllText(path));
-        Assert.All(document.Skins.SelectMany(s => s.AllImages()).Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
+        Assert.All(document.Rigs.SelectMany(r => r.Nodes).Select(n => n.Image).OfType<string>().Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
 
         // 늦게 나오는 층은 제 차례 전에 숨어 있고("제 차례 전까지 숨기기"), 걷기 시작(표지 "release")에서는 다 보인다.
         MotionAsset timeline = Assert.Single(document.Motions);

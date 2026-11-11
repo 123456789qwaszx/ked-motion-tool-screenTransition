@@ -98,7 +98,7 @@ internal static class TransitionExamples
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddRig(new RigAsset { Kind = Station });
-        editor.ImportLayers(Station, LayerSheet.Load(layersPath), "art", Station, Stage);
+        editor.ImportLayers(Station, LayerSheet.Load(layersPath), "art", Stage);
 
         const MotionChannelMode Rel = MotionChannelMode.Relative;
 
@@ -282,7 +282,7 @@ internal static class TransitionExamples
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddRig(new RigAsset { Kind = kind });
-        editor.ImportLayers(kind, LayerSheet.Load(layersPath), "art", kind, Stage);
+        editor.ImportLayers(kind, LayerSheet.Load(layersPath), "art", Stage);
         return editor;
     }
 

@@ -1821,26 +1821,6 @@
       ]
     }
   ],
-  "skins": [
-    {
-      "name": "pillar",
-      "rig": "pillar",
-      "parts": {
-        "city_far": "art/06_city_far.png",
-        "city_near": "art/07_city_near.png",
-        "clouds_far": "art/01_clouds_far.png",
-        "clouds_near": "art/02_clouds_near.png",
-        "haze": "art/03_haze.png",
-        "hill": "art/08_hill.png",
-        "petal_1": "art/10_petal_1.png",
-        "petal_2": "art/11_petal_2.png",
-        "petal_3": "art/12_petal_3.png",
-        "pillar": "art/09_pillar.png",
-        "sun": "art/05_sun.png",
-        "sun_glow": "art/04_sun_glow.png"
-      }
-    }
-  ],
   "rigs": [
     {
       "kind": "pillar",
@@ -1856,7 +1836,6 @@
           "scaleX": 1,
           "scaleY": 1,
           "color": "#243B6B",
-          "image": false,
           "alpha": true
         },
         {
@@ -1869,7 +1848,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/01_clouds_far.png",
           "alpha": true
         },
         {
@@ -1882,7 +1861,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/02_clouds_near.png",
           "alpha": true
         },
         {
@@ -1895,7 +1874,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/03_haze.png",
           "alpha": true
         },
         {
@@ -1908,7 +1887,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/04_sun_glow.png",
           "alpha": true
         },
         {
@@ -1921,7 +1900,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/05_sun.png",
           "alpha": true
         },
         {
@@ -1934,7 +1913,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/06_city_far.png",
           "alpha": true
         },
         {
@@ -1947,7 +1926,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/07_city_near.png",
           "alpha": true
         },
         {
@@ -1960,7 +1939,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/08_hill.png",
           "alpha": true
         },
         {
@@ -1973,7 +1952,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/09_pillar.png",
           "alpha": true
         },
         {
@@ -1986,7 +1965,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/10_petal_1.png",
           "alpha": true
         },
         {
@@ -1999,7 +1978,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/11_petal_2.png",
           "alpha": true
         },
         {
@@ -2012,7 +1991,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/12_petal_3.png",
           "alpha": true
         }
       ]

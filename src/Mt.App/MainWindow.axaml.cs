@@ -1222,8 +1222,8 @@ public partial class MainWindow : Window
         _viewport.SetRig(_session.Rig);
         _viewport.ClearImages();
 
-        // 스킨의 그림 — 파일이 없거나 못 읽으면 null을 넣는다(자리표시로 그려진다). 어느 스킨의 어느 장을 그릴지는 뷰포트가 그때그때 고른다.
-        foreach ((string image, string? imagePath) in _session.SkinImages())
+        // 층의 그림 — 파일이 없거나 못 읽으면 null을 넣는다(자리표시로 그려진다).
+        foreach ((string image, string? imagePath) in _session.LayerImages())
         {
             Bitmap? bitmap = null;
 
@@ -1296,7 +1296,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// 오른쪽 = 탭: 채널 박스(기본) · 세트(층 · 스킨) · 모션(속성). 설정·단축키는 툴바의 창으로,
+    /// 오른쪽 = 탭: 채널 박스(기본) · 세트(층) · 모션(속성). 설정·단축키는 툴바의 창으로,
     /// 단축키의 그림자 버튼(Q/W/E/R·S·Esc·복사·붙여넣기…)은 없다. 마지막 탭·접힌 묶음은 설정에 남는다.
     /// </summary>
     private void BuildRight()
@@ -1348,13 +1348,12 @@ public partial class MainWindow : Window
         return panel;
     }
 
-    /// <summary>세트 탭 — 연 세트의 층 칸과 스킨 칸.</summary>
+    /// <summary>세트 탭 — 연 세트의 층 칸.</summary>
     private Control BuildSetTab()
     {
         var panel = new StackPanel { Spacing = 4, Margin = new Avalonia.Thickness(0, 6, 0, 0) };
         _viewport.ObjectSelected += (_, _) => RefreshObjects();
         panel.Children.Add(BuildSetNodePanel());
-        panel.Children.Add(BuildSkinPanel());
         return panel;
     }
 
@@ -1578,7 +1577,7 @@ public partial class MainWindow : Window
         RefreshChannelBox();
     }
 
-    /// <summary>하이어아키 · 스킨 칸 · 채널 박스를 무대의 세트에 맞춘다.</summary>
+    /// <summary>하이어아키를 무대의 세트에 맞춘다.</summary>
     private void RefreshObjects()
     {
         _refreshDepth++;
@@ -1586,7 +1585,6 @@ public partial class MainWindow : Window
         try
         {
             RebuildHierarchy();
-            RefreshSkinPanel();
         }
         finally
         {

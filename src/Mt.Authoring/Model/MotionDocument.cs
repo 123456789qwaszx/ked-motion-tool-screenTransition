@@ -17,24 +17,6 @@ public sealed class MotionDocument
     public List<MotionAsset> Motions { get; set; } = new();
 
     /// <summary>
-    /// 스킨들 — 리그의 조각마다 붙일 그림의 묶음. 미리보기 전용.
-    /// 저작본에는 <see cref="SkinsOrNull"/>로 실린다: 스킨이 없는 문서는 전과 같은 글자다.
-    /// </summary>
-    [System.Text.Json.Serialization.JsonIgnore]
-    public List<SkinAsset> Skins { get; set; } = new();
-
-    /// <summary>저작본의 <c>skins</c> 자리 — 비면 쓰지 않는다. 코드는 <see cref="Skins"/>를 쓴다.</summary>
-    [System.Text.Json.Serialization.JsonPropertyName("skins")]
-    public List<SkinAsset>? SkinsOrNull
-    {
-        get => Skins.Count == 0 ? null : Skins;
-        set => Skins = value ?? new List<SkinAsset>();
-    }
-
-    public SkinAsset? FindSkin(string? name)
-        => name is null ? null : Skins.FirstOrDefault(s => string.Equals(s.Name, name, StringComparison.Ordinal));
-
-    /// <summary>
     /// 세트들 — 층(오브젝트)의 사각형 · 그림 · 색. 미리보기는 이것만으로 선다(<see cref="Rig.RigAssets.Compose"/>).
     /// 저작본에는 <see cref="RigsOrNull"/>로 실린다(없으면 안 적는다).
     /// </summary>

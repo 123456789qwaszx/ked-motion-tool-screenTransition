@@ -6,8 +6,8 @@ namespace Mt.Authoring.Editing;
 public sealed partial class MotionEditor
 {
     /// <summary>
-    /// 세트의 이름을 바꾼다 — 그 이름을 가리키던 것이 같은 칸에서 따라온다: 그 세트의 애니메이션·스킨.
-    /// **세트의 이름을 딴 이름들도 따라온다**: 애니메이션 <c>옛이름_x</c> → <c>새이름_x</c>, 스킨 <c>옛이름</c> — 새 이름이 비어 있을 때만.
+    /// 세트의 이름을 바꾼다 — 그 이름을 가리키던 것이 같은 칸에서 따라온다: 그 세트의 애니메이션.
+    /// **세트의 이름을 딴 이름들도 따라온다**: 애니메이션 <c>옛이름</c> · <c>옛이름_x</c> → <c>새이름</c> · <c>새이름_x</c> — 새 이름이 비어 있을 때만.
     /// </summary>
     public void RenameRig(string kind, string newKind)
     {
@@ -24,7 +24,7 @@ public sealed partial class MotionEditor
         {
             RenameRigCore(rig, kind, name);
 
-            foreach (MotionAsset motion in Document.Motions.Where(m => m.Rig == name && m.Name.StartsWith(kind + "_", StringComparison.Ordinal)).ToList())
+            foreach (MotionAsset motion in Document.Motions.Where(m => m.Rig == name && (m.Name == kind || m.Name.StartsWith(kind + "_", StringComparison.Ordinal))).ToList())
             {
                 string renamed = name + motion.Name[kind.Length..];
 
@@ -32,11 +32,6 @@ public sealed partial class MotionEditor
                 {
                     RenameMotion(motion.Name, renamed);
                 }
-            }
-
-            if (Document.FindSkin(kind) is { } skin && skin.Rig == name && Document.FindSkin(name) is null)
-            {
-                RenameSkin(kind, name);
             }
         });
     }
@@ -50,11 +45,6 @@ public sealed partial class MotionEditor
             foreach (MotionAsset motion in Document.Motions.Where(m => m.Rig == kind))
             {
                 motion.Rig = name;
-            }
-
-            foreach (SkinAsset skin in Document.Skins.Where(s => s.Rig == kind))
-            {
-                skin.Rig = name;
             }
         });
     }

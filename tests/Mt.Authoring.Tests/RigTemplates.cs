@@ -51,7 +51,7 @@ public static class RigTemplates
 
         for (int i = 1; i <= parts; i++)
         {
-            rig.Nodes.Add(new RigNodeAsset { Id = $"Emoji_Part{i}", Parent = "Emoji_Body", Width = partSize, Height = partSize, Image = true, Alpha = true });
+            rig.Nodes.Add(new RigNodeAsset { Id = $"Emoji_Part{i}", Parent = "Emoji_Body", Width = partSize, Height = partSize, Image = $"art/part{i}.png", Alpha = true });
         }
 
         return rig;

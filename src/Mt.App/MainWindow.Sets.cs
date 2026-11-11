@@ -30,7 +30,7 @@ public partial class MainWindow
     private readonly TextBox _rigNodeScaleX = new() { FontSize = 11 };
     private readonly TextBox _rigNodeScaleY = new() { FontSize = 11 };
     private readonly TextBox _rigNodeColor = new() { FontSize = 11, PlaceholderText = "(색 없음) #RRGGBB" };
-    private readonly CheckBox _rigNodeImage = new() { Content = "그림을 그린다", FontSize = 11 };
+    private readonly TextBox _rigNodeImage = new() { FontSize = 11, PlaceholderText = "그림 없음" };
     private readonly CheckBox _rigNodeAlpha = new() { Content = "불투명도를 받는다", FontSize = 11 };
     private readonly Button _rigNodeSwatch = new() { Width = 22, Height = 20, Margin = new Avalonia.Thickness(3, 0, 0, 0), Padding = new Avalonia.Thickness(0), BorderThickness = new Avalonia.Thickness(1), BorderBrush = Avalonia.Media.Brushes.Gray };
 
@@ -101,7 +101,7 @@ public partial class MainWindow
         => (SelectedSet, _rigNodeSelected, (_setList.ItemsSource as IEnumerable<string> ?? Array.Empty<string>()).ToList(), _setNodePanel.IsVisible && _rigNodeFields.IsEnabled);
 
     /// <summary>테스트 손잡이 — 오브젝트 칸들.</summary>
-    internal (TextBox Id, ComboBox Parent, TextBox X, TextBox Y, TextBox W, TextBox H, CheckBox Image, CheckBox Alpha) RigNodeBoxes
+    internal (TextBox Id, ComboBox Parent, TextBox X, TextBox Y, TextBox W, TextBox H, TextBox Image, CheckBox Alpha) RigNodeBoxes
         => (_rigNodeId, _rigNodeParent, _rigNodeX, _rigNodeY, _rigNodeW, _rigNodeH, _rigNodeImage, _rigNodeAlpha);
 
     /// <summary>테스트 손잡이 — 가만히 선 자세의 회전·배율 칸.</summary>
@@ -155,7 +155,7 @@ public partial class MainWindow
 
     private static string SideName(StageSide side) => side switch { StageSide.Left => "왼쪽", StageSide.Right => "오른쪽", StageSide.Top => "위", _ => "아래" };
 
-    internal string? AddSetNodeFromForm(bool image) => AddSetNode(image);
+    internal string? AddSetNodeFromForm() => AddSetNode();
 
     internal void RemoveSetNodeFromForm() => RemoveSelectedSetNode();
 
@@ -206,14 +206,14 @@ public partial class MainWindow
                 _session.SetStatus($"층 표 가져오기 실패: {exception.Message}");
             }
         });
-        ToolTip.SetTip(importLayers, "그림 한 묶음을 한 번에 — 층 표(layers.tsv: 파일 ⇥ 왼쪽 ⇥ 위 ⇥ 너비 ⇥ 높이, 뒤에서 앞으로)를 읽어 층마다 그림 오브젝트를 그 자리에 세우고 스킨에 그림을 준다. 표의 설명 줄에 #RRGGBB가 있으면 맨 뒤에 그 색의 바탕이 선다. 되돌리기 한 번");
-        ToolTip.SetTip(import, "PNG를 연 세트의 그림 오브젝트로 — 이름은 파일 이름에서, 크기는 그림의 크기, 지금 입혀 보는 스킨에 그림이 들어간다(스킨이 없으면 만든다). 되돌리기 한 번. 뷰포트에 파일을 끌어다 놓아도 된다");
+        ToolTip.SetTip(importLayers, "그림 한 묶음을 한 번에 — 층 표(layers.tsv: 파일 ⇥ 왼쪽 ⇥ 위 ⇥ 너비 ⇥ 높이, 뒤에서 앞으로)를 읽어 층마다 그림 오브젝트를 그 자리에 세운다. 표의 설명 줄에 #RRGGBB가 있으면 맨 뒤에 그 색의 바탕이 선다. 되돌리기 한 번");
+        ToolTip.SetTip(import, "PNG를 연 세트의 그림 오브젝트로 — 이름은 파일 이름에서, 크기는 그림의 크기. 되돌리기 한 번. 뷰포트에 파일을 끌어다 놓아도 된다");
         ToolTip.SetTip(add, "빈 세트(오브젝트 Body 하나)를 만들어 연다 — 이름 set, set_2…. 하이어아키에서 우클릭해 오브젝트를 더한다");
-        ToolTip.SetTip(remove, "연 세트를 지운다. 그 세트의 애니메이션·스킨은 남고 문제 목록이 알린다(되돌리기 한 번)");
+        ToolTip.SetTip(remove, "연 세트를 지운다. 그 세트의 애니메이션은 남고 문제 목록이 알린다(되돌리기 한 번)");
         ToolTip.SetTip(close, "세트를 닫는다");
         LeftPanel.Children.Insert(2, new WrapPanel { Orientation = Orientation.Horizontal, Children = { add, remove, close, import, importLayers } });
         LeftPanel.Children.Insert(3, Labeled("세트 이름", _setName));
-        ToolTip.SetTip(_setName, "연 세트의 이름 — 고치고 Enter. 그 세트의 애니메이션·스킨이 따라온다(되돌리기 한 번). 영문자로 시작하는 영문·숫자·_");
+        ToolTip.SetTip(_setName, "연 세트의 이름 — 고치고 Enter. 그 세트의 애니메이션이 따라온다(되돌리기 한 번). 영문자로 시작하는 영문·숫자·_");
         OnCommit(_setName, text =>
         {
             if (!_refreshing && SelectedSet is { } kind && text.Trim() != kind)
@@ -252,10 +252,11 @@ public partial class MainWindow
         ToolTip.SetTip(_rigNodeSwatch, "색 고르기 — 이 문서에서 쓴 색과 기본 견본에서 고른다. 고르면 바로 들어간다(되돌리기 한 번). 정확한 값은 왼쪽 칸에 #RRGGBB로 적는다");
         _rigNodeSwatch.Click += (_, _) => OpenColorSwatches();
         ToolTip.SetTip(_rigNodeColor, "색 — #RRGGBB 또는 #RRGGBBAA. 적으면 단색 사각형이 된다(그림 없이 너비 × 높이를 이 색으로 채운다 — 화면 전환·소개의 패널). 비우면 색 오브젝트가 아니다");
-        _rigNodeFields.Children.Add(_rigNodeImage);
+        _rigNodeFields.Children.Add(Labeled("그림", _rigNodeImage));
+        ToolTip.SetTip(_rigNodeImage, "그림 — 문서 기준 상대 경로. 사각형 안에 종횡비로 맞춰 그린다. 비우면 그림 오브젝트가 아니다. 새 그림은 \"그림 가져오기…\"로");
         _rigNodeFields.Children.Add(_rigNodeAlpha);
         _setNodePanel.Children.Add(_rigNodeFields);
-        ToolTip.SetTip(_rigNodeId, "오브젝트 이름(영문자로 시작하는 영문·숫자·_) — 바꾸면 그 세트의 애니메이션 채널·스킨 칸이 따라온다");
+        ToolTip.SetTip(_rigNodeId, "오브젝트 이름(영문자로 시작하는 영문·숫자·_) — 바꾸면 그 세트의 애니메이션 채널이 따라온다");
         ToolTip.SetTip(_rigNodeParent, "부모 — 밑의 오브젝트도 함께 옮겨진다");
         ToolTip.SetTip(_rigNodeX, "부모 가운데에서의 자리(px) — 가만히 선 자세. 애니메이션은 여기에 얹힌다");
         ToolTip.SetTip(_rigNodeW, "사각형의 크기(px) — 그림이면 그림이 이 안에 종횡비로 맞춰진다. 묶기만 하는 오브젝트는 0");
@@ -317,12 +318,11 @@ public partial class MainWindow
             }
         };
 
-        foreach (TextBox box in new[] { _rigNodeX, _rigNodeY, _rigNodeW, _rigNodeH, _rigNodeRotation, _rigNodeScaleX, _rigNodeScaleY, _rigNodeColor })
+        foreach (TextBox box in new[] { _rigNodeX, _rigNodeY, _rigNodeW, _rigNodeH, _rigNodeRotation, _rigNodeScaleX, _rigNodeScaleY, _rigNodeColor, _rigNodeImage })
         {
             OnCommit(box, _ => CommitRigNode());
         }
 
-        _rigNodeImage.IsCheckedChanged += (_, _) => CommitRigNode();
         _rigNodeAlpha.IsCheckedChanged += (_, _) => CommitRigNode();
         return _setNodePanel;
     }
@@ -440,8 +440,8 @@ public partial class MainWindow
     }
 
     /// <summary>
-    /// 그림 파일을 연 세트의 그림 오브젝트로 — 오브젝트를 만들고(이름은 파일 이름에서, 크기는 그림의 픽셀 크기), 그 자리에 놓고, 입혀 보는 스킨에 그림을 준다.
-    /// 스킨이 없으면 세트의 이름으로 만든다. 통째로 되돌리기 한 칸. 고른 오브젝트가 묶는 것이면 그 밑에, 아니면 맨 위에 선다.
+    /// 그림 파일을 연 세트의 그림 오브젝트로 — 오브젝트를 만들고(이름은 파일 이름에서, 크기는 그림의 픽셀 크기), 그 자리에 놓고, 그림을 준다.
+    /// 통째로 되돌리기 한 칸. 고른 오브젝트가 묶는 것이면 그 밑에, 아니면 맨 위에 선다.
     /// </summary>
     private string? AddImageObject(string path, Ked.Presentation.Core.Vec2 at)
     {
@@ -474,31 +474,17 @@ public partial class MainWindow
             height = size.Height;
         }
 
-        string under = EditedRigNode is { Image: false } group ? group.Id : "";
+        string under = EditedRigNode is { Image: null } group ? group.Id : "";
         at = _viewport.ToSetLocal(under, at); // 놓은 자리(루트 공간)를 그 부모 안의 좌표로
         MotionEditor editor = _session.Editor;
-        string? skin = _viewport.SetSkin;
+        string image = _session.RelativeToDocument(path);
 
         editor.Batch(MotionChangeKind.Document, () =>
         {
-            if (skin is null)
-            {
-                skin = kind;
-
-                for (int i = 2; editor.Document.FindSkin(skin) is not null; i++)
-                {
-                    skin = $"{kind}_{i.ToString(CultureInfo.InvariantCulture)}";
-                }
-
-                editor.AddSkin(skin, kind);
-            }
-
-            editor.AddRigNode(kind, id, under, image: true);
-            editor.UpdateRigNode(kind, id, new RigNodeAsset { X = MathF.Round(at.X), Y = MathF.Round(at.Y), Width = width, Height = height, Image = true, Alpha = true });
-            _session.SetSkinPart(skin, id, path);
+            editor.AddRigNode(kind, id, under);
+            editor.UpdateRigNode(kind, id, new RigNodeAsset { X = MathF.Round(at.X), Y = MathF.Round(at.Y), Width = width, Height = height, Image = image, Alpha = true });
         });
 
-        _viewport.SetSkin = skin;
         SelectSetNode(id);
         return id;
     }
@@ -506,7 +492,7 @@ public partial class MainWindow
     /// <summary>테스트 손잡이 — "층 표 가져오기…"에서 파일을 고른 것과 같다.</summary>
     internal IReadOnlyList<string> ImportLayerSheetFromForm(string path) => ImportLayerSheet(path);
 
-    /// <summary>층 표를 연 세트로 들인다 — 입혀 보는 스킨에(없으면 세트의 이름으로 만든다). 들인 뒤 보기를 세트에 맞춘다.</summary>
+    /// <summary>층 표를 연 세트로 들인다. 들인 뒤 보기를 세트에 맞춘다.</summary>
     private IReadOnlyList<string> ImportLayerSheet(string path)
     {
         if (SelectedSet is not { } kind)
@@ -514,15 +500,7 @@ public partial class MainWindow
             return Array.Empty<string>();
         }
 
-        string skin = _viewport.SetSkin ?? kind;
-
-        for (int i = 2; _viewport.SetSkin is null && _session.Editor.Document.FindSkin(skin) is { } taken && taken.Rig != kind; i++)
-        {
-            skin = $"{kind}_{i.ToString(CultureInfo.InvariantCulture)}";
-        }
-
-        IReadOnlyList<string> created = _session.ImportLayers(kind, path, skin);
-        _viewport.SetSkin = skin;
+        IReadOnlyList<string> created = _session.ImportLayers(kind, path);
         RefreshAssets();
         Avalonia.Threading.Dispatcher.UIThread.Post(_viewport.FitToSet);
         return created;
@@ -580,29 +558,28 @@ public partial class MainWindow
             ScaleX = TryFloat(_rigNodeScaleX.Text ?? "", out float sx) ? sx : node.ScaleX,
             ScaleY = TryFloat(_rigNodeScaleY.Text ?? "", out float sy) ? sy : node.ScaleY,
             Color = _rigNodeColor.Text,
-            Image = _rigNodeImage.IsChecked == true,
+            Image = _rigNodeImage.Text,
             Alpha = _rigNodeAlpha.IsChecked == true,
         };
         Guard("오브젝트 값", () => _session.Editor.UpdateRigNode(kind, node.Id, value));
     }
 
-    /// <summary>오브젝트를 더한다 — 고른 오브젝트 밑에(없으면 맨 위에). 이름은 Part1…(그림) · Node1…(묶음).</summary>
-    private string? AddSetNode(bool image, string? under = null)
+    /// <summary>오브젝트(묶음)를 더한다 — 고른 오브젝트 밑에(없으면 맨 위에). 이름은 Node1…. 그림 오브젝트는 "그림 가져오기…"로.</summary>
+    private string? AddSetNode(string? under = null)
     {
         if (SelectedSet is not { } kind || EditedRig is not { } rig)
         {
             return null;
         }
 
-        string stem = image ? "Part" : "Node";
-        string id = stem + "1";
+        string id = "Node1";
 
         for (int i = 2; rig.Find(id) is not null; i++)
         {
-            id = stem + i.ToString(CultureInfo.InvariantCulture);
+            id = "Node" + i.ToString(CultureInfo.InvariantCulture);
         }
 
-        _session.Editor.AddRigNode(kind, id, under ?? EditedRigNode?.Id, image);
+        _session.Editor.AddRigNode(kind, id, under ?? EditedRigNode?.Id);
         SelectSetNode(id);
         return id;
     }
@@ -625,7 +602,7 @@ public partial class MainWindow
         MotionEditor editor = _session.Editor;
         editor.Batch(MotionChangeKind.Document, () =>
         {
-            editor.AddRigNode(kind, id, under, image: false);
+            editor.AddRigNode(kind, id, under);
             editor.UpdateRigNode(kind, id, new RigNodeAsset { Width = 400f, Height = 300f, Color = "#3D5A80", Alpha = true });
         });
         SelectSetNode(id);
@@ -665,8 +642,7 @@ public partial class MainWindow
         }
 
         string where = nodeId is null ? "맨 위에" : $"{nodeId} 밑에";
-        Item(_hierarchyMenu, $"오브젝트 더하기 — {where}", () => AddSetNode(image: false, under: nodeId ?? ""));
-        Item(_hierarchyMenu, $"그림 오브젝트 더하기 — {where}", () => AddSetNode(image: true, under: nodeId ?? ""));
+        Item(_hierarchyMenu, $"오브젝트 더하기 — {where}", () => AddSetNode(under: nodeId ?? ""));
         Item(_hierarchyMenu, $"색 사각형 더하기 — {where}", () => AddColorNode(nodeId ?? ""));
 
         if (nodeId is null || rig?.Find(nodeId) is not { } node)
@@ -891,7 +867,7 @@ public partial class MainWindow
             _rigNodeSwatch.Background = node?.Color is { Length: > 0 } fill && Avalonia.Media.Color.TryParse(fill.Length == 9 ? fill[..7] : fill, out Avalonia.Media.Color shown)
                 ? new Avalonia.Media.SolidColorBrush(shown)
                 : Avalonia.Media.Brushes.Transparent;
-            _rigNodeImage.IsChecked = node?.Image == true;
+            Write(_rigNodeImage, node?.Image ?? "");
             _rigNodeAlpha.IsChecked = node?.Alpha == true;
 
             List<string> parents = rig is not null && node is not null ? ParentChoicesOf(rig, node) : new List<string> { RootParentChoice };

@@ -32,7 +32,7 @@ public sealed partial class MotionEditor
         return copy;
     }
 
-    /// <summary>리그를 지운다. 그 세트의 모션·스킨은 남는다 — 검증이 "없는 세트"로 알린다.</summary>
+    /// <summary>리그를 지운다. 그 세트의 모션은 남는다 — 검증이 "없는 세트"로 알린다.</summary>
     public void RemoveRig(string kind)
     {
         RigAsset rig = RequireRig(kind);
@@ -44,7 +44,7 @@ public sealed partial class MotionEditor
     /// <summary>
     /// 노드를 더한다 — <paramref name="parent"/>(비면 루트) 밑의 맨 뒤(그 부모의 식구들 뒤 = 가장 위에 그려진다). id는 그 리그에서 하나뿐이어야 한다.
     /// </summary>
-    public RigNodeAsset AddRigNode(string kind, string id, string? parent = null, bool image = false)
+    public RigNodeAsset AddRigNode(string kind, string id, string? parent = null)
     {
         RigAsset rig = RequireRig(kind);
         string name = RequireNodeId(rig, id);
@@ -55,13 +55,13 @@ public sealed partial class MotionEditor
             throw new KeyNotFoundException($"부모 노드 '{under}'가 리그 '{kind}'에 없다.");
         }
 
-        var node = new RigNodeAsset { Id = name, Parent = under, Image = image, Alpha = image, Width = image ? DefaultImageSize : 0f, Height = image ? DefaultImageSize : 0f };
+        var node = new RigNodeAsset { Id = name, Parent = under };
         int at = under.Length == 0 ? rig.Nodes.Count : SubtreeEnd(rig, rig.Nodes.FindIndex(n => n.Id == under));
         Mutate(MotionChangeKind.Document, () => rig.Nodes.Insert(at, node));
         return node;
     }
 
-    /// <summary>노드를 지운다 — 그 밑의 노드도 함께. 그 노드를 쓰던 채널·스킨 칸은 남고 검증이 알린다(되살리면 다시 맞는다).</summary>
+    /// <summary>노드를 지운다 — 그 밑의 노드도 함께. 그 노드를 쓰던 채널은 남고 검증이 알린다(되살리면 다시 맞는다).</summary>
     public void RemoveRigNode(string kind, string id)
     {
         RigAsset rig = RequireRig(kind);
@@ -71,7 +71,7 @@ public sealed partial class MotionEditor
     }
 
     /// <summary>
-    /// 노드의 이름을 바꾼다 — 그 이름을 가리키던 것이 같은 칸에서 따라온다: 자식의 부모, 그 리그의 모션 채널, 스킨의 조각 칸.
+    /// 노드의 이름을 바꾼다 — 그 이름을 가리키던 것이 같은 칸에서 따라온다: 자식의 부모, 그 리그의 모션 채널.
     /// </summary>
     public void RenameRigNode(string kind, string id, string newId)
     {
@@ -104,23 +104,10 @@ public sealed partial class MotionEditor
             {
                 channel.Node = name;
             }
-
-            foreach (SkinAsset skin in Document.Skins.Where(s => s.Rig == kind))
-            {
-                if (skin.Parts.Remove(id, out string? image))
-                {
-                    skin.Parts[name] = image;
-                }
-
-                if (skin.Setups.Remove(id, out SkinPartSetup? setup))
-                {
-                    skin.Setups[name] = setup;
-                }
-            }
         });
     }
 
-    /// <summary>노드의 값(위치 · 크기 · 그림을 그리는가 · 불투명도를 받는가)을 고친다. id와 부모는 따로(<see cref="RenameRigNode"/> · <see cref="SetRigNodeParent"/>).</summary>
+    /// <summary>노드의 값(위치 · 크기 · 그림 · 색 · 불투명도를 받는가)을 고친다. 빈 그림 경로는 그림 없음이다. id와 부모는 따로(<see cref="RenameRigNode"/> · <see cref="SetRigNodeParent"/>).</summary>
     public void UpdateRigNode(string kind, string id, RigNodeAsset value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -138,8 +125,9 @@ public sealed partial class MotionEditor
         }
 
         string? color = NormalizeColor(value.Color);
+        string? image = string.IsNullOrWhiteSpace(value.Image) ? null : value.Image.Trim().Replace('\\', '/');
 
-        if (node.X == value.X && node.Y == value.Y && node.Width == value.Width && node.Height == value.Height && node.Image == value.Image && node.Alpha == value.Alpha
+        if (node.X == value.X && node.Y == value.Y && node.Width == value.Width && node.Height == value.Height && node.Image == image && node.Alpha == value.Alpha
             && node.Rotation == value.Rotation && node.ScaleX == value.ScaleX && node.ScaleY == value.ScaleY && node.Color == color)
         {
             return;
@@ -151,7 +139,7 @@ public sealed partial class MotionEditor
             node.Y = value.Y;
             node.Width = value.Width;
             node.Height = value.Height;
-            node.Image = value.Image;
+            node.Image = image;
             node.Alpha = value.Alpha;
             node.Rotation = value.Rotation;
             node.ScaleX = value.ScaleX;

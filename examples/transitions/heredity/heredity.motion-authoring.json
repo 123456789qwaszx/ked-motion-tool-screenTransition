@@ -2021,26 +2021,6 @@
       ]
     }
   ],
-  "skins": [
-    {
-      "name": "heredity",
-      "rig": "heredity",
-      "parts": {
-        "canopy": "art/09_canopy.png",
-        "crystals": "art/05_crystals.png",
-        "crystals_light": "art/06_crystals_light.png",
-        "island": "art/07_island.png",
-        "islets": "art/08_islets.png",
-        "leaf_1": "art/10_leaf_1.png",
-        "leaf_2": "art/11_leaf_2.png",
-        "leaf_3": "art/12_leaf_3.png",
-        "moon": "art/01_moon.png",
-        "orb": "art/03_orb.png",
-        "orb_swirl": "art/04_orb_swirl.png",
-        "spiral": "art/02_spiral.png"
-      }
-    }
-  ],
   "rigs": [
     {
       "kind": "heredity",
@@ -2056,7 +2036,6 @@
           "scaleX": 1,
           "scaleY": 1,
           "color": "#0C1A33",
-          "image": false,
           "alpha": true
         },
         {
@@ -2069,7 +2048,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/01_moon.png",
           "alpha": true
         },
         {
@@ -2082,7 +2061,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/02_spiral.png",
           "alpha": true
         },
         {
@@ -2095,7 +2074,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/03_orb.png",
           "alpha": true
         },
         {
@@ -2108,7 +2087,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/04_orb_swirl.png",
           "alpha": true
         },
         {
@@ -2121,7 +2100,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/05_crystals.png",
           "alpha": true
         },
         {
@@ -2134,7 +2113,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/06_crystals_light.png",
           "alpha": true
         },
         {
@@ -2147,7 +2126,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/07_island.png",
           "alpha": true
         },
         {
@@ -2160,7 +2139,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/08_islets.png",
           "alpha": true
         },
         {
@@ -2173,7 +2152,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/09_canopy.png",
           "alpha": true
         },
         {
@@ -2186,7 +2165,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/10_leaf_1.png",
           "alpha": true
         },
         {
@@ -2199,7 +2178,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/11_leaf_2.png",
           "alpha": true
         },
         {
@@ -2212,7 +2191,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/12_leaf_3.png",
           "alpha": true
         }
       ]

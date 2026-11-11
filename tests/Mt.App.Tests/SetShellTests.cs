@@ -10,8 +10,8 @@ using Mt.Authoring.Preview;
 
 namespace Mt.App.Tests;
 
-/// <summary>스킨과 조각의 화면 — 조각마다 그림을 주면 그 조각만 그려진다.</summary>
-public class SkinShellTests
+/// <summary>세트의 화면 — 층(그림 · 색 사각형)을 짓고, 배치하고, 따로 보고, 움직인다.</summary>
+public class SetShellTests
 {
     private static MainWindow NewWindow()
     {
@@ -34,8 +34,6 @@ public class SkinShellTests
                 window.Session.Editor.AddRig(RigTemplates.Emoji());
                 MotionEditor editor = window.Session.Editor;
                 string id = window.PlaceRig(RigTemplates.EmojiKind);
-                window.AddSkinFromForm();
-                editor.SetSkinPart("skin", "Emoji_Part1", "art/sweat.png");
                 editor.AddMotion("vanish", RigTemplates.EmojiKind, 1f, MotionEnd.Commit);
                 window.SelectMotion("vanish");
                 window.Viewport.SelectedObjectId = id;
@@ -100,76 +98,6 @@ public class SkinShellTests
     }
 
     [Fact]
-    public void 스킨의_그림_넘기기와_놓임이_뷰포트에_그대로_보인다()
-    {
-        HeadlessUi.Run(() =>
-        {
-            MainWindow window = NewWindow();
-            window.Show();
-
-            try
-            {
-                window.Session.Editor.AddRig(RigTemplates.Emoji());
-                MotionEditor editor = window.Session.Editor;
-                string id = window.PlaceRig(RigTemplates.EmojiKind);
-                window.AddSkinFromForm();
-                window.InspectorTab = 1; // 세트 탭
-                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-
-                // 그림 칸에 ' | '로 이어 적으면 장이 여럿 — 한 칸.
-                long revision = editor.Revision;
-                TextBox images = window.SkinPartBox("Emoji_Part1")!;
-                images.Focus();
-                images.Text = "art/a.png | art/b.png | art/c.png";
-                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
-                Assert.Equal(revision + 1, editor.Revision);
-                Assert.Equal(new[] { "art/a.png", "art/b.png", "art/c.png" }, editor.Document.FindSkin("skin")!.ImagesOf("Emoji_Part1"));
-                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Assert.Equal("art/a.png | art/b.png | art/c.png", window.SkinPartBox("Emoji_Part1")!.Text);
-                Assert.Null(window.SkinSetupBoxes("Emoji_Part2")); // 그림이 없는 조각에는 덧붙임 칸이 없다
-
-                // 시계를 따라 넘어간다(장당 0.2초).
-                editor.AddMotion("still", RigTemplates.EmojiKind, 1f);
-                window.SelectMotion("still");
-                window.Viewport.SelectedObjectId = id;
-                window.Viewport.ScrubTo(0.0);
-                Assert.Equal("art/a.png", window.Viewport.PartImage(id, "Emoji_Part1"));
-                window.Viewport.ScrubTo(0.25);
-                Assert.Equal("art/b.png", window.Viewport.PartImage(id, "Emoji_Part1"));
-                window.Viewport.ScrubTo(0.5);
-                Assert.Equal("art/c.png", window.Viewport.PartImage(id, "Emoji_Part1"));
-
-                // 놓임 칸(X) — 한 칸, 조각이 그만큼 옮겨 그려진다. 노드의 값은 그대로다(모션과 따로).
-                Quad before = window.Viewport.PartQuad(id, "Emoji_Part1")!.Value;
-                var boxes = window.SkinSetupBoxes("Emoji_Part1")!;
-                revision = editor.Revision;
-                boxes.X.Focus();
-                boxes.X.Text = "50";
-                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
-                Assert.Equal(revision + 1, editor.Revision);
-                Assert.Equal(50f, editor.Document.FindSkin("skin")!.SetupOf("Emoji_Part1").X);
-                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                Quad placed = window.Viewport.PartQuad(id, "Emoji_Part1")!.Value;
-                // 놓임은 조각 노드의 px이다 — 화면에서는 부모들의 배율(캐릭터의 깊이 배율 등)이 곱해진다: 조각의 폭이 곱해진 그만큼.
-                float perPixel = (before.BottomRight.X - before.BottomLeft.X) / RigTemplates.DefaultPartSize;
-                Assert.Equal(before.Center.X + 50f * perPixel, placed.Center.X, 2);
-                Assert.Equal(0f, window.Viewport.CurrentPose()!.GetState($"{id}/Emoji_Part1").AnchoredPosition.X, 3);
-
-                // 크기 0.5 — 사각형이 반으로.
-                SkinPartSetup half = editor.Document.FindSkin("skin")!.SetupOf("Emoji_Part1").Clone();
-                half.Scale = 0.5f;
-                editor.SetSkinPartSetup("skin", "Emoji_Part1", half);
-                Quad small = window.Viewport.PartQuad(id, "Emoji_Part1")!.Value;
-                Assert.Equal((before.BottomRight.X - before.BottomLeft.X) / 2f, small.BottomRight.X - small.BottomLeft.X, 2);
-            }
-            finally
-            {
-                window.Close();
-            }
-        });
-    }
-
-    [Fact]
     public void 배치_모드에서_그림을_가져와_놓고_끌어서_가만히_선_자세를_잡는다()
     {
         HeadlessUi.Run(() =>
@@ -195,14 +123,13 @@ public class SkinShellTests
                 Assert.True(view.IsLayoutMode);
                 RigAsset Rig() => editor.Document.FindRig("set")!;
 
-                // 그림 가져오기 — 오브젝트(이름은 파일에서, 크기는 그림의 것) + 자리 + 스킨의 그림이 한 칸. 스킨이 없어 세트의 이름으로 만들어 입혀 본다.
+                // 그림 가져오기 — 오브젝트(이름은 파일에서, 크기는 그림의 것) + 자리 + 그림이 한 칸.
                 long revision = editor.Revision;
                 Assert.Equal("alert", window.AddImageObjectFromForm(art, new Vec2(100f, 50f)));
                 Assert.Equal(revision + 1, editor.Revision);
                 RigNodeAsset node = Rig().Find("alert")!;
-                Assert.Equal(("Body", 100f, 50f, 256f, 256f, true), (node.Parent, node.X, node.Y, node.Width, node.Height, node.Image));
-                Assert.Equal("set", view.SetSkin);
-                Assert.EndsWith("alert.png", editor.Document.FindSkin("set")!.Parts["alert"], StringComparison.Ordinal);
+                Assert.Equal(("Body", 100f, 50f, 256f, 256f), (node.Parent, node.X, node.Y, node.Width, node.Height));
+                Assert.EndsWith("alert.png", node.Image, StringComparison.Ordinal);
                 Assert.Equal("alert", window.SetEditorState.Node);
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 Assert.Equal(new[] { "alert" }, view.DrawnParts(view.SelectedObject!));
@@ -257,6 +184,23 @@ public class SkinShellTests
                 Assert.Equal(revision, editor.Revision);
                 Assert.Equal("alert_2", window.SetEditorState.Node);
 
+                // 그림 칸 — 고른 오브젝트의 그림 경로. 비우고 Enter면 그림 오브젝트가 아니다(한 칸), 다시 적으면 돌아온다.
+                TextBox imageBox = window.RigNodeBoxes.Image;
+                string path = imageBox.Text!;
+                Assert.EndsWith("alert.png", path, StringComparison.Ordinal);
+                revision = editor.Revision;
+                imageBox.Focus();
+                imageBox.Text = "";
+                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+                Assert.Equal(revision + 1, editor.Revision);
+                Assert.Null(Rig().Find("alert_2")!.Image);
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                Assert.Equal(new[] { "alert" }, view.DrawnParts(view.SelectedObject!));
+                imageBox.Focus();
+                imageBox.Text = path;
+                window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+                Assert.Equal(path, Rig().Find("alert_2")!.Image);
+
                 // 그 세트의 애니메이션을 고르면 배치 모드가 아니다 — 끌기는 키가 된다(전부터 있던 길).
                 editor.AddMotion("in", "set", 0.5f);
                 window.SelectMotion("in");
@@ -284,15 +228,14 @@ public class SkinShellTests
                 ViewportView view = window.Viewport;
                 editor.AddMotion("nod", "character", 0.6f);
                 window.NewSetFromForm();
-                string a = window.AddSetNodeFromForm(image: true)!;   // Part1 — Body 밑
+                string a = window.AddSetNodeFromForm()!;   // Node1 — Body 밑
                 window.SelectSetNode("Body");
-                string b = window.AddSetNodeFromForm(image: true)!;   // Part2 — Body 밑
+                string b = window.AddSetNodeFromForm()!;   // Node2 — Body 밑
                 window.SelectSetNode(b);
-                string c = window.AddSetNodeFromForm(image: true)!;   // Part3 — Part2 밑
-                editor.AddSkin("skin", "set");
+                string c = window.AddSetNodeFromForm()!;   // Node3 — Node2 밑
                 foreach (string part in new[] { a, b, c })
                 {
-                    editor.SetSkinPart("skin", part, $"art/{part}.png");
+                    editor.UpdateRigNode("set", part, new RigNodeAsset { Width = 100f, Height = 100f, Image = $"art/{part}.png" });
                 }
 
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
@@ -367,7 +310,7 @@ public class SkinShellTests
     }
 
     [Fact]
-    public void 색_사각형을_더하면_스킨_없이_세트에_서고_끌어서_옮기고_칸에서_색을_바꾼다()
+    public void 색_사각형을_더하면_그림_없이_세트에_서고_끌어서_옮기고_칸에서_색을_바꾼다()
     {
         HeadlessUi.Run(() =>
         {
@@ -383,12 +326,12 @@ public class SkinShellTests
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 RigNodeAsset Node(string id) => editor.Document.FindRig("set")!.Find(id)!;
 
-                // 색 사각형 더하기 — 오브젝트 + 크기 + 색이 한 칸. 스킨이 없어도 선다(세트의 오브젝트 사각형이 그 색 사각형이다).
+                // 색 사각형 더하기 — 오브젝트 + 크기 + 색이 한 칸. 그림이 없어도 선다(세트의 오브젝트 사각형이 그 색 사각형이다).
                 long revision = editor.Revision;
                 Assert.Equal("Color1", window.AddColorNodeFromForm());
                 Assert.Equal(revision + 1, editor.Revision);
-                Assert.Equal(("Body", 400f, 300f, "#3D5A80", false), (Node("Color1").Parent, Node("Color1").Width, Node("Color1").Height, Node("Color1").Color, Node("Color1").Image));
-                Assert.Null(view.SetSkin);
+                Assert.Equal(("Body", 400f, 300f, "#3D5A80"), (Node("Color1").Parent, Node("Color1").Width, Node("Color1").Height, Node("Color1").Color));
+                Assert.Null(Node("Color1").Image);
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 Quad quad = view.ObjectQuad(ViewportView.SetObjectId)!.Value;
                 Assert.Equal(400f, quad.BottomRight.X - quad.BottomLeft.X, 1);
@@ -438,7 +381,7 @@ public class SkinShellTests
     }
 
     [Fact]
-    public void 층_표를_가져오면_그림_한_묶음이_세트의_오브젝트와_스킨으로_한_칸에_선다()
+    public void 층_표를_가져오면_그림_한_묶음이_세트의_그림_오브젝트로_한_칸에_선다()
     {
         HeadlessUi.Run(() =>
         {
@@ -467,16 +410,14 @@ public class SkinShellTests
                 Assert.Equal(10, created.Count);
                 RigAsset rig = editor.Document.FindRig("set")!;
                 Assert.Equal("#10262B", rig.Find("Backdrop")!.Color);
-                Assert.Equal((1920f, 1080f, true), (rig.Find("arches")!.Width, rig.Find("arches")!.Height, rig.Find("arches")!.Image));
-                Assert.Equal("set", window.Viewport.SetSkin);
-                Assert.EndsWith("art/06_sign.png", editor.Document.FindSkin("set")!.Parts["sign"], StringComparison.Ordinal);
+                Assert.Equal((1920f, 1080f), (rig.Find("arches")!.Width, rig.Find("arches")!.Height));
+                Assert.EndsWith("art/06_sign.png", rig.Find("sign")!.Image, StringComparison.Ordinal);
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                 Assert.Equal(created, window.Viewport.DrawnParts(window.Viewport.SelectedObject!));
 
                 // 되돌리면 통째로 사라진다(처음의 Body만 남는다).
                 editor.Undo();
                 Assert.Equal(new[] { "Body" }, editor.Document.FindRig("set")!.Nodes.Select(n => n.Id));
-                Assert.Null(editor.Document.FindSkin("set"));
             }
             finally
             {

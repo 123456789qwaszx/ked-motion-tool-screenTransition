@@ -1101,25 +1101,6 @@
       ]
     }
   ],
-  "skins": [
-    {
-      "name": "lapis",
-      "rig": "lapis",
-      "parts": {
-        "fish_school": "art/08_fish_school.png",
-        "light_band": "art/01_light_band.png",
-        "orb": "art/11_orb.png",
-        "pillars_far": "art/02_pillars_far.png",
-        "pillars_mid": "art/04_pillars_mid.png",
-        "ray": "art/09_ray.png",
-        "seabed_far": "art/03_seabed_far.png",
-        "seabed_near": "art/05_seabed_near.png",
-        "stars": "art/10_stars.png",
-        "trunk_left": "art/06_trunk_left.png",
-        "trunk_right": "art/07_trunk_right.png"
-      }
-    }
-  ],
   "rigs": [
     {
       "kind": "lapis",
@@ -1135,7 +1116,6 @@
           "scaleX": 1,
           "scaleY": 1,
           "color": "#0E1E4A",
-          "image": false,
           "alpha": true
         },
         {
@@ -1148,7 +1128,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/01_light_band.png",
           "alpha": true
         },
         {
@@ -1161,7 +1141,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/02_pillars_far.png",
           "alpha": true
         },
         {
@@ -1174,7 +1154,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/03_seabed_far.png",
           "alpha": true
         },
         {
@@ -1187,7 +1167,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/04_pillars_mid.png",
           "alpha": true
         },
         {
@@ -1200,7 +1180,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/05_seabed_near.png",
           "alpha": true
         },
         {
@@ -1213,7 +1193,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/06_trunk_left.png",
           "alpha": true
         },
         {
@@ -1226,7 +1206,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/07_trunk_right.png",
           "alpha": true
         },
         {
@@ -1239,7 +1219,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/08_fish_school.png",
           "alpha": true
         },
         {
@@ -1252,7 +1232,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/09_ray.png",
           "alpha": true
         },
         {
@@ -1265,7 +1245,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/10_stars.png",
           "alpha": true
         },
         {
@@ -1278,7 +1258,7 @@
           "rotation": 0,
           "scaleX": 1,
           "scaleY": 1,
-          "image": true,
+          "image": "art/11_orb.png",
           "alpha": true
         }
       ]
