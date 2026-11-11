@@ -21,8 +21,8 @@
 ## 구조
 
 ```
-Ked.Presentation.Core (재생의 계산 — 순수 C#, netstandard2.1)  ──►  Mt.Authoring (도메인)  ──►  Mt.App (Avalonia 화면)
-tests: Ked.Presentation.Core.Tests (NUnit) · Mt.Authoring.Tests (xunit) · Mt.App.Tests (xunit + Avalonia.Headless)
+ScreenTransition.Core (재생의 계산 — 순수 C#, netstandard2.1)  ──►  ScreenTransition.Authoring (도메인)  ──►  ScreenTransition.App (Avalonia 화면)
+tests: ScreenTransition.Core.Tests (NUnit) · ScreenTransition.Authoring.Tests (xunit) · ScreenTransition.App.Tests (xunit + Avalonia.Headless)
 ```
 
 미리보기는 전환 하나로 선다: 전환의 층 → 코어의 사각형 계층(`StageTree.Build` → `RectNodeTree`) → 타임라인의 포즈(`MotionPreview`).
@@ -33,27 +33,27 @@ tests: Ked.Presentation.Core.Tests (NUnit) · Mt.Authoring.Tests (xunit) · Mt.A
 클라우드 컨테이너에 SDK가 없으면 `apt-get install -y dotnet-sdk-10.0`.
 
 ```bash
-dotnet run --project src/Mt.App/Mt.App.csproj
+dotnet run --project src/ScreenTransition.App/ScreenTransition.App.csproj
 ```
 
 ```bash
-dotnet build KedMotionTool.sln -c Release
+dotnet build ScreenTransition.sln -c Release
 ```
 
 ```bash
-dotnet test KedMotionTool.sln -c Release --no-build
+dotnet test ScreenTransition.sln -c Release --no-build
 ```
 
-예시 문서를 다시 쓴다(빌더 `tests/Mt.Authoring.Tests/TransitionExamples.cs`를 고친 뒤):
+예시 문서를 다시 쓴다(빌더 `tests/ScreenTransition.Authoring.Tests/TransitionExamples.cs`를 고친 뒤):
 
 ```bash
-MT_WRITE_EXAMPLES=1 dotnet test tests/Mt.Authoring.Tests -c Release --filter TransitionExampleTests
+ST_WRITE_EXAMPLES=1 dotnet test tests/ScreenTransition.Authoring.Tests -c Release --filter TransitionExampleTests
 ```
 
 화면을 그림으로 뽑는다(헤드리스가 Skia로 실제 렌더):
 
 ```bash
-MT_RENDER_DIR=<폴더> dotnet test tests/Mt.App.Tests -c Release --filter TransitionExampleShots
+ST_RENDER_DIR=<폴더> dotnet test tests/ScreenTransition.App.Tests -c Release --filter TransitionExampleShots
 ```
 
 작업 관습은 [`CLAUDE.md`](CLAUDE.md).

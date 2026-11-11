@@ -11,31 +11,31 @@
 
 ## 구조
 
-`Ked.Presentation.Core`(재생의 계산 — 순수 C#, netstandard2.1 · C# 9) → `Mt.Authoring`(도메인) → `Mt.App`(Avalonia 화면).
-테스트: `tests/Mt.Authoring.Tests` · `tests/Mt.App.Tests`(xunit — 화면은 `HeadlessUi.Run`) · `tests/Ked.Presentation.Core.Tests`(NUnit).
+`ScreenTransition.Core`(재생의 계산 — 순수 C#, netstandard2.1 · C# 9) → `ScreenTransition.Authoring`(도메인) → `ScreenTransition.App`(Avalonia 화면).
+테스트: `tests/ScreenTransition.Authoring.Tests` · `tests/ScreenTransition.App.Tests`(xunit — 화면은 `HeadlessUi.Run`) · `tests/ScreenTransition.Core.Tests`(NUnit).
 
 ## 명령
 
 클라우드 컨테이너에 SDK가 없으면: `apt-get install -y dotnet-sdk-10.0`.
 
 ```bash
-dotnet build KedMotionTool.sln -c Release
+dotnet build ScreenTransition.sln -c Release
 ```
 
 ```bash
-dotnet test KedMotionTool.sln -c Release --no-build
+dotnet test ScreenTransition.sln -c Release --no-build
 ```
 
-예시 문서를 다시 쓴다(빌더 `tests/Mt.Authoring.Tests/TransitionExamples.cs`를 고친 뒤):
+예시 문서를 다시 쓴다(빌더 `tests/ScreenTransition.Authoring.Tests/TransitionExamples.cs`를 고친 뒤):
 
 ```bash
-MT_WRITE_EXAMPLES=1 dotnet test tests/Mt.Authoring.Tests -c Release --filter TransitionExampleTests
+ST_WRITE_EXAMPLES=1 dotnet test tests/ScreenTransition.Authoring.Tests -c Release --filter TransitionExampleTests
 ```
 
 화면을 그림으로 뽑는다(헤드리스가 Skia로 실제 렌더 — 고친 화면은 눈으로 확인한다):
 
 ```bash
-MT_RENDER_DIR=<폴더> dotnet test tests/Mt.App.Tests -c Release --filter TransitionExampleShots
+ST_RENDER_DIR=<폴더> dotnet test tests/ScreenTransition.App.Tests -c Release --filter TransitionExampleShots
 ```
 
 ## 관습
@@ -47,5 +47,5 @@ MT_RENDER_DIR=<폴더> dotnet test tests/Mt.App.Tests -c Release --filter Transi
 - **안 쓰는 기능은 흔적 없이 지운다** — 코드 · 주석 · 문서 · 테스트까지. 죽은 코드를 남기지 않는다.
 - 단축키는 F1 표에, 쓰는 법은 README와 `docs/USER-GUIDE.md`에.
 - 화면의 기능에는 테스트 손잡이(`internal … FromForm()`)와 헤드리스 테스트를 붙인다.
-- 툴의 미리보기와 게임의 재생은 **같은 계산**이어야 한다 — 그 계산은 `Ked.Presentation.Core`에 순수 함수로 두고, 둘이 같은 모습을 내는지 프레임마다 맞추는 테스트를 둔다. 여기서 "게임"은 **이 툴의 산출물을 읽는 유니티 쪽 코드**다 — 그 코드도 이 툴의 것이다(런타임 저장소에 넣지 않는다, 뒤의 일).
+- 툴의 미리보기와 게임의 재생은 **같은 계산**이어야 한다 — 그 계산은 `ScreenTransition.Core`에 순수 함수로 두고, 둘이 같은 모습을 내는지 프레임마다 맞추는 테스트를 둔다. 여기서 "게임"은 **이 툴의 산출물을 읽는 유니티 쪽 코드**다 — 그 코드도 이 툴의 것이다(런타임 저장소에 넣지 않는다, 뒤의 일).
 - PR은 요청받았을 때만 만든다.

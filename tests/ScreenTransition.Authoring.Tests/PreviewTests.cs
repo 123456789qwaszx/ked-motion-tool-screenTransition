@@ -1,0 +1,250 @@
+using ScreenTransition.Core;
+using ScreenTransition.Authoring.Editing;
+using ScreenTransition.Authoring.Graph;
+using ScreenTransition.Authoring.Model;
+using ScreenTransition.Authoring.Preview;
+
+namespace ScreenTransition.Authoring.Tests;
+
+public class MotionPreviewTests
+{
+    private const string MoveY = "MoverY";
+    private const string Sway = "Pivot";
+
+    [Fact]
+    public void nod는_가운데서_18_내려가고_길이를_지나면_restore라_시작_상태다()
+    {
+        MotionDocument document = Fixtures.NodBowDocument();
+        RectNodeTree template = StageTree.Build(TransitionTemplates.Figure());
+        TimelineAsset nod = document.Find("nod")!;
+
+        Assert.Equal(0f, MotionPreview.Pose(template, nod, 0).GetState(MoveY).AnchoredPosition.Y, 4);
+        Assert.Equal(-18f, MotionPreview.Pose(template, nod, 0.3).GetState(MoveY).AnchoredPosition.Y, 4);
+        Assert.Equal(0f, MotionPreview.Pose(template, nod, 0.6).GetState(MoveY).AnchoredPosition.Y, 4);
+        Assert.Equal(0f, MotionPreview.Pose(template, nod, 5).GetState(MoveY).AnchoredPosition.Y, 4);
+
+        // 포즈는 사본이다 — 원본 트리는 그대로.
+        Assert.Equal(0f, template.GetState(MoveY).AnchoredPosition.Y);
+    }
+
+    [Fact]
+    public void bow는_commit이라_길이를_지나도_마지막_키가_남고_중간은_에르미트다()
+    {
+        TimelineAsset bow = Fixtures.NodBowDocument().Find("bow")!;
+        RectNodeTree template = StageTree.Build(TransitionTemplates.Figure());
+
+        Assert.Equal(4f, MotionPreview.Pose(template, bow, 0.2).GetState(Sway).LocalEulerAngles.Z, 3);
+        Assert.Equal(8f, MotionPreview.Pose(template, bow, 0.4).GetState(Sway).LocalEulerAngles.Z, 4);
+        Assert.Equal(8f, MotionPreview.Pose(template, bow, 9).GetState(Sway).LocalEulerAngles.Z, 4);
+    }
+
+    [Fact]
+    public void 뮤트된_성분은_재생에서_빠진다()
+    {
+        TimelineAsset nod = Fixtures.NodBowDocument().Find("nod")!;
+        RectNodeTree template = StageTree.Build(TransitionTemplates.Figure());
+        var y = new CurveRef(MoveY, MotionChannelKind.Position, Axis.Y);
+
+        Assert.Equal(-18f, MotionPreview.Pose(template, nod, 0.3, c => c != y).GetState(MoveY).AnchoredPosition.Y, 4);
+        Assert.Equal(0f, MotionPreview.Pose(template, nod, 0.3, c => c == y).GetState(MoveY).AnchoredPosition.Y, 4);
+    }
+}
+
+public class PlaybackClockTests
+{
+    [Fact]
+    public void 루프는_감고_한_번은_끝에서_멈춘다()
+    {
+        var clock = new PlaybackClock();
+        clock.SetDuration(0.6);
+        clock.Play();
+
+        Assert.True(clock.Advance(0.5));
+        Assert.Equal(0.5, clock.Time, 9);
+        Assert.True(clock.Advance(0.2));
+        Assert.Equal(0.1, clock.Time, 9);
+        Assert.True(clock.IsPlaying);
+
+        clock.Mode = PlaybackMode.Once;
+        clock.Advance(1);
+        Assert.Equal(0.6, clock.Time, 9);
+        Assert.False(clock.IsPlaying);
+
+        // 끝에 선 채 다시 재생하면 범위 처음부터.
+        clock.Play();
+        Assert.Equal(0, clock.Time, 9);
+        Assert.False(clock.Loop);
+        clock.Loop = true;
+        Assert.Equal(PlaybackMode.Loop, clock.Mode);
+    }
+
+    [Fact]
+    public void 왕복은_범위_끝에서_되돌아오고_속도는_배율이다()
+    {
+        var clock = new PlaybackClock { Mode = PlaybackMode.Oscillate, Speed = 2 };
+        clock.SetDuration(1);
+        clock.SetRange(0.2, 0.6);
+        clock.Play();
+        Assert.Equal(0.2, clock.Time, 9);
+
+        clock.Advance(0.1); // ×2 → 0.4
+        Assert.Equal(0.4, clock.Time, 9);
+        clock.Advance(0.15); // 0.7 → 되돌아 0.5
+        Assert.Equal(0.5, clock.Time, 9);
+        clock.Advance(0.2); // 0.1 → 되돌아 0.3
+        Assert.Equal(0.3, clock.Time, 9);
+        Assert.True(clock.IsPlaying);
+    }
+
+    [Fact]
+    public void 재생_범위는_길이_안이고_끝에_붙은_범위는_길이를_따라간다()
+    {
+        var clock = new PlaybackClock();
+        clock.SetDuration(1);
+        Assert.Equal(1, clock.RangeEnd);
+
+        clock.SetDuration(2);
+        Assert.Equal(2, clock.RangeEnd);
+
+        clock.SetRange(0.5, 1.5);
+        clock.SetDuration(3);
+        Assert.Equal(1.5, clock.RangeEnd);
+        clock.SetDuration(1);
+        Assert.Equal(1, clock.RangeEnd);
+        Assert.True(clock.RangeStart < clock.RangeEnd);
+
+        Assert.Throws<ArgumentException>(() => clock.SetRange(0.5, 0.5));
+        clock.ResetRange();
+        Assert.Equal(0, clock.RangeStart);
+        Assert.Equal(1, clock.RangeEnd);
+
+        // 범위 밖에서 재생하면 범위 처음으로.
+        clock.SetRange(0.4, 0.8);
+        clock.ScrubTo(0.1);
+        clock.Play();
+        Assert.Equal(0.4, clock.Time, 9);
+        clock.Stop();
+        Assert.Equal(0.4, clock.Time, 9);
+    }
+
+    [Fact]
+    public void 일시정지면_흐르지_않고_스크럽은_길이_안으로_죈다()
+    {
+        var clock = new PlaybackClock();
+        clock.SetDuration(1);
+        Assert.False(clock.Advance(0.5));
+        Assert.Equal(0, clock.Time);
+
+        clock.ScrubTo(5);
+        Assert.Equal(1, clock.Time);
+        clock.ScrubTo(-1);
+        Assert.Equal(0, clock.Time);
+
+        clock.Play();
+        clock.Toggle();
+        Assert.False(clock.IsPlaying);
+    }
+}
+
+public class PlaybackBackwardTests
+{
+    [Fact]
+    public void 거꾸로_재생은_한_번이면_범위_시작에서_멈추고_루프면_끝으로_감는다()
+    {
+        var clock = new PlaybackClock();
+        clock.SetDuration(1);
+        clock.Mode = PlaybackMode.Once;
+        clock.ScrubTo(0.6);
+        clock.PlayBackward();
+        Assert.True(clock.IsReversed);
+        clock.Advance(0.2);
+        Assert.Equal(0.4, clock.Time, 9);
+        clock.Advance(1);
+        Assert.Equal(0, clock.Time, 9);
+        Assert.False(clock.IsPlaying);
+
+        clock.Mode = PlaybackMode.Loop;
+        clock.ScrubTo(0.1);
+        clock.PlayBackward();
+        clock.Advance(0.3);
+        Assert.Equal(0.8, clock.Time, 9);
+        Assert.True(clock.IsPlaying);
+
+        clock.Play();
+        Assert.False(clock.IsReversed);
+    }
+
+    [Fact]
+    public void 시작에_서_있으면_거꾸로는_끝부터다()
+    {
+        var clock = new PlaybackClock();
+        clock.SetDuration(1);
+        clock.Mode = PlaybackMode.Once;
+        clock.PlayBackward();
+        Assert.Equal(1, clock.Time, 9);
+    }
+}
+
+public class WholeFramePlaybackTests
+{
+    [Fact]
+    public void 프레임_단위_재생은_실제_시간을_따르되_보이는_시각은_정수_프레임이다()
+    {
+        var clock = new PlaybackClock { WholeFrames = true };
+        clock.SetDuration(1);
+        clock.Play();
+
+        Assert.False(clock.Advance(0.02)); // 0.48프레임 → 0프레임, 안 바뀜
+        Assert.Equal(0, clock.Time, 9);
+        Assert.True(clock.Advance(0.02)); // 0.96프레임 → 1프레임
+        Assert.Equal(1.0 / 24.0, clock.Time, 9);
+        clock.Advance(0.5); // 실제 0.54초 = 12.96프레임 → 13프레임 (0.04초가 사라지지 않는다)
+        Assert.Equal(13.0 / 24.0, clock.Time, 9);
+
+        clock.WholeFrames = false;
+        clock.Advance(0.01);
+        Assert.Equal(13.0 / 24.0 + 0.01, clock.Time, 9); // 연속으로 돌아가면 보이던 시각에서 흐른 시간 그대로
+
+        clock.ScrubTo(0.3);
+        Assert.Equal(0.3, clock.Time, 9); // 스크럽은 프레임에 안 맞춘다(슬라이더가 스냅한다)
+    }
+
+    [Fact]
+    public void 프레임_단위_재생도_한_번이면_범위_끝에서_정확히_멈춘다()
+    {
+        var clock = new PlaybackClock { WholeFrames = true, Mode = PlaybackMode.Once };
+        clock.SetDuration(0.55);
+        clock.Play();
+        clock.Advance(1);
+        Assert.Equal(0.55, clock.Time, 6);
+        Assert.False(clock.IsPlaying);
+    }
+}
+
+public class KeyTimesTests
+{
+    [Fact]
+    public void 모든_키_시각은_합쳐_오름차순이고_다음_이전을_찾는다()
+    {
+        TimelineAsset bow = Fixtures.NodBowDocument().Find("bow")!;
+        List<float> times = KeyTimes.All(bow);
+
+        Assert.Equal(new[] { 0f, 0.4f }, times);
+        Assert.Equal(0.4f, KeyTimes.Next(times, 0));
+        Assert.Null(KeyTimes.Next(times, 0.4));
+        Assert.Equal(0f, KeyTimes.Previous(times, 0.4));
+        Assert.Null(KeyTimes.Previous(times, 0));
+        Assert.Equal(0.4f, KeyTimes.Next(times, 0.2));
+        Assert.Equal(0f, KeyTimes.Previous(times, 0.2));
+    }
+
+    [Fact]
+    public void 선택_키_시각()
+    {
+        TimelineAsset nod = Fixtures.NodBowDocument().Find("nod")!;
+        var y = new CurveRef("MoverY", MotionChannelKind.Position, Axis.Y);
+
+        List<float> selected = KeyTimes.OfSelection(nod, new[] { new KeyRef(y, 2), new KeyRef(y, 1), new KeyRef(y, 9) });
+        Assert.Equal(new[] { 0.3f, 0.6f }, selected);
+    }
+}

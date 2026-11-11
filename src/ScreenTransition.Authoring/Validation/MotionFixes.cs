@@ -1,0 +1,166 @@
+using ScreenTransition.Core;
+using ScreenTransition.Authoring.Editing;
+using ScreenTransition.Authoring.Graph;
+using ScreenTransition.Authoring.Model;
+
+namespace ScreenTransition.Authoring.Validation;
+
+/// <summary>규칙 위반을 한 번에 고치는 돕는 손(계획 2.4). 각각 편집기 명령 하나 = 되돌리기 하나.</summary>
+public enum MotionFix
+{
+    /// <summary>첫 키를 시각 0으로 옮긴다.</summary>
+    FirstKeysToZero,
+
+    /// <summary>마지막 키를 길이로 옮긴다.</summary>
+    EndKeysToDuration,
+
+    /// <summary>길이를 가장 늦은 키에 맞춘다.</summary>
+    DurationToLastKey,
+
+    /// <summary>길이 자리에 키를 하나 넣는다(값은 곡선 위 — 마지막 키 값). 길이 밖의 키는 사라진다.</summary>
+    KeyAtDuration,
+}
+
+public static class MotionFixes
+{
+    public static string Label(MotionFix fix) => fix switch
+    {
+        MotionFix.FirstKeysToZero => "첫 키를 0초로",
+        MotionFix.EndKeysToDuration => "끝 키를 길이로 옮기기",
+        MotionFix.DurationToLastKey => "길이를 마지막 키에 맞추기",
+        MotionFix.KeyAtDuration => "길이 자리에 키 넣기",
+        _ => fix.ToString(),
+    };
+
+    /// <summary>코어 <c>MotionRules</c>의 문구에서 고칠 손을 고른다. 문구가 바뀌면 여기만 따라간다.</summary>
+    public static IReadOnlyList<MotionFix> Suggest(MotionProblem problem)
+    {
+        ArgumentNullException.ThrowIfNull(problem);
+        string m = problem.Message;
+
+        if (m.Contains("마지막 키 시각이 길이와 다르다", StringComparison.Ordinal))
+        {
+            return new[] { MotionFix.EndKeysToDuration, MotionFix.DurationToLastKey, MotionFix.KeyAtDuration };
+        }
+
+        if (m.Contains("첫 키 시각이 0이 아니다", StringComparison.Ordinal))
+        {
+            return new[] { MotionFix.FirstKeysToZero };
+        }
+
+        return Array.Empty<MotionFix>();
+    }
+
+    /// <summary>고친다. 할 것이 없으면 false(편집기 조작도 없다).</summary>
+    public static bool Apply(MotionEditor editor, string motionName, MotionFix fix)
+    {
+        ArgumentNullException.ThrowIfNull(editor);
+        TimelineAsset motion = editor.Document.Find(motionName) ?? throw new KeyNotFoundException($"전환 '{motionName}'가 없다.");
+
+        switch (fix)
+        {
+            case MotionFix.DurationToLastKey:
+            {
+                List<float> times = KeyTimes.All(motion);
+
+                if (times.Count == 0 || Math.Abs(times[^1] - motion.Duration) <= MotionRules.Tolerance)
+                {
+                    return false;
+                }
+
+                editor.SetDuration(motionName, times[^1]);
+                return true;
+            }
+
+            default:
+            {
+                var edits = new List<(CurveRef Curve, IEnumerable<KeyAsset> Keys)>();
+
+                foreach (ChannelAsset channel in motion.Channels)
+                {
+                    foreach (Axis axis in new[] { Axis.X, Axis.Y, Axis.Z })
+                    {
+                        if (channel.Get(axis) is not { } curve || curve.Keys.Count == 0)
+                        {
+                            continue;
+                        }
+
+                        List<KeyAsset> keys = curve.Keys.Select(Clone).ToList();
+                        bool changed = ApplyToCurve(fix, keys, motion);
+
+                        if (changed)
+                        {
+                            edits.Add((new CurveRef(channel.Node, channel.Kind, axis), keys));
+                        }
+                    }
+                }
+
+                if (edits.Count == 0)
+                {
+                    return false;
+                }
+
+                editor.SetKeysMany(motionName, edits);
+                return true;
+            }
+        }
+    }
+
+    private static bool ApplyToCurve(MotionFix fix, List<KeyAsset> keys, TimelineAsset motion)
+    {
+        KeyAsset first = keys[0];
+        KeyAsset last = keys[^1];
+
+        switch (fix)
+        {
+            case MotionFix.FirstKeysToZero:
+                if (Math.Abs(first.T) <= MotionRules.Tolerance)
+                {
+                    return false;
+                }
+
+                first.T = 0f;
+                keys.RemoveAll(k => !ReferenceEquals(k, first) && Math.Abs(k.T) <= MotionRules.Tolerance);
+                return true;
+
+            case MotionFix.KeyAtDuration:
+            {
+                if (Math.Abs(last.T - motion.Duration) <= MotionRules.Tolerance)
+                {
+                    return false;
+                }
+
+                List<KeyAsset> withKey = KeyOps.WithKeyOnCurve(keys, motion.Duration);
+                withKey.RemoveAll(k => k.T > motion.Duration + MotionRules.Tolerance);
+                keys.Clear();
+                keys.AddRange(withKey.OrderBy(k => k.T));
+                return true;
+            }
+
+            case MotionFix.EndKeysToDuration:
+                if (Math.Abs(last.T - motion.Duration) <= MotionRules.Tolerance)
+                {
+                    return false;
+                }
+
+                last.T = motion.Duration;
+                keys.RemoveAll(k => !ReferenceEquals(k, last) && Math.Abs(k.T - motion.Duration) <= MotionRules.Tolerance);
+                // 길이를 줄였으면 길이 밖의 키는 사라진다 — 끝 키가 마지막이어야 한다.
+                keys.RemoveAll(k => !ReferenceEquals(k, last) && k.T > motion.Duration);
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    private static KeyAsset Clone(KeyAsset key) => new()
+    {
+        T = key.T,
+        V = key.V,
+        InTangent = key.InTangent,
+        OutTangent = key.OutTangent,
+        Tangent = key.Tangent,
+        Broken = key.Broken,
+    };
+}

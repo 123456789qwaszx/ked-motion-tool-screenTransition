@@ -1,0 +1,60 @@
+using ScreenTransition.Core;
+using ScreenTransition.Authoring.Editing;
+using ScreenTransition.Authoring.Model;
+using ScreenTransition.Authoring.Preview;
+using ScreenTransition.Authoring.Serialization;
+using ScreenTransition.Authoring.Validation;
+
+namespace ScreenTransition.Authoring.Tests;
+
+/// <summary>이벤트 키 — "이 프레임에 이모지·소리".</summary>
+public class MotionEventTests
+{
+
+    private static MotionEditor NewEditor() => new(Fixtures.NodBowDocument()); // nod 0.6초 · bow 0.4초
+
+    [Fact]
+    public void 이벤트는_시각_순으로_서고_명령_하나가_한_칸이다()
+    {
+        MotionEditor editor = NewEditor();
+        Assert.DoesNotContain("events", MotionDocumentJson.Write(editor.Document), StringComparison.Ordinal);
+
+        Assert.Equal(0, editor.AddMotionEvent("nod", 0.3f, "emoji", "땀"));
+        Assert.Equal(0, editor.AddMotionEvent("nod", 0.1f, " sfx ", "pop")); // 앞에 끼어든다, 이름의 빈칸은 버린다
+        Assert.Equal(2, editor.AddMotionEvent("nod", 0.3f, "emoji_off"));     // 같은 시각이면 먼저 있던 것 뒤
+        Assert.Equal(0, editor.AddMotionEvent("nod", -5f, "start"));          // 0 아래로 못 간다
+        List<MotionEventAsset> events = editor.Document.Find("nod")!.Events;
+        Assert.Equal(new[] { ("start", 0f), ("sfx", 0.1f), ("emoji", 0.3f), ("emoji_off", 0.3f) }, events.Select(e => (e.Name, e.T)));
+        Assert.Null(events[3].Value);
+
+        // 고치기: 시각이 바뀌면 자리가 옮겨지고 새 번호가 온다.
+        long revision = editor.Revision;
+        Assert.Equal(3, editor.UpdateMotionEvent("nod", 1, 0.5f, "sfx", "ding"));
+        Assert.Equal(revision + 1, editor.Revision);
+        Assert.Equal(("sfx", 0.5f, "ding"), (events[3].Name, events[3].T, events[3].Value));
+        editor.Undo();
+        Assert.Equal(("sfx", 0.1f, "pop"), (editor.Document.Find("nod")!.Events[1].Name, editor.Document.Find("nod")!.Events[1].T, editor.Document.Find("nod")!.Events[1].Value));
+
+        editor.RemoveMotionEvent("nod", 0);
+        Assert.Equal(3, editor.Document.Find("nod")!.Events.Count);
+        Assert.Throws<ArgumentOutOfRangeException>(() => editor.RemoveMotionEvent("nod", 9));
+        Assert.Throws<KeyNotFoundException>(() => editor.AddMotionEvent("nope", 0f, "x"));
+
+        // 저작본 왕복.
+        string json = MotionDocumentJson.Write(editor.Document);
+        Assert.Equal(json, MotionDocumentJson.Write(MotionDocumentJson.Read(json)));
+        Assert.Equal(1, json.Split("\"events\"").Length - 1); // bow에는 없다
+    }
+
+    [Fact]
+    public void 구간은_열린_앞과_닫힌_뒤라_같은_이벤트가_두_번_잡히지_않는다()
+    {
+        MotionEditor editor = NewEditor();
+        editor.AddMotionEvent("nod", 0.3f, "emoji", "땀");
+        TimelineAsset nod = editor.Document.Find("nod")!;
+
+        Assert.Single(MotionEvents.Between(nod, 0.0, 0.3));
+        Assert.Empty(MotionEvents.Between(nod, 0.3, 0.6));
+        Assert.Empty(MotionEvents.Between(nod, -1, 0.2));
+    }
+}

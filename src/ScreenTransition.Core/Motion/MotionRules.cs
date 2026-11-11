@@ -1,0 +1,190 @@
+using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+
+namespace ScreenTransition.Core
+{
+    // ─────────────────────────────────────────────────────────────────
+    // 모션 검증 — 런타임 로더와 저작 도구가 같은 규칙을 써야 한다.
+    // 한쪽만 알면 "툴에서는 되는데 재생에서 사라지는" 모션이 생긴다.
+    //
+    // 규칙은 **모양**만 본다(이름·길이·노드·종류·성분·키 시각). "첫 키가 중립값" 같은 값 규칙은 없다 —
+    // 첫 프레임부터 자리에서 떨어져 있는 것도 작가의 뜻이다.
+    //
+    // 어긋난 모션은 호출부가 로그 + 무시한다 — 조용히 빠뜨리지 않는다.
+    // ─────────────────────────────────────────────────────────────────
+    public static class MotionRules
+    {
+        /// <summary>이름 규칙 — 호스트가 이 이름으로 부른다.</summary>
+        public static readonly Regex NameRule = new("^[a-z0-9_]+$", RegexOptions.Compiled);
+
+        /// <summary>시각·값 판정 허용 오차. JSON 왕복의 부동소수 잡음만 흡수한다.</summary>
+        public const float Tolerance = 1e-4f;
+
+        /// <summary>
+        /// 클립 전체를 검증한다. rigNodeIds(전환의 층 id들)를 주면 노드가 그 안에 있는지도 본다(null이면 생략 —
+        /// 전환이 없는 자리, 예: 단위 테스트).
+        /// </summary>
+        public static bool TryValidate(MotionClip clip, ICollection<string> rigNodeIds, out string reason)
+        {
+            if (clip == null)
+            {
+                reason = "클립이 null이다";
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(clip.Name) || !NameRule.IsMatch(clip.Name))
+            {
+                reason = $"이름은 [a-z0-9_]+ 여야 한다 ('{clip.Name}')";
+                return false;
+            }
+
+            if (!(clip.Duration > 0f))
+            {
+                reason = $"길이가 0보다 커야 한다 ({clip.Duration})";
+                return false;
+            }
+
+            // 채널이 없는 모션은 유효하다 — 아무것도 하지 않고 길이만큼 흐른다(저작 도구는 첫 키에서 채널을 만든다).
+            HashSet<(string, MotionChannelKind)> seen = new();
+            MotionChannel[] channels = clip.Channels ?? System.Array.Empty<MotionChannel>();
+
+            for (int i = 0; i < channels.Length; i++)
+            {
+                if (!TryValidateChannel(channels[i], clip.Duration, rigNodeIds, out string why))
+                {
+                    reason = $"채널 {i}: {why}";
+                    return false;
+                }
+
+                if (!seen.Add((channels[i].Node, channels[i].Kind)))
+                {
+                    reason = $"채널 {i}: 같은 노드·종류의 채널이 둘이다 ({channels[i].Node} {channels[i].Kind})";
+                    return false;
+                }
+            }
+
+            MotionEvent[] events = clip.Events ?? System.Array.Empty<MotionEvent>();
+
+            for (int i = 0; i < events.Length; i++)
+            {
+                if (string.IsNullOrEmpty(events[i].Name) || !NameRule.IsMatch(events[i].Name))
+                {
+                    reason = $"이벤트 {i}: 이름은 [a-z0-9_]+ 여야 한다 ('{events[i].Name}')";
+                    return false;
+                }
+
+                if (events[i].Time < -Tolerance || events[i].Time > clip.Duration + Tolerance)
+                {
+                    reason = $"이벤트 {i}: 시각이 0~길이 밖이다 ({events[i].Time})";
+                    return false;
+                }
+
+                if (i > 0 && events[i].Time < events[i - 1].Time)
+                {
+                    reason = $"이벤트 {i}: 시각이 오름차순이 아니다";
+                    return false;
+                }
+            }
+
+            reason = null;
+            return true;
+        }
+
+        public static bool TryValidateChannel(
+            in MotionChannel channel, float duration, ICollection<string> rigNodeIds, out string reason)
+        {
+            if (string.IsNullOrEmpty(channel.Node))
+            {
+                reason = "노드가 비어 있다";
+                return false;
+            }
+
+            if (rigNodeIds != null && !rigNodeIds.Contains(channel.Node))
+            {
+                reason = $"전환에 없는 층이다 ('{channel.Node}')";
+                return false;
+            }
+
+            if (!Enum.IsDefined(typeof(MotionChannelKind), channel.Kind))
+            {
+                reason = $"모르는 채널 종류다 ({(int)channel.Kind})";
+                return false;
+            }
+
+            if (channel.Kind != MotionChannelKind.Euler && channel.Z != null)
+            {
+                reason = $"{channel.Kind}에는 Z 성분이 없다";
+                return false;
+            }
+
+            if (channel.Kind == MotionChannelKind.Alpha)
+            {
+                if (channel.Y != null)
+                {
+                    reason = "Alpha에는 X 성분만 있다";
+                    return false;
+                }
+
+                // 불투명도는 0~1이다. 키가 범위 밖이면 호스트의 CanvasGroup이 죄어 버려 보이는 것과 파일이 달라진다.
+                for (int k = 0; channel.X != null && k < channel.X.Length; k++)
+                {
+                    if (channel.X[k].Value < -Tolerance || channel.X[k].Value > 1f + Tolerance)
+                    {
+                        reason = $"Alpha 키 값은 0~1이어야 한다 ({channel.X[k].Value})";
+                        return false;
+                    }
+                }
+            }
+
+            if (!channel.HasX && !channel.HasY && !channel.HasZ)
+            {
+                reason = "성분(X·Y·Z)이 하나는 있어야 한다";
+                return false;
+            }
+
+            return TryValidateComponent("X", channel.X, duration, out reason)
+                && TryValidateComponent("Y", channel.Y, duration, out reason)
+                && TryValidateComponent("Z", channel.Z, duration, out reason);
+        }
+
+        private static bool TryValidateComponent(string label, CurveKey[] keys, float duration, out string reason)
+        {
+            reason = null;
+
+            if (keys == null || keys.Length == 0)
+                return true;
+
+            if (keys.Length < 2)
+            {
+                reason = $"{label}: 키가 2개 이상이어야 한다";
+                return false;
+            }
+
+            if (Math.Abs(keys[0].Time) > Tolerance)
+            {
+                reason = $"{label}: 첫 키 시각이 0이 아니다 ({keys[0].Time})";
+                return false;
+            }
+
+            float lastTime = keys[keys.Length - 1].Time;
+
+            if (Math.Abs(lastTime - duration) > Tolerance)
+            {
+                reason = $"{label}: 마지막 키 시각이 길이와 다르다 ({lastTime} ≠ {duration})";
+                return false;
+            }
+
+            for (int i = 1; i < keys.Length; i++)
+            {
+                if (keys[i].Time <= keys[i - 1].Time)
+                {
+                    reason = $"{label}: 키 시각이 오름차순이 아니다 (index {i})";
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
+}

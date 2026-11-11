@@ -4,8 +4,8 @@
 
 ## 1. 실행
 
-저장소 루트에서 `dotnet run --project src/Mt.App/Mt.App.csproj`. 빈 문서가 뜬다.
-설정은 `%APPDATA%\ked-motion-tool\settings.json`(리눅스는 `~/.config/ked-motion-tool/`)에, 자동 저장은 문서 옆 `<이름>.autosave.transition-authoring.json`에 남는다.
+저장소 루트에서 `dotnet run --project src/ScreenTransition.App/ScreenTransition.App.csproj`. 빈 문서가 뜬다.
+설정은 `%APPDATA%\ked-screen-transition\settings.json`(리눅스는 `~/.config/ked-screen-transition/`)에, 자동 저장은 문서 옆 `<이름>.autosave.transition-authoring.json`에 남는다.
 
 ## 2. 화면
 
