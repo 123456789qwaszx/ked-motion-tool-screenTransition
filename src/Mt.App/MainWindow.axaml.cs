@@ -1378,7 +1378,7 @@ public partial class MainWindow : Window
         panel.Children.Add(Labeled("이름", _motionName));
         panel.Children.Add(Labeled("길이(초)", _motionDuration));
         panel.Children.Add(Labeled("종료 처리", _motionEnd));
-        ToolTip.SetTip(_motionEnd, "모션이 끝난 뒤 — 복원(restore) = 시작 자세로 돌아간다 · 유지(commit) = 마지막 키 값이 남는다. 산출물(motions/2)의 end");
+        ToolTip.SetTip(_motionEnd, "모션이 끝난 뒤 — 복원(restore) = 시작 자세로 돌아간다 · 유지(commit) = 마지막 키 값이 남는다");
         panel.Children.Add(Labeled("재생 기준", _motionDefaultMode));
         ToolTip.SetTip(_motionDefaultMode, "키 값을 어떻게 읽나 — 상대값(relative) = 시작값 + 키(배율은 ×) · 절대값(absolute) = 키 그대로. 뷰포트 미리보기와 매니퓰레이터·채널 박스가 포즈를 키 값으로 바꿀 때 쓴다. 파일에는 안 나간다: 재생은 대본의 <<motion slot 이름 relative|absolute>>가 정한다(생략 = relative)");
 

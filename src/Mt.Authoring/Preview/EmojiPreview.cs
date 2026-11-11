@@ -12,7 +12,7 @@ public readonly record struct EmojiPhases(float Enter, float Hold, float Exit, b
     public float Total => Enter + Hold + Exit;
 }
 
-/// <summary>수명의 구간 — 그 구간의 모션을 이모지 안에서 고친다(<c>PLAN-parts.md</c> §15).</summary>
+/// <summary>수명의 구간 — 그 구간의 모션을 이모지 안에서 고친다.</summary>
 public enum EmojiPhase
 {
     Enter,
@@ -23,7 +23,7 @@ public enum EmojiPhase
 /// <summary>
 /// 이모지 정의의 미리보기 — 수명 한 번의 시각 t 포즈. 새 수학은 없다: 등장·머묾·퇴장 모션을 차례로 <see cref="MotionPreview"/>에 얹는다.
 ///
-/// 뜻(런타임에 요청하는 규약, <c>PLAN-parts.md</c> §8):
+/// 뜻(런타임에 요청하는 규약):
 /// 등장은 한 번(끝 규칙 그대로 — commit이면 그 자세가 남는다). 머묾은 등장이 끝난 자세에서 시작해 **처음부터 되풀이**하고(바퀴가 쌓이지 않는다),
 /// 머무는 시간이 다하면 그 순간의 자세에서 퇴장이 시작한다. 퇴장이 끝나면 사라진다.
 /// </summary>
@@ -111,7 +111,7 @@ public static class EmojiPreview
         return tree;
     }
 
-    // ── 이모지 안에서 구간의 모션을 고친다 (PLAN-parts.md §15) ─────────
+    // ── 이모지 안에서 구간의 모션을 고친다 ─────────
 
     /// <summary>그 구간의 모션 이름. 없으면 null.</summary>
     public static string? MotionNameOf(EmojiAsset emoji, EmojiPhase phase)

@@ -3,7 +3,7 @@ using Mt.Authoring.Model;
 
 namespace Mt.Authoring.Editing;
 
-// 툴에서 정의하는 리그의 명령(PLAN-parts.md §9) — 각각 되돌리기 한 칸.
+// 툴에서 정의하는 리그의 명령 — 각각 되돌리기 한 칸.
 public sealed partial class MotionEditor
 {
     /// <summary>새 그림 오브젝트의 처음 크기(px) — 그림을 주면 그림의 크기로 바뀐다.</summary>
@@ -39,7 +39,7 @@ public sealed partial class MotionEditor
         Mutate(MotionChangeKind.Document, () => Document.Rigs.Remove(rig));
     }
 
-    // ── 리그 편집기(PLAN-parts.md §12) — 노드를 하나씩 짓고 옮긴다 ────────
+    // ── 리그 편집기 — 노드를 하나씩 짓고 옮긴다 ────────
 
     /// <summary>
     /// 노드를 더한다 — <paramref name="parent"/>(비면 루트) 밑의 맨 뒤(그 부모의 식구들 뒤 = 가장 위에 그려진다). id는 그 리그에서 하나뿐이어야 한다.

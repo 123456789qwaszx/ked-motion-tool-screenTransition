@@ -268,7 +268,7 @@ public sealed class ViewportView : Control
     private string? SkinOf(string kind, string? chosen)
         => _editor?.Document.FindSkin(chosen) is { } skin && skin.Rig == kind ? skin.Name : _editor?.Document.Skins.FirstOrDefault(s => s.Rig == kind)?.Name;
 
-    // ── 세트 보기 (PLAN-set.md S1) ────────────────────────────────────
+    // ── 세트 보기 ────────────────────────────────────
 
     /// <summary>무대에 선 세트의 오브젝트 id.</summary>
     public const string SetObjectId = "set";
@@ -319,7 +319,7 @@ public sealed class ViewportView : Control
         }
     }
 
-    // 세트 안에서 오브젝트를 하나씩 따로 본다(PLAN-set.md S3) — 보기 상태다: 문서·되돌리기·산출물에 없고 세트를 닫으면 풀린다.
+    // 세트 안에서 오브젝트를 하나씩 따로 본다 — 보기 상태다: 문서·되돌리기·산출물에 없고 세트를 닫으면 풀린다.
     private readonly HashSet<string> _hiddenSetNodes = new(StringComparer.Ordinal);
     private string? _soloSetNode;
 
@@ -404,7 +404,7 @@ public sealed class ViewportView : Control
     private EmojiPhase? _emojiPhase;
 
     /// <summary>
-    /// 이모지 정의를 보는 중에 고칠 구간(등장·머묾·퇴장) — 끌기·채널 박스·S가 **그 구간의 모션**에 키를 놓는다(<c>PLAN-parts.md</c> §15).
+    /// 이모지 정의를 보는 중에 고칠 구간(등장·머묾·퇴장) — 끌기·채널 박스·S가 **그 구간의 모션**에 키를 놓는다.
     /// 시각은 수명의 시각 − 구간의 시작(머묾은 지금 바퀴의 처음), 시작값은 그 구간이 얹히기 전의 자세다. null이면 포즈를 잡지 않고 조각을 끌어 놓는다(§14).
     /// </summary>
     public EmojiPhase? EmojiPhaseContext
@@ -1065,7 +1065,7 @@ public sealed class ViewportView : Control
 
     public MotionAsset? Motion => _editor is not null && _motionName is not null ? _editor.Document.Find(_motionName) : null;
 
-    // ── 이모지 정의의 미리보기(PLAN-parts.md §8) ─────────────────────────
+    // ── 이모지 정의의 미리보기 ─────────────────────────
 
     private string? _emojiName;
 
@@ -1485,7 +1485,7 @@ public sealed class ViewportView : Control
         }
     }
 
-    // ── 불투명도(알파 채널, PLAN-parts.md P4) ───────────────────────────
+    // ── 불투명도(알파 채널) ───────────────────────────
 
     /// <summary>그리는 중인 프레임의 불투명도 표 — Render가 포즈와 함께 채운다.</summary>
     private readonly Dictionary<string, float> _drawAlphas = new(StringComparer.Ordinal);
@@ -2375,7 +2375,7 @@ public sealed class ViewportView : Control
         }
     }
 
-    // ── 배치 모드 (PLAN-set.md S2) — 세트의 오브젝트를 끌어 가만히 선 자세(자리 · 배율 · 회전)를 잡는다 ──
+    // ── 배치 모드 — 세트의 오브젝트를 끌어 가만히 선 자세(자리 · 배율 · 회전)를 잡는다 ──
 
     private sealed record LayoutDrag(string Node, PlaceMode Mode, Vec2 StartRoot, Vec2 CenterRoot, RigNodeAsset Start)
     {
@@ -2601,7 +2601,7 @@ public sealed class ViewportView : Control
         InvalidateVisual();
     }
 
-    // ── 조각 놓기 (PLAN-parts.md §14) — 이모지 정의를 보며 조각을 끌어 스킨의 놓임을 잡는다 ──
+    // ── 조각 놓기 — 이모지 정의를 보며 조각을 끌어 스킨의 놓임을 잡는다 ──
 
     private enum PlaceMode { Move, Scale, Rotate }
 

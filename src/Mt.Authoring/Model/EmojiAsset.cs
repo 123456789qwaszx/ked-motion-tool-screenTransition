@@ -5,7 +5,7 @@ namespace Mt.Authoring.Model;
 /// 런타임은 이 정의를 불러 한 번의 수명을 돌린다: 등장 모션 → 머무는 동안 머묾 모션을 되풀이 → 퇴장 모션 → 사라짐.
 /// 머무는 시간이 없으면(null) 끄라고 할 때까지 머문다.
 ///
-/// 모션과 스킨은 **참조**한다. 산출물은 <c>emojis.json</c>(초안)으로 따로 나간다.
+/// 모션과 스킨은 **참조**한다.
 /// </summary>
 public sealed class EmojiAsset
 {

@@ -2,7 +2,7 @@ using Mt.Authoring.Model;
 
 namespace Mt.Authoring.Editing;
 
-// 이모지 정의 명령(PLAN-parts.md §8) — 각각 되돌리기 한 칸. 참조(스킨·모션)의 옳고 그름은 검증이 알린다.
+// 이모지 정의 명령 — 각각 되돌리기 한 칸. 참조(스킨·모션)의 옳고 그름은 검증이 알린다.
 public sealed partial class MotionEditor
 {
     public EmojiAsset AddEmoji(string name, string rig)

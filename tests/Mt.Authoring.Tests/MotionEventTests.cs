@@ -8,7 +8,7 @@ using Mt.Authoring.Validation;
 
 namespace Mt.Authoring.Tests;
 
-/// <summary>이벤트 키(<c>PLAN-parts.md</c> §2.5, <c>motions/3</c>) — "이 프레임에 이모지·소리".</summary>
+/// <summary>이벤트 키 — "이 프레임에 이모지·소리".</summary>
 public class MotionEventTests
 {
     private static readonly RigSchemaFile RigFile = RigTemplates.File();

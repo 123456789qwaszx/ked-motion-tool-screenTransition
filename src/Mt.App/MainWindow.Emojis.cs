@@ -13,7 +13,7 @@ using Mt.Authoring.Validation;
 
 namespace Mt.App;
 
-// 이모지 정의의 셸(PLAN-parts.md §8) — 오른쪽 "이모지" 탭. 목록에서 고르면 그 이모지가 시간의 주인이 된다:
+// 이모지 정의의 셸 — 오른쪽 "이모지" 탭. 목록에서 고르면 그 이모지가 시간의 주인이 된다:
 // 뷰포트·타임 슬라이더가 수명 한 번(등장 → 머묾 → 퇴장)을 재생하고, 모션 선택은 풀린다. 값은 아래 칸에서 고친다(각각 되돌리기 한 칸).
 public partial class MainWindow
 {
@@ -175,7 +175,7 @@ public partial class MainWindow
         }
     }
 
-    // ── 이모지 안에서 구간의 모션을 고친다 (PLAN-parts.md §15) ─────────
+    // ── 이모지 안에서 구간의 모션을 고친다 ─────────
 
     /// <summary>이모지를 보면서 그 안의 모션을 고치는 중인가 — 그래프의 모션은 "고른 모션"이 아니다(목록에서 골라 주면 문맥이 풀린다).</summary>
     private bool EditingInPlace => SelectedEmoji is not null;

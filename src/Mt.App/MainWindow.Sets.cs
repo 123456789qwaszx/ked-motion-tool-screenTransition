@@ -10,7 +10,7 @@ using Mt.Authoring.Model;
 
 namespace Mt.App;
 
-// 세트(PLAN-set.md S1) — 오브젝트들의 계층 + 그림 + 애니메이션들의 한 덩어리. 데이터는 툴이 정의한 리그(RigAsset)다.
+// 세트 — 오브젝트들의 계층 + 그림 + 애니메이션들의 한 덩어리. 데이터는 툴이 정의한 리그(RigAsset)다.
 // 왼쪽 목록에서 세트를 열면 뷰포트·하이어아키가 그 세트만 보이고, 하이어아키에서 오브젝트를 더하고 지우고 옮긴다.
 public partial class MainWindow
 {

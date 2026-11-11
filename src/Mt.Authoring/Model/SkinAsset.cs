@@ -1,9 +1,8 @@
 namespace Mt.Authoring.Model;
 
 /// <summary>
-/// 스킨 — 한 리그의 조각(그림 노드)마다 어떤 그림을 붙일지의 묶음에 이름을 붙인 것(<c>PLAN-parts.md</c> P1, Spine의 skin과 같은 자리).
+/// 스킨 — 한 리그의 조각(그림 노드)마다 어떤 그림을 붙일지의 묶음에 이름을 붙인 것.
 /// 세트 하나에 "땀"·"꽃"·"느낌표"가 각각 스킨이고, 연출·세트 보기가 스킨을 고른다. 그림이 없는 조각은 안 그린다.
-/// 미리보기 전용이라 <c>motions.json</c>에는 안 나간다.
 /// </summary>
 public sealed class SkinAsset
 {
@@ -17,7 +16,7 @@ public sealed class SkinAsset
     public SortedDictionary<string, string> Parts { get; set; } = new(StringComparer.Ordinal);
 
     /// <summary>
-    /// 조각마다의 덧붙임(<c>PLAN-parts.md</c> §13) — 그림 넘기기(뒤따르는 장들)와 놓임(자리·크기·회전). 기본값뿐인 조각은 없다.
+    /// 조각마다의 덧붙임 — 그림 넘기기(뒤따르는 장들)와 놓임(자리·크기·회전). 기본값뿐인 조각은 없다.
     /// 저작본에는 <see cref="SetupsOrNull"/>로 실린다(없으면 안 적는다).
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]

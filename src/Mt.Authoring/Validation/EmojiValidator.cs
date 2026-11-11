@@ -12,7 +12,7 @@ public sealed record EmojiProblem(string EmojiName, string Message, bool Blockin
 }
 
 /// <summary>
-/// 이모지 정의의 검증(<c>PLAN-parts.md</c> §8). 막는 것: 키·참조(스킨·모션)의 어긋남, 리그가 안 맞는 스킨·모션. 알리는 것: 그림 없음, 없는 자리 노드.
+/// 이모지 정의의 검증. 막는 것: 키·참조(스킨·모션)의 어긋남, 리그가 안 맞는 스킨·모션. 알리는 것: 그림 없음, 없는 자리 노드.
 /// </summary>
 public static class EmojiValidator
 {

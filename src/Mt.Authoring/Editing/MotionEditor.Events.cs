@@ -2,7 +2,7 @@ using Mt.Authoring.Model;
 
 namespace Mt.Authoring.Editing;
 
-// 이벤트 키 명령(PLAN-parts.md §2.5) — 각각 되돌리기 한 칸. 시각 오름차순은 편집기가 지킨다. 이름 규칙·길이 밖은 검증(코어 MotionRules)이 알린다.
+// 이벤트 키 명령 — 각각 되돌리기 한 칸. 시각 오름차순은 편집기가 지킨다. 이름 규칙·길이 밖은 검증(코어 MotionRules)이 알린다.
 public sealed partial class MotionEditor
 {
     /// <summary>이벤트 키를 놓고 번호를 돌려준다. 시각은 0 아래로 못 간다.</summary>

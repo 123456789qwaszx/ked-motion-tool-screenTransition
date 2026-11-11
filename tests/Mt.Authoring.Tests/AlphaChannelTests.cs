@@ -8,7 +8,7 @@ using Mt.Authoring.Validation;
 
 namespace Mt.Authoring.Tests;
 
-/// <summary>불투명도 채널(<c>PLAN-parts.md</c> P4, <c>motions/3</c>) — 알파를 키와 커브로.</summary>
+/// <summary>불투명도 채널 — 알파를 키와 커브로.</summary>
 public class AlphaChannelTests
 {
     private const string Part = "Emoji_Part1";

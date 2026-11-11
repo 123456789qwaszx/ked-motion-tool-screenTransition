@@ -5,8 +5,8 @@ namespace Mt.Authoring.Model;
 /// <summary>
 /// 저작본 ↔ 코어 클립. 수학·검증은 코어 것이므로 여기서는 모양만 바꾼다.
 ///
-/// 키가 있는 성분은 전부 나간다 — 파일(motions/2)은 mode를 모르므로 "전 구간 중립값인 성분은 무변"이라는 판단을
-/// 낼 때 할 수 없다(absolute로 쓰면 그 값으로 가는 뜻이 있다). Unity 내보내기도 같은 규칙이다.
+/// 키가 있는 성분은 전부 옮긴다 — 클립은 mode를 모르므로 "전 구간 중립값인 성분은 무변"이라고 판단할 수 없다
+/// (absolute면 그 값으로 가는 뜻이 있다).
 /// </summary>
 public static class MotionAssetCodec
 {

@@ -6,9 +6,9 @@ namespace Mt.Authoring.Tests;
 public class MotionAssetCodecTests
 {
     [Fact]
-    public void 키가_있는_성분은_전부_나간다_전_구간_중립값인_상수도()
+    public void 키가_있는_성분은_전부_옮긴다_전_구간_중립값인_상수도()
     {
-        // motions/2는 mode를 모른다 — 상수 1이 "무변"(relative)인지 "1로"(absolute)인지 낼 때 정할 수 없으니 그대로 싣는다.
+        // 클립은 mode를 모른다 — 상수 1이 "무변"(relative)인지 "1로"(absolute)인지 정할 수 없으니 그대로 싣는다.
         var scale = new ChannelAsset
         {
             Node = "N", Kind = MotionChannelKind.Scale,

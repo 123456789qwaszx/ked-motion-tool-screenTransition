@@ -8,7 +8,7 @@ using Mt.Authoring.Rig;
 
 namespace Mt.App;
 
-// 스킨의 셸(PLAN-parts.md P1) — 세트 탭 아래, 조각 노드가 있는 세트를 보일 때만 선다.
+// 스킨의 셸 — 세트 탭 아래, 조각 노드가 있는 세트를 보일 때만 선다.
 // 스킨 = 조각마다 붙일 그림의 묶음에 이름을 붙인 것. 오브젝트는 스킨을 고르고, 스킨의 조각 줄에서 그림을 정한다.
 public partial class MainWindow
 {

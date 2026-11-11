@@ -12,7 +12,7 @@ public enum StageSide
     Bottom,
 }
 
-// 화면 밖에서 들어오고 나간다(PLAN-set.md — 세 장면을 지으며 드러난 불편). "얼마나 옮겨야 화면 밖인가"(−760 같은 수)를 손으로 적지 않게 한다.
+// 화면 밖에서 들어오고 나간다. "얼마나 옮겨야 화면 밖인가"(−760 같은 수)를 손으로 적지 않게 한다.
 public sealed partial class MotionEditor
 {
     /// <summary>

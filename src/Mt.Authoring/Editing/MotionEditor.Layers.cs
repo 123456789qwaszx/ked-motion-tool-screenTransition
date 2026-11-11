@@ -4,7 +4,7 @@ using Mt.Authoring.Rig;
 
 namespace Mt.Authoring.Editing;
 
-// 층 표를 세트로 들인다(PLAN-set.md S6) — 그림 한 묶음이 오브젝트 여럿 + 스킨으로, 한 칸에.
+// 층 표를 세트로 들인다 — 그림 한 묶음이 오브젝트 여럿 + 스킨으로, 한 칸에.
 public sealed partial class MotionEditor
 {
     /// <summary>바탕색 오브젝트의 이름 — 층 표에 바탕색이 있으면 맨 뒤에 무대 크기의 색 사각형으로 선다.</summary>

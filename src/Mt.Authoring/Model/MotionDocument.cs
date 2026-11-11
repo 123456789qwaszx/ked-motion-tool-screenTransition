@@ -17,7 +17,7 @@ public sealed class MotionDocument
     public List<MotionAsset> Motions { get; set; } = new();
 
     /// <summary>
-    /// 스킨들(<c>PLAN-parts.md</c> P1) — 리그의 조각마다 붙일 그림의 묶음. 미리보기 전용.
+    /// 스킨들 — 리그의 조각마다 붙일 그림의 묶음. 미리보기 전용.
     /// 저작본에는 <see cref="SkinsOrNull"/>로 실린다: 스킨이 없는 문서는 전과 같은 글자다.
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
@@ -35,7 +35,7 @@ public sealed class MotionDocument
         => name is null ? null : Skins.FirstOrDefault(s => string.Equals(s.Name, name, StringComparison.Ordinal));
 
     /// <summary>
-    /// 이모지 정의들(<c>PLAN-parts.md</c> §8) — 붙는 리그 + 스킨 + 등장·머묾·퇴장 모션의 묶음. <c>emojis.json</c>(초안)으로 따로 나간다.
+    /// 이모지 정의들 — 세트 + 스킨 + 등장·머묾·퇴장 모션의 묶음.
     /// 저작본에는 <see cref="EmojisOrNull"/>로 실린다(없으면 안 적는다).
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
@@ -87,7 +87,6 @@ public sealed class MotionAsset
 
     /// <summary>
     /// 뷰포트가 키 값을 어떻게 보여 줄지 — relative(시작값 + 키, 배율은 ×) 또는 absolute(키 그대로).
-    /// 산출물에는 **안 나간다**: motions/2에서 mode는 재생하는 커맨드(<c>motion slot 이름 relative|absolute</c>)가 정한다.
     /// 매니퓰레이터·채널 박스가 포즈를 키 값으로 바꿀 때도 이 렌즈를 쓴다(PoseEdit.KeyValueFor).
     /// </summary>
     public MotionChannelMode PreviewMode { get; set; } = MotionChannelMode.Relative;
@@ -99,7 +98,7 @@ public sealed class MotionAsset
     public List<ChannelAsset> Channels { get; set; } = new();
 
     /// <summary>
-    /// 이벤트 키(<c>PLAN-parts.md</c> §2.5, <c>motions/3</c>) — 재생이 그 시각을 지나는 순간 런타임이 이름과 값으로 알린다("이 프레임에 이모지·소리").
+    /// 이벤트 키 — 재생이 그 시각을 지나는 순간 런타임이 이름과 값으로 알린다("이 프레임에 이모지·소리").
     /// 시각 오름차순을 편집기가 지킨다. 저작본에는 <see cref="EventsOrNull"/>로 실린다(없으면 안 적는다).
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]

@@ -6,7 +6,7 @@ using Mt.Authoring.Rig;
 namespace Mt.Authoring.Tests;
 
 /// <summary>
-/// 예시 문서 <c>examples/transitions/station/station.motion-authoring.json</c> — 화면 이동 연출 하나를 세트로 지은 것(<c>PLAN-set.md</c> S6).
+/// 예시 문서 <c>examples/transitions/station/station.motion-authoring.json</c> — 화면 이동 연출 하나를 세트로 지은 것.
 /// 층 표(<c>art/layers.tsv</c>)를 세트로 들이고, 등장·머묾·퇴장 애니메이션을 놓고, 화면에 서는 연출로 묶는다. 편집기의 명령으로만 짓는다.
 /// </summary>
 internal static class TransitionExamples

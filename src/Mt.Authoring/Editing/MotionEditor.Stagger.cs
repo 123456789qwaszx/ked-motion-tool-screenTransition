@@ -4,7 +4,7 @@ using Mt.Authoring.Model;
 
 namespace Mt.Authoring.Editing;
 
-// 시차(PLAN-set.md S6의 남은 불편 1) — 오브젝트의 움직임을 통째로 늦추거나 당긴다. 층 여럿이 차례로 들어오게 할 때 키를 하나씩 옮기지 않는다.
+// 시차 — 오브젝트의 움직임을 통째로 늦추거나 당긴다. 층 여럿이 차례로 들어오게 할 때 키를 하나씩 옮기지 않는다.
 public sealed partial class MotionEditor
 {
     /// <summary>

@@ -106,7 +106,7 @@ public sealed class DocumentSession
 
     /// <summary>스킨의 조각 그림을 파일로 정한다 — 경로는 문서 기준 상대로 적힌다. null이면 그 조각을 비운다.</summary>
     /// <summary>
-    /// 층 표(<c>layers.tsv</c>)를 세트로 들인다 — 표 옆의 그림들이 오브젝트 여럿 + 스킨으로, 한 칸에(<c>PLAN-set.md</c> S6). 그림 경로는 문서 기준으로 적힌다.
+    /// 층 표(<c>layers.tsv</c>)를 세트로 들인다 — 표 옆의 그림들이 오브젝트 여럿 + 스킨으로, 한 칸에. 그림 경로는 문서 기준으로 적힌다.
     /// </summary>
     public IReadOnlyList<string> ImportLayers(string kind, string sheetPath, string skin)
     {

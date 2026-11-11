@@ -9,7 +9,7 @@ using Mt.Authoring.Validation;
 
 namespace Mt.Authoring.Tests;
 
-/// <summary>이모지 정의(<c>PLAN-parts.md</c> §8) — 스킨 + 등장·머묾·퇴장 모션의 묶음과 그 수명.</summary>
+/// <summary>이모지 정의 — 스킨 + 등장·머묾·퇴장 모션의 묶음과 그 수명.</summary>
 public class EmojiTests
 {
     private const string Body = "Emoji_Body";
@@ -154,7 +154,7 @@ public class EmojiTests
         Assert.DoesNotContain("emojis", MotionDocumentJson.Write(editor.Document), StringComparison.Ordinal);
     }
 
-    // ── 이모지 안에서 구간의 모션을 고친다(PLAN-parts.md §15) ───────────
+    // ── 이모지 안에서 구간의 모션을 고친다 ───────────
 
     [Fact]
     public void 구간의_창은_그_모션의_0초가_수명의_몇_초인지_내고_머묾은_지금_바퀴의_처음이다()

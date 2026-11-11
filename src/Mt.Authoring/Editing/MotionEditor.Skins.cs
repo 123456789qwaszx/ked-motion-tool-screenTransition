@@ -2,7 +2,7 @@ using Mt.Authoring.Model;
 
 namespace Mt.Authoring.Editing;
 
-// 스킨 명령(PLAN-parts.md P1) — 각각 되돌리기 한 칸. 조각 노드가 그 리그에 있는지는 검증·화면의 일이다.
+// 스킨 명령 — 각각 되돌리기 한 칸. 조각 노드가 그 리그에 있는지는 검증·화면의 일이다.
 public sealed partial class MotionEditor
 {
     public SkinAsset AddSkin(string name, string rig)

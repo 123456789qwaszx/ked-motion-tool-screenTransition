@@ -7,9 +7,9 @@ namespace Mt.Authoring.Tests;
 internal static class Fixtures
 {
     /// <summary>
-    /// 재생 저장소에서 Unity Animation 창으로 만들어 내보낸 그 두 모션을 편집기 명령으로 똑같이 짓는다.
+    /// 발판 세트 <c>character</c>(<see cref="RigTemplates.Character"/>) 위의 두 모션.
     /// nod: Track_Move_Y 위치, y 0 → -18 → 0 (restore 0.6s). bow: SwayPivot 회전, z 0 → 8 (commit 0.4s, 미리보기는 absolute).
-    /// bow의 x·y는 Unity가 세 성분을 묶어 기록해 상수 0으로 딸려 나온 것이고 파일에 그대로 남는다(motions/2는 mode를 몰라 빼지 않는다).
+    /// bow의 x·y는 상수 0이다 — 세 성분이 묶여 있어도 그대로 남는지 본다.
     /// </summary>
     public static MotionDocument NodBowDocument()
     {

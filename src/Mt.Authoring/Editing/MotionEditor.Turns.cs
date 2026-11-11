@@ -3,7 +3,7 @@ using Mt.Authoring.Model;
 
 namespace Mt.Authoring.Editing;
 
-// 제 차례 전에는 숨긴다(PLAN-set.md — pillar를 지으며 드러난 불편). 가만히 선 자세는 "다 보이는" 것이라,
+// 제 차례 전에는 숨긴다. 가만히 선 자세는 "다 보이는" 것이라,
 // 늦게 나오는 층은 제 차례 전까지 불투명도로 숨겨 둬야 한다 — 그 키를 손으로 놓지 않게 한다.
 public sealed partial class MotionEditor
 {

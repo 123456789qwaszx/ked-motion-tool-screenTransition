@@ -16,7 +16,7 @@
 ## 선반영 — 런타임 반영 대기 (2026-11-10, 소유자 지시: "런타임은 완성이 되었다고 가정하고 진행")
 
 툴이 규약을 먼저 만들어 가는 중이라, 아래는 **정본보다 이 사본이 앞서 있다**. "사본을 고치지 않는다"의 예외이고, 다음 동기화의 감사(ⓒ 이쪽에만 있는 멤버)에
-걸리는 것이 정상이다 — 저쪽이 같은 모양으로 들어오면 사라지고, 다르게 들어오면 소비자(`Mt.Authoring`)를 저쪽에 맞춘다. 명세는 `docs/PLAN-parts.md` §2.1.
+걸리는 것이 정상이다 — 저쪽이 같은 모양으로 들어오면 사라지고, 다르게 들어오면 소비자(`Mt.Authoring`)를 저쪽에 맞춘다.
 
 | 파일 | 선반영한 것 |
 |---|---|
@@ -24,10 +24,10 @@
 | `Motion/MotionMath.cs` | `Neutral`(Alpha = 1) · relative는 곱 · `ClaimFor` → `StageNodeClaim.CanvasAlpha` · `StartOf(channel, state, alpha)` 오버로드 |
 | `Motion/MotionRules.cs` | Alpha는 X만 · 키 값 0~1 |
 | `Reduce/StageReducer.Staging.cs` | `ApplyMotion`이 시작값에 `state.GetAlpha`를 넘긴다 |
-| `Motion/MotionClip.cs` | `MotionEvent`(Time·Name·Value) · `MotionClip.Events` — 이벤트 키(명세 `docs/PLAN-parts.md` §2.5) |
+| `Motion/MotionClip.cs` | `MotionEvent`(Time·Name·Value) · `MotionClip.Events` — 이벤트 키 |
 | `Motion/MotionRules.cs` | 이벤트: 이름 규칙 · 시각 0~길이 · 오름차순 |
-| `Tuning/RigSchemaDto.cs` | `RigSchemaNodeDto.fillColor` — 단색 사각형 노드의 색(명세 `docs/PLAN-set.md` S4). 툴이 정의한 세트의 색 오브젝트 |
-| `Tuning/RigSchemaDto.cs` | `RigSchemaNodeDto.hasImage` — 그림 노드 표시(명세 `docs/PLAN-parts.md` §2.2). 툴이 정의한 리그(§9)가 이 필드로 조각을 가린다 |
+| `Tuning/RigSchemaDto.cs` | `RigSchemaNodeDto.fillColor` — 단색 사각형 노드의 색. 툴이 정의한 세트의 색 오브젝트 |
+| `Tuning/RigSchemaDto.cs` | `RigSchemaNodeDto.hasImage` — 그림 노드 표시. 툴이 정의한 세트가 이 필드로 조각을 가린다 |
 
 ## 동기화 절차
 

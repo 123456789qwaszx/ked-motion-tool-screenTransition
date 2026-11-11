@@ -10,7 +10,7 @@ using Mt.Authoring.Preview;
 
 namespace Mt.App.Tests;
 
-/// <summary>스킨과 조각의 화면(<c>PLAN-parts.md</c> P1) — 조각마다 그림을 주면 그 조각만 그려진다.</summary>
+/// <summary>스킨과 조각의 화면 — 조각마다 그림을 주면 그 조각만 그려진다.</summary>
 public class SkinShellTests
 {
     private static MainWindow NewWindow()

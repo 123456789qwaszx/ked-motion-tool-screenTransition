@@ -19,7 +19,7 @@ public class RigAssetTests
         return editor;
     }
 
-    // ── 리그 편집기(PLAN-parts.md §12) ─────────────────────────────────
+    // ── 리그 편집기 ─────────────────────────────────
 
     private static string[] Ids(MotionEditor editor, string kind = RigTemplates.EmojiKind) => editor.Document.FindRig(kind)!.Nodes.Select(n => n.Id).ToArray();
 

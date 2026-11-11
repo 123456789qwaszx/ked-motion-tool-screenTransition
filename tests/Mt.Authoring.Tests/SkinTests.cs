@@ -7,7 +7,7 @@ using Mt.Authoring.Serialization;
 
 namespace Mt.Authoring.Tests;
 
-/// <summary>스킨과 조각(<c>PLAN-parts.md</c> P1) — 리그의 조각마다 붙일 그림의 묶음.</summary>
+/// <summary>스킨과 조각 — 리그의 조각마다 붙일 그림의 묶음.</summary>
 public class SkinTests
 {
     private static readonly RigSchemaFile RigFile = RigTemplates.File();
@@ -33,7 +33,7 @@ public class SkinTests
         Assert.Contains("Emoji_Part1", RigFile.NodeIds[RigTemplates.EmojiKind]);
     }
 
-    // ── 조각의 덧붙임(PLAN-parts.md §13) — 그림 넘기기 · 놓임 ───────────
+    // ── 조각의 덧붙임 — 그림 넘기기 · 놓임 ───────────
 
     [Fact]
     public void 조각에_장을_여럿_주면_장당_시간마다_넘어가고_되풀이하거나_마지막에서_멈춘다()

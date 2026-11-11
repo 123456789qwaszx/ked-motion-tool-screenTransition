@@ -36,7 +36,7 @@ public sealed class RigNodeAsset
 
     public float Height { get; set; }
 
-    /// <summary>가만히 선 자세의 회전(도, 반시계 +)과 배율 — 배치 모드에서 잡는다(<c>PLAN-set.md</c> S2). 애니메이션은 이 위에 얹힌다.</summary>
+    /// <summary>가만히 선 자세의 회전(도, 반시계 +)과 배율 — 배치 모드에서 잡는다. 애니메이션은 이 위에 얹힌다.</summary>
     public float Rotation { get; set; }
 
     public float ScaleX { get; set; } = 1f;
@@ -44,7 +44,7 @@ public sealed class RigNodeAsset
     public float ScaleY { get; set; } = 1f;
 
     /// <summary>
-    /// 색 — 있으면 **단색 사각형**이다: 그림 없이 이 노드의 사각형을 이 색으로 채운다(<c>PLAN-set.md</c> S4 — 화면 전환·소개의 패널).
+    /// 색 — 있으면 **단색 사각형**이다: 그림 없이 이 노드의 사각형을 이 색으로 채운다.
     /// "#RRGGBB" 또는 "#RRGGBBAA". null이면 색 오브젝트가 아니다. 그림과 함께 켜면 그림 뒤에 색이 깔린다.
     /// </summary>
     public string? Color { get; set; }
