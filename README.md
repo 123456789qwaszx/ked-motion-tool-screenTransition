@@ -17,7 +17,6 @@
 - **표지** — 이름 붙은 시각(이벤트 키). 예시는 `covered`(다 덮였다) · `release`(걷기 시작)를 둔다.
 - **되돌리기** — 조작 하나 = 한 칸. 문제 칸(검증과 돕는 손). 설정 · 자동 저장.
 - **예시 다섯** — `examples/transitions/`(station · pillar · lapis · heredity · mercury).
-- **방향 코드** — 화면 비율 맞춤(`ScreenLayout`) · 덮임 검사(`CoverCheck`). 아직 화면에 안 붙었다(T3′ · T4).
 
 ## 구조
 
