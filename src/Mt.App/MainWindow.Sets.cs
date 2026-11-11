@@ -90,7 +90,7 @@ public partial class MainWindow
 
     private string? _rigNodeSelected;
 
-    /// <summary>연 세트(rigKind). 없으면 null — 뷰포트는 고른 연출·애니메이션의 세트를 보인다.</summary>
+    /// <summary>연 세트(rigKind). 없으면 null — 뷰포트는 고른 애니메이션의 세트를 보인다.</summary>
     internal string? SelectedSet => _setList.SelectedItem as string;
 
     /// <summary>테스트 손잡이 — 세트 목록에서 고른 것과 같다.</summary>
@@ -172,7 +172,7 @@ public partial class MainWindow
         // 세트가 맨 위다 — 무엇을 열어 작업하는지가 먼저다(그 아래의 하이어아키·모션이 그 세트의 것이 된다).
         LeftPanel.Children.Insert(0, Header("세트"));
         _setList.SelectionChanged += (_, _) => OnSetSelected();
-        ToolTip.SetTip(_setList, "세트 — 오브젝트들의 계층 + 그림 + 애니메이션들의 한 덩어리(화면 이동 하나, 이모지 무리 하나…). 고르면 뷰포트와 하이어아키가 그 세트만 보인다. 다시 눌러 풀면 씬으로 돌아간다");
+        ToolTip.SetTip(_setList, "세트 — 오브젝트들의 계층 + 그림 + 애니메이션들의 한 덩어리(화면 전환 하나). 고르면 뷰포트와 하이어아키가 그 세트만 보인다");
         LeftPanel.Children.Insert(1, _setList);
 
         Button add = SmallButton("새 세트", (_, _) => Guard("새 세트", () => NewSet()));
@@ -209,11 +209,11 @@ public partial class MainWindow
         ToolTip.SetTip(importLayers, "그림 한 묶음을 한 번에 — 층 표(layers.tsv: 파일 ⇥ 왼쪽 ⇥ 위 ⇥ 너비 ⇥ 높이, 뒤에서 앞으로)를 읽어 층마다 그림 오브젝트를 그 자리에 세우고 스킨에 그림을 준다. 표의 설명 줄에 #RRGGBB가 있으면 맨 뒤에 그 색의 바탕이 선다. 되돌리기 한 번");
         ToolTip.SetTip(import, "PNG를 연 세트의 그림 오브젝트로 — 이름은 파일 이름에서, 크기는 그림의 크기, 지금 입혀 보는 스킨에 그림이 들어간다(스킨이 없으면 만든다). 되돌리기 한 번. 뷰포트에 파일을 끌어다 놓아도 된다");
         ToolTip.SetTip(add, "빈 세트(오브젝트 Body 하나)를 만들어 연다 — 이름 set, set_2…. 하이어아키에서 우클릭해 오브젝트를 더한다");
-        ToolTip.SetTip(remove, "연 세트를 지운다. 그 세트의 애니메이션·스킨·연출은 남고 문제 목록이 알린다(되돌리기 한 번)");
+        ToolTip.SetTip(remove, "연 세트를 지운다. 그 세트의 애니메이션·스킨은 남고 문제 목록이 알린다(되돌리기 한 번)");
         ToolTip.SetTip(close, "세트를 닫는다");
         LeftPanel.Children.Insert(2, new WrapPanel { Orientation = Orientation.Horizontal, Children = { add, remove, close, import, importLayers } });
         LeftPanel.Children.Insert(3, Labeled("세트 이름", _setName));
-        ToolTip.SetTip(_setName, "연 세트의 이름 — 고치고 Enter. 그 세트의 애니메이션·스킨·연출이 따라온다(되돌리기 한 번). 영문자로 시작하는 영문·숫자·_");
+        ToolTip.SetTip(_setName, "연 세트의 이름 — 고치고 Enter. 그 세트의 애니메이션·스킨이 따라온다(되돌리기 한 번). 영문자로 시작하는 영문·숫자·_");
         OnCommit(_setName, text =>
         {
             if (!_refreshing && SelectedSet is { } kind && text.Trim() != kind)
@@ -255,7 +255,7 @@ public partial class MainWindow
         _rigNodeFields.Children.Add(_rigNodeImage);
         _rigNodeFields.Children.Add(_rigNodeAlpha);
         _setNodePanel.Children.Add(_rigNodeFields);
-        ToolTip.SetTip(_rigNodeId, "오브젝트 이름(영문자로 시작하는 영문·숫자·_) — 바꾸면 그 세트의 애니메이션 채널·스킨 칸·연출의 자리 노드가 따라온다");
+        ToolTip.SetTip(_rigNodeId, "오브젝트 이름(영문자로 시작하는 영문·숫자·_) — 바꾸면 그 세트의 애니메이션 채널·스킨 칸이 따라온다");
         ToolTip.SetTip(_rigNodeParent, "부모 — 밑의 오브젝트도 함께 옮겨진다");
         ToolTip.SetTip(_rigNodeX, "부모 가운데에서의 자리(px) — 가만히 선 자세. 애니메이션은 여기에 얹힌다");
         ToolTip.SetTip(_rigNodeW, "사각형의 크기(px) — 그림이면 그림이 이 안에 종횡비로 맞춰진다. 묶기만 하는 오브젝트는 0");
@@ -336,8 +336,7 @@ public partial class MainWindow
 
         if (SelectedSet is { } kind)
         {
-            // 세트를 열면 연출 보기를 떠난다. 그 세트의 것이 아닌 모션도 풀린다(이 세트가 연기할 수 없다).
-            DeselectEmoji();
+            // 그 세트의 것이 아닌 모션은 풀린다(이 세트가 연기할 수 없다).
 
             if (SelectedMotion is { } motion && _session.Editor.Document.Find(motion)?.Rig != kind)
             {
@@ -382,7 +381,7 @@ public partial class MainWindow
         }
     }
 
-    /// <summary>세트 보기를 떠난다 — 연출을 골랐거나 다른 리그의 모션을 골랐을 때.</summary>
+    /// <summary>세트 보기를 떠난다 — 다른 리그의 모션을 골랐을 때.</summary>
     private void DeselectSet()
     {
         if (SelectedSet is null)

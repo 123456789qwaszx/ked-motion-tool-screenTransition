@@ -98,7 +98,7 @@ public class RigAssetTests
     }
 
     [Fact]
-    public void 노드의_이름을_바꾸면_채널과_스킨과_이모지와_붙는_노드가_따라온다()
+    public void 노드의_이름을_바꾸면_자식과_채널과_스킨이_따라온다()
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddRig(RigTemplates.Emoji(parts: 2));
@@ -107,7 +107,6 @@ public class RigAssetTests
         editor.AddMotion("pop", RigTemplates.EmojiKind, 0.2f);
         editor.AddChannel("pop", "Emoji_Part1", MotionChannelKind.Position);
         editor.AddChannel("pop", "Emoji_Body", MotionChannelKind.Position);
-        editor.AddEmoji("sweat", RigTemplates.EmojiKind);
 
         long revision = editor.Revision;
         editor.RenameRigNode(RigTemplates.EmojiKind, "Emoji_Part1", "Drop");
@@ -120,7 +119,6 @@ public class RigAssetTests
         Assert.Equal(new[] { "Drop", "Emoji_Body" }, editor.Document.Find("pop")!.Channels.Select(c => c.Node));
         Assert.Equal("art/sweat.png", editor.Document.FindSkin("땀")!.Parts["Drop"]);
         Assert.False(editor.Document.FindSkin("땀")!.Parts.ContainsKey("Emoji_Part1"));
-        Assert.Equal("Pin", editor.Document.FindEmoji("sweat")!.AnchorNode);
 
         // 이름이 겹치거나 규칙에 안 맞으면 막는다. 되돌리면 전부 함께 돌아온다.
         Assert.Throws<InvalidOperationException>(() => editor.RenameRigNode(RigTemplates.EmojiKind, "Drop", "Emoji_Body"));
@@ -128,7 +126,7 @@ public class RigAssetTests
         editor.Undo();
         editor.Undo();
         Assert.Equal("Emoji_Part1", editor.Document.Find("pop")!.Channels[0].Node);
-        Assert.Equal("Emoji_Anchor", editor.Document.FindEmoji("sweat")!.AnchorNode);
+        Assert.Equal("Emoji_Anchor", Ids(editor)[0]);
         Assert.True(editor.Document.FindSkin("땀")!.Parts.ContainsKey("Emoji_Part1"));
     }
 
@@ -245,15 +243,14 @@ public class RigAssetTests
         editor.AddChannel("star_in", "Sun", MotionChannelKind.Position);
         editor.SetKeys("star_in", "Sun", MotionChannelKind.Position, Axis.Y, new[] { Lin(0f, -100f), Lin(1f, 0f) });
         editor.AddMotion("rise", "star", 1f, MotionEnd.Commit);
-        editor.AddEmoji("cue", "star");
         editor.AddRig(new RigAsset { Kind = "town" });
 
-        // 한 칸 — 세트의 이름을 딴 이름들(애니메이션 star_x · 스킨 star)도 함께 바뀐다. 다른 이름(rise · cue)은 그대로 그 세트를 가리킨다.
+        // 한 칸 — 세트의 이름을 딴 이름들(애니메이션 star_x · 스킨 star)도 함께 바뀐다. 다른 이름(rise)은 그대로 그 세트를 가리킨다.
         long revision = editor.Revision;
         editor.RenameRig("star", "sol");
         Assert.Equal(revision + 1, editor.Revision);
         Assert.Null(editor.Document.FindRig("star"));
-        Assert.Equal(("sol", "sol", "sol", "sol"), (editor.Document.Find("sol_in")!.Rig, editor.Document.Find("rise")!.Rig, editor.Document.FindSkin("sol")!.Rig, editor.Document.FindEmoji("cue")!.Rig));
+        Assert.Equal(("sol", "sol", "sol"), (editor.Document.Find("sol_in")!.Rig, editor.Document.Find("rise")!.Rig, editor.Document.FindSkin("sol")!.Rig));
         Assert.Null(editor.Document.Find("star_in"));
 
         // 막는 것: 있는 이름 · 규칙에 안 맞는 이름. 같은 이름은 기록이 없다.

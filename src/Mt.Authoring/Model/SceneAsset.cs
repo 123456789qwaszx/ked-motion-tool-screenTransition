@@ -1,7 +1,7 @@
 namespace Mt.Authoring.Model;
 
 /// <summary>
-/// 뷰포트의 무대 — 문서에는 없다(보기 전용). 지금은 세트 하나가 서는 자리다: 연 세트 · 고른 연출의 세트 · 고른 애니메이션의 세트.
+/// 뷰포트의 무대 — 문서에는 없다(보기 전용). 지금은 세트 하나가 서는 자리다: 연 세트 · 고른 애니메이션의 세트.
 /// 노드 키는 코어 규약대로 <c>{id}/{nodeId}</c>다.
 /// </summary>
 public sealed class SceneAsset

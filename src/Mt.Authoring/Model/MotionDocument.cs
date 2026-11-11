@@ -35,23 +35,6 @@ public sealed class MotionDocument
         => name is null ? null : Skins.FirstOrDefault(s => string.Equals(s.Name, name, StringComparison.Ordinal));
 
     /// <summary>
-    /// 이모지 정의들 — 세트 + 스킨 + 등장·머묾·퇴장 모션의 묶음.
-    /// 저작본에는 <see cref="EmojisOrNull"/>로 실린다(없으면 안 적는다).
-    /// </summary>
-    [System.Text.Json.Serialization.JsonIgnore]
-    public List<EmojiAsset> Emojis { get; set; } = new();
-
-    [System.Text.Json.Serialization.JsonPropertyName("emojis")]
-    public List<EmojiAsset>? EmojisOrNull
-    {
-        get => Emojis.Count == 0 ? null : Emojis;
-        set => Emojis = value ?? new List<EmojiAsset>();
-    }
-
-    public EmojiAsset? FindEmoji(string? name)
-        => name is null ? null : Emojis.FirstOrDefault(e => string.Equals(e.Name, name, StringComparison.Ordinal));
-
-    /// <summary>
     /// 세트들 — 층(오브젝트)의 사각형 · 그림 · 색. 미리보기는 이것만으로 선다(<see cref="Rig.RigAssets.Compose"/>).
     /// 저작본에는 <see cref="RigsOrNull"/>로 실린다(없으면 안 적는다).
     /// </summary>
@@ -98,7 +81,7 @@ public sealed class MotionAsset
     public List<ChannelAsset> Channels { get; set; } = new();
 
     /// <summary>
-    /// 이벤트 키 — 재생이 그 시각을 지나는 순간 런타임이 이름과 값으로 알린다("이 프레임에 이모지·소리").
+    /// 이벤트 키 — 재생이 그 시각을 지나는 순간 런타임이 이름과 값으로 알린다(예: <c>covered</c> — 화면이 다 덮였다).
     /// 시각 오름차순을 편집기가 지킨다. 저작본에는 <see cref="EventsOrNull"/>로 실린다(없으면 안 적는다).
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]

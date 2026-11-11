@@ -6,8 +6,8 @@ using Mt.Authoring.Rig;
 namespace Mt.Authoring.Tests;
 
 /// <summary>
-/// 예시 문서 <c>examples/transitions/station/station.motion-authoring.json</c> — 화면 이동 연출 하나를 세트로 지은 것.
-/// 층 표(<c>art/layers.tsv</c>)를 세트로 들이고, 등장·머묾·퇴장 애니메이션을 놓고, 화면에 서는 연출로 묶는다. 편집기의 명령으로만 짓는다.
+/// 예시 문서 <c>examples/transitions/station/station.motion-authoring.json</c> — 화면 전환 하나를 세트와 타임라인 하나로 지은 것.
+/// 층 표(<c>art/layers.tsv</c>)를 세트로 들이고, 등장·머묾·퇴장을 따로 짓고 한 타임라인으로 잇는다(<see cref="Join"/>). 편집기의 명령으로만 짓는다.
 /// </summary>
 internal static class TransitionExamples
 {
@@ -168,8 +168,7 @@ internal static class TransitionExamples
         Curve(editor, Out, MotionEditor.BackdropNode, MotionChannelKind.Alpha, Axis.X, L(0f, 1f), L(0.5f, 1f), L(E, 0f));
 
         // ── 연출 — 화면에 선다. 1초 머물고 걷힌다.
-        editor.AddEmoji(Station, Station);
-        editor.UpdateEmoji(Station, new EmojiAsset { Skin = Station, Enter = In, Hold = Hold, Exit = Out, HoldSeconds = 1f });
+        Join(editor, Station, In, Hold, Out);
         return editor;
     }
 
@@ -269,8 +268,7 @@ internal static class TransitionExamples
         Curve(editor, Out, "clouds_near", MotionChannelKind.Alpha, Axis.X, Ramp(E, 0.3f, 0.7f, 1f, 0f));
         Curve(editor, Out, MotionEditor.BackdropNode, MotionChannelKind.Alpha, Axis.X, L(0f, 1f), L(0.55f, 1f), L(E, 0f));
 
-        editor.AddEmoji(Pillar, Pillar);
-        editor.UpdateEmoji(Pillar, new EmojiAsset { Skin = Pillar, Enter = In, Hold = Hold, Exit = Out, HoldSeconds = 1.5f });
+        Join(editor, Pillar, In, Hold, Out);
         return editor;
     }
 
@@ -305,10 +303,82 @@ internal static class TransitionExamples
     private static void Slide(MotionEditor editor, string motion, string node, Axis axis, float duration, float from, float to, float a, float b)
         => Curve(editor, motion, node, MotionChannelKind.Position, axis, Ramp(duration, from, to, a, b));
 
-    private static void Cue(MotionEditor editor, string kind, float holdSeconds)
+    /// <summary>
+    /// 등장 › 머묾(한 바퀴) › 퇴장을 그 세트의 타임라인 하나로 잇는다 — 셋 다 상대값이고, 머묾은 등장이 끝난 자세에서, 퇴장은 머묾이 끝난 자세에서 시작한다.
+    /// 키를 굽지 않는다: 구간마다 시작값을 얹는다(위치·회전은 더하고 배율·불투명도는 곱한다 — 탄젠트도 같이). 구간이 만나는 키는 양쪽 탄젠트를 그대로 지닌다.
+    /// 표지 — 등장의 <c>covered</c>(덮였다)는 그대로, 머묾의 끝에 <c>release</c>(걷기 시작)를 둔다.
+    /// </summary>
+    private static void Join(MotionEditor editor, string kind, string enter, string hold, string exit)
     {
-        editor.AddEmoji(kind, kind);
-        editor.UpdateEmoji(kind, new EmojiAsset { Skin = kind, Enter = kind + "_in", Hold = kind + "_hold", Exit = kind + "_out", HoldSeconds = holdSeconds });
+        MotionAsset[] parts = { editor.Document.Find(enter)!, editor.Document.Find(hold)!, editor.Document.Find(exit)! };
+        editor.AddMotion(kind, kind, parts.Sum(p => p.Duration), MotionEnd.Commit, MotionChannelMode.Relative);
+
+        foreach (MotionEventAsset e in parts[0].Events)
+        {
+            editor.AddMotionEvent(kind, e.T, e.Name, e.Value);
+        }
+
+        editor.AddMotionEvent(kind, parts[0].Duration + parts[1].Duration, "release");
+
+        foreach ((string node, MotionChannelKind channelKind) in parts.SelectMany(p => p.Channels).Select(c => (c.Node, c.Kind)).Distinct())
+        {
+            editor.AddChannel(kind, node, channelKind);
+            bool multiply = channelKind is MotionChannelKind.Scale or MotionChannelKind.Alpha;
+            float neutral = MotionMath.Neutral(channelKind);
+
+            foreach (Axis axis in new[] { Axis.X, Axis.Y, Axis.Z })
+            {
+                if (parts.All(p => p.FindChannel(node, channelKind)?.Get(axis) is null))
+                {
+                    continue;
+                }
+
+                var keys = new List<KeyAsset>();
+                float start = neutral;
+                float offset = 0f;
+
+                foreach (MotionAsset part in parts)
+                {
+                    IReadOnlyList<KeyAsset> source = (IReadOnlyList<KeyAsset>?)part.FindChannel(node, channelKind)?.Get(axis)?.Keys
+                        ?? new[] { F(0f, neutral), F(part.Duration, neutral) };
+                    float factor = multiply ? start : 1f;
+                    List<KeyAsset> placed = source.Select(k => new KeyAsset
+                    {
+                        T = k.T + offset,
+                        V = multiply ? start * k.V : start + k.V,
+                        InTangent = k.InTangent * factor,
+                        OutTangent = k.OutTangent * factor,
+                        Tangent = k.Tangent,
+                        Broken = k.Broken,
+                    }).ToList();
+
+                    if (keys.Count > 0)
+                    {
+                        KeyAsset last = keys[^1];
+                        KeyAsset first = placed[0];
+
+                        if (Math.Abs(last.T - first.T) > 1e-4f || Math.Abs(last.V - first.V) > 1e-3f)
+                        {
+                            throw new InvalidOperationException($"{kind}: {node} {channelKind} {axis}가 {first.T}초에서 끊긴다");
+                        }
+
+                        keys[^1] = new KeyAsset { T = last.T, V = last.V, InTangent = last.InTangent, OutTangent = first.OutTangent, Tangent = TangentMode.Free, Broken = true };
+                        placed.RemoveAt(0);
+                    }
+
+                    keys.AddRange(placed);
+                    start = keys[^1].V;
+                    offset += part.Duration;
+                }
+
+                editor.SetKeys(kind, node, channelKind, axis, keys);
+            }
+        }
+
+        foreach (MotionAsset part in parts)
+        {
+            editor.RemoveMotion(part.Name);
+        }
     }
 
     /// <summary>
@@ -373,7 +443,7 @@ internal static class TransitionExamples
         editor.StaggerNodes(Out, sinking, 0.07f);
         Fade(editor, Out, "light_band", E, 0.3f, 0.7f, 1f, 0f);
         Uncover(editor, Out, E);
-        Cue(editor, Lapis, 1.5f);
+        Join(editor, Lapis, In, Hold, Out);
         return editor;
     }
 
@@ -471,7 +541,7 @@ internal static class TransitionExamples
         Fade(editor, Out, "spiral", E, 0.2f, 0.6f, 1f, 0f);
         Fade(editor, Out, "moon", E, 0.3f, 0.7f, 1f, 0f);
         Uncover(editor, Out, E);
-        Cue(editor, Heredity, 1.5f);
+        Join(editor, Heredity, In, Hold, Out);
         return editor;
     }
 
@@ -539,7 +609,7 @@ internal static class TransitionExamples
         Fade(editor, Out, "atmosphere_inner", E, 0.3f, 0.65f, 1f, 0f);
         Fade(editor, Out, "atmosphere", E, 0.35f, 0.7f, 1f, 0f);
         Uncover(editor, Out, E);
-        Cue(editor, Mercury, 1.5f);
+        Join(editor, Mercury, In, Hold, Out);
         return editor;
     }
 }

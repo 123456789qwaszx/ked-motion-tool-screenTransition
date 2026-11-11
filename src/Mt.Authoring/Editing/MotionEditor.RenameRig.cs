@@ -6,7 +6,7 @@ namespace Mt.Authoring.Editing;
 public sealed partial class MotionEditor
 {
     /// <summary>
-    /// 세트의 이름을 바꾼다 — 그 이름을 가리키던 것이 같은 칸에서 따라온다: 그 세트의 애니메이션·스킨·연출.
+    /// 세트의 이름을 바꾼다 — 그 이름을 가리키던 것이 같은 칸에서 따라온다: 그 세트의 애니메이션·스킨.
     /// **세트의 이름을 딴 이름들도 따라온다**: 애니메이션 <c>옛이름_x</c> → <c>새이름_x</c>, 스킨 <c>옛이름</c> — 새 이름이 비어 있을 때만.
     /// </summary>
     public void RenameRig(string kind, string newKind)
@@ -55,11 +55,6 @@ public sealed partial class MotionEditor
             foreach (SkinAsset skin in Document.Skins.Where(s => s.Rig == kind))
             {
                 skin.Rig = name;
-            }
-
-            foreach (EmojiAsset emoji in Document.Emojis.Where(e => e.Rig == kind))
-            {
-                emoji.Rig = name;
             }
         });
     }

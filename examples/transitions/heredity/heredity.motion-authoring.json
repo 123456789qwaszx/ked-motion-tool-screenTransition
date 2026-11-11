@@ -2,9 +2,9 @@
   "schema": "motion-authoring/2",
   "motions": [
     {
-      "name": "heredity_in",
+      "name": "heredity",
       "rig": "heredity",
-      "duration": 1.5,
+      "duration": 5.5,
       "end": "commit",
       "previewMode": "relative",
       "channels": [
@@ -34,6 +34,30 @@
                 "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 5.05,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": -2.2222233,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 5.5,
+                "v": 0,
+                "inTangent": -2.2222233,
+                "outTangent": -2.2222233,
                 "tangent": "linear",
                 "broken": false
               }
@@ -72,6 +96,38 @@
               {
                 "t": 1.5,
                 "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.8,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.2,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.5,
+                "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "flat",
@@ -114,6 +170,22 @@
                 "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 5.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "flat",
                 "broken": false
               }
@@ -147,6 +219,22 @@
               },
               {
                 "t": 1.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 5.5,
                 "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
@@ -190,6 +278,38 @@
                 "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.7,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.1,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "flat",
                 "broken": false
               }
@@ -227,6 +347,30 @@
               },
               {
                 "t": 1.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3,
+                "v": 6,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 4.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 5.5,
                 "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
@@ -270,6 +414,38 @@
                 "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.72,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.12,
+                "v": -760,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.5,
+                "v": -760,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "flat",
                 "broken": false
               }
@@ -310,7 +486,39 @@
                 "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
-                "tangent": "auto",
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.65,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.05,
+                "v": -760,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.5,
+                "v": -760,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
                 "broken": false
               }
             ]
@@ -350,6 +558,38 @@
                 "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.6,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5,
+                "v": 520,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.5,
+                "v": 520,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "flat",
                 "broken": false
               }
@@ -387,6 +627,22 @@
               },
               {
                 "t": 1.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 5.5,
                 "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
@@ -430,6 +686,38 @@
                 "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.55,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.85,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "flat",
                 "broken": false
               }
@@ -467,6 +755,22 @@
               },
               {
                 "t": 1.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 5.5,
                 "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
@@ -510,6 +814,62 @@
                 "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 2.25,
+                "v": 0.45,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 3,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 3.75,
+                "v": 0.45,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 4.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.55,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.85,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "flat",
                 "broken": false
               }
@@ -558,6 +918,54 @@
                 "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 2.25,
+                "v": 1.05,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 3,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 3.75,
+                "v": 1.05,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 4.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.8,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.5,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "flat",
                 "broken": false
               }
@@ -602,6 +1010,54 @@
                 "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 2.25,
+                "v": 1.05,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 3,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 3.75,
+                "v": 1.05,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 4.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.8,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.5,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "flat",
                 "broken": false
               }
@@ -642,6 +1098,30 @@
                 "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.8,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.5,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "flat",
                 "broken": false
               }
@@ -676,6 +1156,30 @@
               {
                 "t": 1.5,
                 "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.8,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.5,
+                "v": 0.5,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "flat",
@@ -717,6 +1221,22 @@
                 "t": 1.5,
                 "v": 0,
                 "inTangent": 0,
+                "outTangent": -240,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": -720,
+                "inTangent": -240,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 5.5,
+                "v": -720,
+                "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "flat",
                 "broken": false
@@ -756,6 +1276,30 @@
               {
                 "t": 1.5,
                 "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.8,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.5,
+                "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "flat",
@@ -798,6 +1342,30 @@
                 "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.8,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "flat",
                 "broken": false
               }
@@ -838,6 +1406,30 @@
                 "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.7,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "flat",
                 "broken": false
               }
@@ -847,6 +1439,50 @@
         {
           "node": "leaf_1",
           "kind": "position",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3,
+                "v": 24,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 4.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 5.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          },
           "y": {
             "keys": [
               {
@@ -875,6 +1511,22 @@
               },
               {
                 "t": 1.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 5.5,
                 "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
@@ -918,7 +1570,31 @@
                 "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
-                "tangent": "auto",
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.7,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
                 "broken": false
               }
             ]
@@ -927,6 +1603,50 @@
         {
           "node": "leaf_2",
           "kind": "position",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3,
+                "v": 32,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 4.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 5.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          },
           "y": {
             "keys": [
               {
@@ -958,7 +1678,23 @@
                 "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
-                "tangent": "auto",
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 5.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
                 "broken": false
               }
             ]
@@ -998,7 +1734,31 @@
                 "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
-                "tangent": "auto",
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.7,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 5.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
                 "broken": false
               }
             ]
@@ -1007,6 +1767,50 @@
         {
           "node": "leaf_3",
           "kind": "position",
+          "x": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3,
+                "v": 40,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 4.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 5.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          },
           "y": {
             "keys": [
               {
@@ -1038,7 +1842,167 @@
                 "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 5.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "leaf_1",
+          "kind": "euler",
+          "z": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3,
+                "v": -30,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 4.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 5.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "leaf_2",
+          "kind": "euler",
+          "z": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3,
+                "v": 30,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 4.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 5.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "leaf_3",
+          "kind": "euler",
+          "z": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3,
+                "v": -30,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 4.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 5.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
                 "broken": false
               }
             ]
@@ -1049,1004 +2013,10 @@
         {
           "t": 0.25,
           "name": "covered"
-        }
-      ]
-    },
-    {
-      "name": "heredity_hold",
-      "rig": "heredity",
-      "duration": 3,
-      "end": "restore",
-      "previewMode": "relative",
-      "channels": [
-        {
-          "node": "orb_swirl",
-          "kind": "euler",
-          "z": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": -240,
-                "outTangent": -240,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 3,
-                "v": -720,
-                "inTangent": -240,
-                "outTangent": -240,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
         },
         {
-          "node": "orb",
-          "kind": "scale",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.75,
-                "v": 1.05,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1.5,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 2.25,
-                "v": 1.05,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 3,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          },
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.75,
-                "v": 1.05,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1.5,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 2.25,
-                "v": 1.05,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 3,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "crystals_light",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 0.75,
-                "v": 0.45,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1.5,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 2.25,
-                "v": 0.45,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 3,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "leaf_1",
-          "kind": "position",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1.5,
-                "v": 24,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 3,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "leaf_1",
-          "kind": "euler",
-          "z": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1.5,
-                "v": -30,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 3,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "leaf_2",
-          "kind": "position",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1.5,
-                "v": 32,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 3,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "leaf_2",
-          "kind": "euler",
-          "z": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1.5,
-                "v": 30,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 3,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "leaf_3",
-          "kind": "position",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1.5,
-                "v": 40,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 3,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "leaf_3",
-          "kind": "euler",
-          "z": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1.5,
-                "v": -30,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 3,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "spiral",
-          "kind": "euler",
-          "z": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1.5,
-                "v": 6,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 3,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "heredity_out",
-      "rig": "heredity",
-      "duration": 1,
-      "end": "commit",
-      "previewMode": "relative",
-      "channels": [
-        {
-          "node": "leaf_1",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.2,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "leaf_2",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.2,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "leaf_3",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.2,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "orb",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.3,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "orb",
-          "kind": "scale",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.3,
-                "v": 0.5,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0.5,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          },
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.3,
-                "v": 0.5,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0.5,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "orb_swirl",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.3,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "orb_swirl",
-          "kind": "scale",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.3,
-                "v": 0.5,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0.5,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          },
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.3,
-                "v": 0.5,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0.5,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "crystals",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.05,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.35,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "crystals_light",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.05,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.35,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "canopy",
-          "kind": "position",
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.1,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.5,
-                "v": 520,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 520,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "islets",
-          "kind": "position",
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.15,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.55,
-                "v": -760,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": -760,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "island",
-          "kind": "position",
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.22,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.62,
-                "v": -760,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": -760,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "spiral",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.2,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.6,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "moon",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.3,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.7,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "Backdrop",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.55,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": -2.2222223,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 1,
-                "v": 0,
-                "inTangent": -2.2222223,
-                "outTangent": -2.2222223,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
+          "t": 4.5,
+          "name": "release"
         }
       ]
     }
@@ -2069,20 +2039,6 @@
         "orb_swirl": "art/04_orb_swirl.png",
         "spiral": "art/02_spiral.png"
       }
-    }
-  ],
-  "emojis": [
-    {
-      "name": "heredity",
-      "rig": "heredity",
-      "skin": "heredity",
-      "enter": "heredity_in",
-      "hold": "heredity_hold",
-      "exit": "heredity_out",
-      "holdSeconds": 1.5,
-      "anchorNode": "Emoji_Anchor",
-      "offsetX": 0,
-      "offsetY": 0
     }
   ],
   "rigs": [

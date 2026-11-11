@@ -10,7 +10,7 @@ namespace Mt.Authoring.Model;
 /// </summary>
 public sealed class RigAsset
 {
-    /// <summary>rigKind — 모션·스킨·이모지가 이 이름으로 가리킨다. 영문자로 시작하는 영문·숫자·_.</summary>
+    /// <summary>rigKind — 모션·스킨이 이 이름으로 가리킨다. 영문자로 시작하는 영문·숫자·_.</summary>
     public string Kind { get; set; } = "";
 
     /// <summary>부모가 자식보다 먼저 온다. 그리는 순서도 이 순서다(뒤의 것이 위).</summary>

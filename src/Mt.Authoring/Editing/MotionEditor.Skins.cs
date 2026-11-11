@@ -20,7 +20,7 @@ public sealed partial class MotionEditor
         return skin;
     }
 
-    /// <summary>스킨을 지운다. 그 스킨을 가리키던 연출은 검증이 알린다.</summary>
+    /// <summary>스킨을 지운다.</summary>
     public void RemoveSkin(string name)
     {
         SkinAsset skin = RequireSkin(name);
@@ -38,11 +38,7 @@ public sealed partial class MotionEditor
         }
 
         string trimmed = RequireSkinName(newName);
-        Mutate(MotionChangeKind.Scene, () =>
-        {
-            skin.Name = trimmed;
-            RetargetEmojiSkins(name, trimmed);
-        });
+        Mutate(MotionChangeKind.Scene, () => skin.Name = trimmed);
     }
 
     /// <summary>조각의 그림(문서 기준 상대 경로). null·빈 문자열이면 그 조각을 비운다(안 그린다).</summary>

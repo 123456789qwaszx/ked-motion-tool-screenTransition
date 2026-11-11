@@ -90,12 +90,7 @@ public sealed partial class MotionEditor
             throw new InvalidOperationException($"모션 '{newName}'이 이미 있다.");
         }
 
-        // 이 모션을 쓰는 연출의 참조도 같은 칸에서 따라온다.
-        Mutate(MotionChangeKind.Metadata, () =>
-        {
-            motion.Name = newName;
-            RetargetEmojiMotions(name, newName);
-        });
+        Mutate(MotionChangeKind.Metadata, () => motion.Name = newName);
     }
 
     /// <summary>
@@ -882,7 +877,7 @@ public enum MotionChangeKind
     /// <summary>이름·길이·end·mode·메모. 목록은 그대로, 글자만 다시 쓴다.</summary>
     Metadata,
 
-    /// <summary>세트·스킨·연출이 바뀌었다. 뷰포트가 무대를 다시 세운다.</summary>
+    /// <summary>세트·스킨이 바뀌었다. 뷰포트가 무대를 다시 세운다.</summary>
     Scene,
 
     /// <summary>키 값. 그래프·뷰포트만 다시 그린다.</summary>

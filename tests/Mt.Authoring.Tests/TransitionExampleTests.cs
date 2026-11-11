@@ -14,7 +14,6 @@ namespace Mt.Authoring.Tests;
 /// </summary>
 public class TransitionExampleTests
 {
-
     private static string ExampleDirectory(string name)
     {
         DirectoryInfo? at = new(AppContext.BaseDirectory);
@@ -26,6 +25,9 @@ public class TransitionExampleTests
 
         return Path.Combine(at?.FullName ?? throw new InvalidOperationException("저장소 뿌리를 못 찾았다"), "examples", "transitions", name);
     }
+
+    private static RectNodeTree Pose(RectNodeTree template, MotionAsset timeline, double seconds, IDictionary<string, float>? alphas = null)
+        => MotionPreview.Pose(template, timeline, seconds, timeline.PreviewMode, null, "t/", alphas);
 
     [Fact]
     public void 화면_이동_예시는_층_표에서_세트가_서고_문제_없이_돌고_저장된_파일과_같다()
@@ -44,7 +46,6 @@ public class TransitionExampleTests
 
         string Problems<T>(IEnumerable<T> problems, Func<T, string> text) => string.Join("\n", problems.Select(text));
         Assert.True(!MotionValidator.Validate(document, rig.NodeIds, rig.AlphaNodeIds).Any(), Problems(MotionValidator.Validate(document, rig.NodeIds, rig.AlphaNodeIds), p => $"{p.MotionName}: {p.Message}"));
-        Assert.True(!EmojiValidator.Validate(document, rig.NodeIds).Any(), Problems(EmojiValidator.Validate(document, rig.NodeIds), p => $"{p.EmojiName}: {p.Message}"));
 
         string path = Path.Combine(directory, "station.motion-authoring.json");
         string json = MotionDocumentJson.Write(document);
@@ -57,22 +58,21 @@ public class TransitionExampleTests
         Assert.Equal(json, File.ReadAllText(path));
         Assert.All(document.Skins.SelectMany(s => s.AllImages()).Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
 
-        // 수명: 등장 1.2 › 머묾 1 › 퇴장 0.9. 등장의 가운데에서 왼쪽 기둥은 아직 들어오는 중이고, 끝나면 제자리다.
-        EmojiAsset cue = document.FindEmoji(TransitionExamples.Station)!;
-        Assert.Equal(3.1f, EmojiPreview.PhasesOf(document, cue).Total, 3);
+        // 타임라인 하나: 등장 1.2 › 머묾 2(한 바퀴) › 퇴장 0.9. 등장의 가운데에서 왼쪽 기둥은 아직 들어오는 중이고, 끝나면 제자리다.
+        MotionAsset timeline = Assert.Single(document.Motions);
+        Assert.Equal((TransitionExamples.Station, 4.1f), (timeline.Name, timeline.Duration));
         var scene = new SceneAsset { Objects = { new SceneObject { Id = "t", Rig = TransitionExamples.Station } } };
         RectNodeTree template = ScenePreview.Build(rig, scene);
         float rest = template.GetState("t/pillars_left").AnchoredPosition.X;
-        float PillarX(double t) => EmojiPreview.Pose(template, document, cue, scene.Objects[0], t).GetState("t/pillars_left").AnchoredPosition.X;
+        float PillarX(double t) => Pose(template, timeline, t).GetState("t/pillars_left").AnchoredPosition.X;
         Assert.Equal(rest - 820f, PillarX(0.1), 1);
         Assert.InRange(PillarX(0.6), rest - 700f, rest - 100f);
         Assert.Equal(rest, PillarX(1.2), 1);
-        Assert.Equal(rest, PillarX(2.0), 1);          // 머묾 — 기둥은 가만히
-        Assert.True(PillarX(2.9) < rest - 400f);      // 퇴장 — 들어온 길로 물러난다
+        Assert.Equal(rest, PillarX(2.2), 1);          // 머묾 — 기둥은 가만히
+        Assert.True(PillarX(4.0) < rest - 400f);      // 퇴장 — 들어온 길로 물러난다
 
-        // "covered" 이벤트가 등장의 0.25초에 — 대본이 여기서 장면을 바꾼다.
-        MotionEventAsset covered = Assert.Single(document.Find("station_in")!.Events);
-        Assert.Equal(("covered", 0.25f), (covered.Name, covered.T));
+        // 표지: "covered"(다 덮였다)가 0.25초에, "release"(걷기 시작)가 머묾의 끝에.
+        Assert.Equal(new[] { ("covered", 0.25f), ("release", 3.2f) }, timeline.Events.Select(e => (e.Name, MathF.Round(e.T, 3))));
     }
 
     [Fact]
@@ -87,7 +87,6 @@ public class TransitionExampleTests
         Assert.Equal(13, document.FindRig(TransitionExamples.Pillar)!.Nodes.Count);
         string Problems<T>(IEnumerable<T> problems, Func<T, string> text) => string.Join("\n", problems.Select(text));
         Assert.True(!MotionValidator.Validate(document, rig.NodeIds, rig.AlphaNodeIds).Any(), Problems(MotionValidator.Validate(document, rig.NodeIds, rig.AlphaNodeIds), p => $"{p.MotionName}: {p.Message}"));
-        Assert.True(!EmojiValidator.Validate(document, rig.NodeIds).Any(), Problems(EmojiValidator.Validate(document, rig.NodeIds), p => $"{p.EmojiName}: {p.Message}"));
 
         string path = Path.Combine(directory, "pillar.motion-authoring.json");
         string json = MotionDocumentJson.Write(document);
@@ -101,14 +100,14 @@ public class TransitionExampleTests
         Assert.All(document.Skins.SelectMany(s => s.AllImages()).Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
 
         // 시차: 지평선의 층 넷이 0.12초씩 늦게 솟기 시작한다(노을 0.2 · 먼 도시 0.32 · 가까운 도시 0.44 · 언덕 0.56).
-        float StartOf(string node) => document.Find("pillar_in")!.FindChannel(node, MotionChannelKind.Position)!.Y!.Keys[1].T;
+        MotionAsset timeline = Assert.Single(document.Motions);
+        float StartOf(string node) => timeline.FindChannel(node, MotionChannelKind.Position)!.Y!.Keys[1].T;
         Assert.Equal(new[] { 0.2f, 0.32f, 0.44f, 0.56f }, new[] { "haze", "city_far", "city_near", "hill" }.Select(n => MathF.Round(StartOf(n), 2)));
 
         // 등장의 가운데에서 노을은 이미 올라왔고 언덕은 아직 아래에 있다.
-        EmojiAsset cue = document.FindEmoji(TransitionExamples.Pillar)!;
         var scene = new SceneAsset { Objects = { new SceneObject { Id = "t", Rig = TransitionExamples.Pillar } } };
         RectNodeTree template = ScenePreview.Build(rig, scene);
-        float Offset(string node, double t) => EmojiPreview.Pose(template, document, cue, scene.Objects[0], t).GetState("t/" + node).AnchoredPosition.Y - template.GetState("t/" + node).AnchoredPosition.Y;
+        float Offset(string node, double t) => Pose(template, timeline, t).GetState("t/" + node).AnchoredPosition.Y - template.GetState("t/" + node).AnchoredPosition.Y;
         Assert.True(Offset("haze", 0.7) > -1f);
         Assert.True(Offset("hill", 0.7) < -300f);
         Assert.Equal(0f, Offset("hill", 1.5), 1);
@@ -117,7 +116,7 @@ public class TransitionExampleTests
         float SunAlpha(double t)
         {
             var alphas = new Dictionary<string, float>(StringComparer.Ordinal);
-            EmojiPreview.Pose(template, document, cue, scene.Objects[0], t, alphas);
+            Pose(template, timeline, t, alphas);
             return alphas.TryGetValue("t/sun", out float a) ? a : 1f;
         }
 
@@ -125,7 +124,7 @@ public class TransitionExampleTests
         Assert.Equal(1f, SunAlpha(1.0), 2);
         Assert.True(Offset("sun", 0.9) < -100f);
         Assert.Equal(0f, Offset("sun", 1.4), 1);
-        Assert.True(Offset("sun", 1.5 + 1.5 + 0.4) < -200f);
+        Assert.True(Offset("sun", 1.5 + 3 + 0.4) < -200f); // 퇴장(머묾 한 바퀴 3초 뒤)
     }
 
     [Theory]
@@ -147,7 +146,6 @@ public class TransitionExampleTests
 
         string Problems<T>(IEnumerable<T> problems, Func<T, string> text) => string.Join("\n", problems.Select(text));
         Assert.True(!MotionValidator.Validate(document, rig.NodeIds, rig.AlphaNodeIds).Any(), Problems(MotionValidator.Validate(document, rig.NodeIds, rig.AlphaNodeIds), p => $"{p.MotionName}: {p.Message}"));
-        Assert.True(!EmojiValidator.Validate(document, rig.NodeIds).Any(), Problems(EmojiValidator.Validate(document, rig.NodeIds), p => $"{p.EmojiName}: {p.Message}"));
 
         string path = Path.Combine(directory, name + ".motion-authoring.json");
         string json = MotionDocumentJson.Write(document);
@@ -160,18 +158,19 @@ public class TransitionExampleTests
         Assert.Equal(json, File.ReadAllText(path));
         Assert.All(document.Skins.SelectMany(s => s.AllImages()).Distinct(), image => Assert.True(File.Exists(Path.Combine(directory, image)), image));
 
-        // 늦게 나오는 층은 제 차례 전에 숨어 있고("제 차례 전까지 숨기기"), 등장이 끝나면 다 보인다.
-        EmojiAsset cue = document.FindEmoji(name)!;
+        // 늦게 나오는 층은 제 차례 전에 숨어 있고("제 차례 전까지 숨기기"), 걷기 시작(표지 "release")에서는 다 보인다.
+        MotionAsset timeline = Assert.Single(document.Motions);
+        float release = timeline.Events.Single(e => e.Name == "release").T;
         var scene = new SceneAsset { Objects = { new SceneObject { Id = "t", Rig = name } } };
         RectNodeTree template = ScenePreview.Build(rig, scene);
 
         foreach (string node in late.Split(','))
         {
             var early = new Dictionary<string, float>(StringComparer.Ordinal);
-            EmojiPreview.Pose(template, document, cue, scene.Objects[0], turn - 0.1, early);
+            Pose(template, timeline, turn - 0.1, early);
             Assert.Equal(0f, early["t/" + node], 2);
             var shown = new Dictionary<string, float>(StringComparer.Ordinal);
-            EmojiPreview.Pose(template, document, cue, scene.Objects[0], document.Find(name + "_in")!.Duration, shown);
+            Pose(template, timeline, release, shown);
             Assert.Equal(1f, shown.TryGetValue("t/" + node, out float alpha) ? alpha : 1f, 2);
         }
     }

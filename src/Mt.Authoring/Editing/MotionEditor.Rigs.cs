@@ -32,7 +32,7 @@ public sealed partial class MotionEditor
         return copy;
     }
 
-    /// <summary>리그를 지운다. 그 세트의 모션·스킨·연출은 남는다 — 검증이 "없는 세트"로 알린다.</summary>
+    /// <summary>리그를 지운다. 그 세트의 모션·스킨은 남는다 — 검증이 "없는 세트"로 알린다.</summary>
     public void RemoveRig(string kind)
     {
         RigAsset rig = RequireRig(kind);
@@ -71,7 +71,7 @@ public sealed partial class MotionEditor
     }
 
     /// <summary>
-    /// 노드의 이름을 바꾼다 — 그 이름을 가리키던 것이 같은 칸에서 따라온다: 자식의 부모, 그 리그의 모션 채널, 스킨의 조각 칸, 이모지의 자리 노드, 그 리그에 붙은 오브젝트의 붙는 노드.
+    /// 노드의 이름을 바꾼다 — 그 이름을 가리키던 것이 같은 칸에서 따라온다: 자식의 부모, 그 리그의 모션 채널, 스킨의 조각 칸.
     /// </summary>
     public void RenameRigNode(string kind, string id, string newId)
     {
@@ -116,11 +116,6 @@ public sealed partial class MotionEditor
                 {
                     skin.Setups[name] = setup;
                 }
-            }
-
-            foreach (EmojiAsset emoji in Document.Emojis.Where(e => e.Rig == kind && e.AnchorNode == id))
-            {
-                emoji.AnchorNode = name;
             }
         });
     }

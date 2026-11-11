@@ -10,7 +10,7 @@ namespace Mt.App.Tests;
 public class TransitionExampleShots
 {
     [Fact]
-    public void 화면_이동_예시의_수명을_시간별로_뽑는다()
+    public void 화면_전환_예시를_시간별로_뽑는다()
     {
         if (RenderShots.Directory is not { } directory)
         {
@@ -45,11 +45,10 @@ public class TransitionExampleShots
                     window.CaptureRenderedFrame()?.Save(stream, new Avalonia.Media.Imaging.PngBitmapEncoderOptions());
                 }
 
-                // 연출을 본다 — 그 세트가 무대에 선다.
-                window.InspectorTab = 3;
-                window.SelectEmoji("station");
+                // 타임라인을 본다 — 그 세트가 무대에 선다.
+                window.SelectMotion("station");
 
-                foreach (double t in new[] { 0.1, 0.3, 0.6, 0.9, 1.2, 1.7, 2.5, 2.8, 3.05 })
+                foreach (double t in new[] { 0.1, 0.3, 0.6, 0.9, 1.2, 2.2, 3.4, 3.7, 4.0 })
                 {
                     Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                     window.Viewport.ScrubTo(t);
@@ -64,11 +63,10 @@ public class TransitionExampleShots
 
                 // 기둥과 노을.
                 window.Session.Open(Path.Combine(root!.FullName, "examples", "transitions", "pillar", "pillar.motion-authoring.json"));
-                window.InspectorTab = 3;
-                window.SelectEmoji("pillar");
+                window.SelectMotion("pillar");
                 window.StageOnlyChecked = true;
 
-                foreach (double t in new[] { 0.3, 0.6, 0.9, 1.2, 1.5, 2.3, 3.2, 3.6, 3.95 })
+                foreach (double t in new[] { 0.3, 0.6, 0.9, 1.2, 1.5, 3.0, 4.7, 5.1, 5.45 })
                 {
                     Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                     window.Viewport.ScrubTo(t);
@@ -77,10 +75,10 @@ public class TransitionExampleShots
 
                 window.StageOnlyChecked = false;
 
-                // 세트를 열고 등장 애니메이션을 고른다 — 하이어아키의 층, 그래프의 커브.
+                // 세트를 열고 타임라인을 고른다 — 하이어아키의 층, 그래프의 커브.
                 window.SelectSet("pillar");
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-                window.SelectMotion("pillar_in");
+                window.SelectMotion("pillar");
                 window.SelectSetNode("sun");
                 window.InspectorTab = 2;
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
@@ -88,15 +86,14 @@ public class TransitionExampleShots
                 Shot("pillar-set");
                 window.SelectSet(null);
 
-                // 나머지 세 장면 — 수명을 따라.
+                // 나머지 세 장면 — 타임라인을 따라.
                 foreach (string name in new[] { "lapis", "heredity", "mercury" })
                 {
                     window.Session.Open(Path.Combine(root!.FullName, "examples", "transitions", name, name + ".motion-authoring.json"));
-                    window.InspectorTab = 3;
-                    window.SelectEmoji(name);
+                    window.SelectMotion(name);
                     window.StageOnlyChecked = true;
 
-                    foreach (double t in new[] { 0.5, 0.9, 1.5, 2.4, 3.5 })
+                    foreach (double t in new[] { 0.5, 0.9, 1.5, 2.4, window.Session.Editor.Document.Find(name)!.Duration - 0.4 })
                     {
                         Avalonia.Threading.Dispatcher.UIThread.RunJobs();
                         window.Viewport.ScrubTo(t);

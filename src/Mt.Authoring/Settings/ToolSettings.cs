@@ -37,7 +37,7 @@ public sealed class ToolSettings
     /// <summary>1프레임 단위 재생(마야 Real-time 24fps 표시). 꺼지면 연속.</summary>
     public bool PlayWholeFrames { get; set; }
 
-    /// <summary>오른쪽 인스펙터의 마지막 탭(0 채널 박스 · 1 세트 · 2 모션 · 3 연출).</summary>
+    /// <summary>오른쪽 인스펙터의 마지막 탭(0 채널 박스 · 1 세트 · 2 모션).</summary>
     public int InspectorTab { get; set; }
 
     /// <summary>창 배치 — 왼쪽(세트·모션) 패널 폭(px). 스플리터로 끌면 저장된다.</summary>

@@ -2,9 +2,9 @@
   "schema": "motion-authoring/2",
   "motions": [
     {
-      "name": "lapis_in",
+      "name": "lapis",
       "rig": "lapis",
-      "duration": 1.4,
+      "duration": 4.4,
       "end": "commit",
       "previewMode": "relative",
       "channels": [
@@ -34,6 +34,30 @@
                 "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.4,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.95,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": -2.222222,
+                "tangent": "linear",
+                "broken": true
+              },
+              {
+                "t": 4.4,
+                "v": 0,
+                "inTangent": -2.222222,
+                "outTangent": -2.222222,
                 "tangent": "linear",
                 "broken": false
               }
@@ -72,6 +96,38 @@
               {
                 "t": 1.4,
                 "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.4,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.7,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.1,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.4,
+                "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "flat",
@@ -114,7 +170,39 @@
                 "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.4,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.7600002,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.16,
+                "v": -760,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.4,
+                "v": -760,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
                 "broken": false
               }
             ]
@@ -152,6 +240,38 @@
               {
                 "t": 1.4,
                 "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.4,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.69,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.09,
+                "v": -760,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.4,
+                "v": -760,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "auto",
@@ -194,6 +314,38 @@
                 "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.4,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.6200001,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.02,
+                "v": -760,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.4,
+                "v": -760,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "auto",
                 "broken": false
               }
@@ -234,7 +386,39 @@
                 "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
-                "tangent": "auto",
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.4,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.5500002,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 3.95,
+                "v": -760,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.4,
+                "v": -760,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
                 "broken": false
               }
             ]
@@ -272,6 +456,38 @@
               {
                 "t": 1.4,
                 "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.4,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 3.95,
+                "v": -420,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.4,
+                "v": -420,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "flat",
@@ -314,6 +530,38 @@
                 "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.4,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.5,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 3.95,
+                "v": 420,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.4,
+                "v": 420,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "flat",
                 "broken": false
               }
@@ -354,6 +602,38 @@
                 "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 2.4,
+                "v": -46,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 3.4,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.9,
+                "v": -1900,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.4,
+                "v": -1900,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "flat",
                 "broken": false
               }
@@ -391,6 +671,74 @@
               },
               {
                 "t": 1.4,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.4,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.9,
+                "v": 1300,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.4,
+                "v": 1300,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          },
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.4,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 2.4,
+                "v": 20,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 3.4,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.4,
                 "v": 0,
                 "inTangent": 0,
                 "outTangent": 0,
@@ -434,6 +782,38 @@
                 "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 2.4,
+                "v": 0.55,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 3.4,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.7,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.4,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "flat",
                 "broken": false
               }
@@ -482,6 +862,38 @@
                 "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 2.4,
+                "v": 1.06,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 3.4,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.7,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.4,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "flat",
                 "broken": false
               }
@@ -524,6 +936,38 @@
               {
                 "t": 1.4,
                 "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 2.4,
+                "v": 1.06,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 3.4,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.7,
+                "v": 0.5,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.4,
+                "v": 0.5,
                 "inTangent": 0,
                 "outTangent": 0,
                 "tangent": "flat",
@@ -566,6 +1010,78 @@
                 "v": 1,
                 "inTangent": 0,
                 "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.4,
+                "v": 1,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 3.7,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 4.4,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              }
+            ]
+          }
+        },
+        {
+          "node": "orb",
+          "kind": "position",
+          "y": {
+            "keys": [
+              {
+                "t": 0,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "flat",
+                "broken": false
+              },
+              {
+                "t": 1.4,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 2.4,
+                "v": 22,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "auto",
+                "broken": false
+              },
+              {
+                "t": 3.4,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
+                "tangent": "free",
+                "broken": true
+              },
+              {
+                "t": 4.4,
+                "v": 0,
+                "inTangent": 0,
+                "outTangent": 0,
                 "tangent": "flat",
                 "broken": false
               }
@@ -577,712 +1093,10 @@
         {
           "t": 0.25,
           "name": "covered"
-        }
-      ]
-    },
-    {
-      "name": "lapis_hold",
-      "rig": "lapis",
-      "duration": 2,
-      "end": "restore",
-      "previewMode": "relative",
-      "channels": [
-        {
-          "node": "fish_school",
-          "kind": "position",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": -46,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 2,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
         },
         {
-          "node": "ray",
-          "kind": "position",
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 20,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 2,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "stars",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0.55,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 2,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "orb",
-          "kind": "position",
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 22,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 2,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "orb",
-          "kind": "scale",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 1.06,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 2,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          },
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 1.06,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              },
-              {
-                "t": 2,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "lapis_out",
-      "rig": "lapis",
-      "duration": 1,
-      "end": "commit",
-      "previewMode": "relative",
-      "channels": [
-        {
-          "node": "orb",
-          "kind": "scale",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.3,
-                "v": 0.5,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0.5,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          },
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.3,
-                "v": 0.5,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0.5,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "orb",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.3,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "stars",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.3,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "fish_school",
-          "kind": "position",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.5,
-                "v": -1900,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": -1900,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "ray",
-          "kind": "position",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.5,
-                "v": 1300,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 1300,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "trunk_left",
-          "kind": "position",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.1,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.55,
-                "v": -420,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": -420,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "trunk_right",
-          "kind": "position",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.1,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.55,
-                "v": 420,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 420,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "seabed_near",
-          "kind": "position",
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.15,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.55,
-                "v": -760,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": -760,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "pillars_mid",
-          "kind": "position",
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.22,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.62,
-                "v": -760,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": -760,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "pillars_far",
-          "kind": "position",
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.29000002,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.69,
-                "v": -760,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": -760,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "seabed_far",
-          "kind": "position",
-          "y": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.36,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.76,
-                "v": -760,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": -760,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "auto",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "light_band",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.3,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 0.7,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              },
-              {
-                "t": 1,
-                "v": 0,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "flat",
-                "broken": false
-              }
-            ]
-          }
-        },
-        {
-          "node": "Backdrop",
-          "kind": "alpha",
-          "x": {
-            "keys": [
-              {
-                "t": 0,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": 0,
-                "tangent": "linear",
-                "broken": false
-              },
-              {
-                "t": 0.55,
-                "v": 1,
-                "inTangent": 0,
-                "outTangent": -2.2222223,
-                "tangent": "linear",
-                "broken": true
-              },
-              {
-                "t": 1,
-                "v": 0,
-                "inTangent": -2.2222223,
-                "outTangent": -2.2222223,
-                "tangent": "linear",
-                "broken": false
-              }
-            ]
-          }
+          "t": 3.4,
+          "name": "release"
         }
       ]
     }
@@ -1304,20 +1118,6 @@
         "trunk_left": "art/06_trunk_left.png",
         "trunk_right": "art/07_trunk_right.png"
       }
-    }
-  ],
-  "emojis": [
-    {
-      "name": "lapis",
-      "rig": "lapis",
-      "skin": "lapis",
-      "enter": "lapis_in",
-      "hold": "lapis_hold",
-      "exit": "lapis_out",
-      "holdSeconds": 1.5,
-      "anchorNode": "Emoji_Anchor",
-      "offsetX": 0,
-      "offsetY": 0
     }
   ],
   "rigs": [

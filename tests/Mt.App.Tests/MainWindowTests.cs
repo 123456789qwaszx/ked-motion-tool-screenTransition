@@ -391,7 +391,7 @@ public class MainWindowTests
     }
 
     [Fact]
-    public void 인스펙터는_탭_다섯이고_마지막_탭은_설정에_남는다()
+    public void 인스펙터는_탭_셋이고_마지막_탭은_설정에_남는다()
     {
         HeadlessUi.Run(() =>
         {
@@ -400,7 +400,7 @@ public class MainWindowTests
 
             try
             {
-                Assert.Equal(4, window.InspectorTabCount); // 채널 박스 · 세트 · 모션 · 연출
+                Assert.Equal(3, window.InspectorTabCount); // 채널 박스 · 세트 · 모션
                 Assert.Equal(0, window.InspectorTab);
                 window.InspectorTab = 2;
                 Assert.Equal(2, window.Settings.InspectorTab);
