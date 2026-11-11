@@ -15,10 +15,6 @@ public sealed class CurveFlags
 
     public bool IsMuted(CurveRef curve) => _muted.Contains(curve);
 
-    public IReadOnlyCollection<CurveRef> Locked => _locked;
-
-    public IReadOnlyCollection<CurveRef> Muted => _muted;
-
     public void SetLocked(CurveRef curve, bool locked) => Set(_locked, curve, locked);
 
     public void SetMuted(CurveRef curve, bool muted) => Set(_muted, curve, muted);

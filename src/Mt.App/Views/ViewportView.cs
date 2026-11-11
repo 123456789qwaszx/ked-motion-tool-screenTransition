@@ -223,7 +223,7 @@ public sealed class ViewportView : Control
                 return Array.Empty<string>();
             }
 
-            return dto.nodes.Select(n => n.id).Where(k => k != RigSchemaLoader.RootKey && !MotionRules.ForbiddenNodes.Contains(k)).OrderBy(k => k, StringComparer.Ordinal).ToList();
+            return dto.nodes.Select(n => n.id).Where(k => k != RigSchemaLoader.RootKey).OrderBy(k => k, StringComparer.Ordinal).ToList();
         }
     }
 
@@ -1962,7 +1962,7 @@ public sealed class ViewportView : Control
         RectNodeTree? pose = CurrentPose();
         string key = Prefix + node;
 
-        if (motion is null || pose is null || !pose.Contains(key) || MotionRules.ForbiddenNodes.Contains(node))
+        if (motion is null || pose is null || !pose.Contains(key))
         {
             return;
         }
@@ -1999,7 +1999,7 @@ public sealed class ViewportView : Control
 
     public void KeyComponents(string node, MotionChannelKind kind, IReadOnlyList<Axis> axes)
     {
-        if (MotionRules.ForbiddenNodes.Contains(node) || axes.Count == 0)
+        if (axes.Count == 0)
         {
             return;
         }

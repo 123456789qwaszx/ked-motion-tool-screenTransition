@@ -131,8 +131,6 @@ public partial class MainWindow : Window
     private readonly TextBlock _motionHeader = Header("모션");
     private object? _menuTarget;
     private static readonly IBrush ActingNodeBrush = new SolidColorBrush(Color.FromRgb(0xC8, 0xE0, 0xFF));
-    private static readonly IBrush PlacementNodeBrush = new SolidColorBrush(Color.FromRgb(0xB0, 0xB0, 0xB0));
-    private static readonly IBrush ForbiddenNodeBrush = new SolidColorBrush(Color.FromRgb(0x70, 0x70, 0x70));
 
     // 오른쪽 — 오브젝트(채널 박스)
 
@@ -609,15 +607,9 @@ public partial class MainWindow : Window
 
     internal ViewportView Viewport => _viewport;
 
-    internal TimeSliderView TimeSlider => _timeSlider;
-
-    internal RangeSliderView RangeSlider => _rangeSlider;
-
     internal DopeSheetView Dope => _dope;
 
     internal KeySelection SharedSelection => _selection;
-
-    internal CurveFlags SharedFlags => _flags;
 
     internal bool AutoKeyChecked
     {
@@ -662,9 +654,6 @@ public partial class MainWindow : Window
 
     /// <summary>테스트 손잡이 — 채널 박스 ●(이 성분을 지금 키).</summary>
     internal void KeyChannelBoxComponent(MotionChannelKind kind, Axis axis) => KeyChannelBox(kind, axis);
-
-    /// <summary>채널 박스가 보여 주는 노드.</summary>
-    internal string? ChannelBoxNode => _viewport.SelectedNode;
 
     /// <summary>채널 행의 성분 토글과 같은 길 — 없는 성분을 현재 시각의 중립값 키 하나로 만든다.</summary>
     internal void EnsureComponent(string node, MotionChannelKind kind, Axis axis)
@@ -1526,10 +1515,6 @@ public partial class MainWindow : Window
         set => _inspectorTabs.SelectedIndex = value;
     }
 
-    internal Window? SettingsWindow => _settingsWindow;
-
-    internal Window? ShortcutsWindow => _shortcutsWindow;
-
     internal void OpenSettingsFromMenu() => OpenSettings();
 
     internal void OpenShortcutsFromMenu() => OpenShortcuts();
@@ -1634,7 +1619,6 @@ public partial class MainWindow : Window
                 TreeViewItem nodeParent = string.IsNullOrEmpty(node.parent) || node.parent == RigSchemaLoader.RootKey || !itemsByNode.TryGetValue(node.parent, out TreeViewItem? found)
                     ? objectItem
                     : found;
-                bool forbidden = MotionRules.ForbiddenNodes.Contains(node.id);
                 // 세트 보기 — 따로 보기(숨김 · 솔로)의 표시.
                 bool shown = _viewport.IsSetNodeShown(node.id);
                 string mark = _viewport.SetView is null ? "" : _viewport.SoloSetNode == node.id ? "   ◉ 이것만" : _viewport.IsSetNodeHidden(node.id) ? "   (숨김)" : "";
@@ -1642,9 +1626,8 @@ public partial class MainWindow : Window
                 nodeItem.Opacity = shown ? 1 : 0.45;
                 nodeItem.Tag = new HierarchyNode(o.Id, node.id);
                 nodeItem.FontWeight = FontWeight.Normal;
-                nodeItem.Foreground = forbidden ? ForbiddenNodeBrush : ActingNodeBrush;
-                nodeItem.FontStyle = forbidden ? FontStyle.Italic : FontStyle.Normal;
-                ToolTip.SetTip(nodeItem, forbidden ? "키잉 금지 노드(코어 규칙) — 채널을 둘 수 없다" : node.id);
+                nodeItem.Foreground = ActingNodeBrush;
+                ToolTip.SetTip(nodeItem, node.id);
                 Attach(nodeItem, nodeParent);
                 itemsByNode[node.id] = nodeItem;
 
@@ -1799,8 +1782,6 @@ public partial class MainWindow : Window
             SelectNodeInHierarchy(node);
         }
     }
-
-    internal int HierarchyObjectCount => _viewport.SceneObjects.Count;
 
     /// <summary>테스트 손잡이 — 하이어아키 항목의 경로(Scene부터 헤더 순). 없으면 빈 목록.</summary>
     internal IReadOnlyList<string> HierarchyPathOf(string objectId, string? nodeId)
@@ -2008,7 +1989,7 @@ public partial class MainWindow : Window
 
         foreach (string node in nodes)
         {
-            if (MotionRules.ForbiddenNodes.Contains(node) || node == RigAssetCodec.RootId)
+            if (node == RigAssetCodec.RootId)
             {
                 continue;
             }
@@ -2197,20 +2178,6 @@ public partial class MainWindow : Window
         }
 
         _graph.SetVisibleAll(curves.Contains);
-    }
-
-    internal int OutlinerRowCount => _channelRows.Children.Count;
-
-    internal string CurrentTimeText => _currentTime.Text ?? "";
-
-    internal string OutlinerQuery
-    {
-        get => _outlinerSearch.Text ?? "";
-        set
-        {
-            _outlinerSearch.Text = value;
-            RefreshChannels();
-        }
     }
 
     private void RefreshMotionInspector()

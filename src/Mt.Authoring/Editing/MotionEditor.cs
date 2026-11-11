@@ -850,11 +850,8 @@ public enum MotionChangeKind
     /// <summary>모션·채널이 생기거나 사라졌다. 목록을 다시 만든다.</summary>
     Structure,
 
-    /// <summary>이름·길이·end·mode·메모. 목록은 그대로, 글자만 다시 쓴다.</summary>
+    /// <summary>이름·길이·이벤트. 목록은 그대로, 글자만 다시 쓴다.</summary>
     Metadata,
-
-    /// <summary>세트가 바뀌었다. 뷰포트가 무대를 다시 세운다.</summary>
-    Scene,
 
     /// <summary>키 값. 그래프·뷰포트만 다시 그린다.</summary>
     Keys,

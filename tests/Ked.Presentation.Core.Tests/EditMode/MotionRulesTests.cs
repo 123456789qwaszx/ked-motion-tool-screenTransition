@@ -25,7 +25,7 @@ public class MotionRulesTests
 
     private static MotionChannel Nod => Channel(y: Keys((0f, 0f), (0.3f, -18f), (0.6f, 0f)));
 
-    private static readonly HashSet<string> Rig = new() { "CharacterPortrait_Track_Move_Y", "CharacterPortrait_SwayPivot", "CharSlot_Track_X", "CharSlot_Track_Focus" };
+    private static readonly HashSet<string> Rig = new() { "CharacterPortrait_Track_Move_Y", "CharacterPortrait_SwayPivot", "CharSlot_Track_X" };
 
     [Test]
     public void 유효한_클립은_통과한다_스키마가_있어도_없어도()
@@ -59,15 +59,6 @@ public class MotionRulesTests
         MotionClip nullChannels = Clip(0.6f);
         nullChannels.Channels = null;
         Assert.IsTrue(MotionRules.TryValidate(nullChannels, null, out reason), reason);
-    }
-
-    [Test]
-    public void Track_Focus는_키잉할_수_없다()
-    {
-        MotionClip clip = Clip(0.6f, Channel("CharSlot_Track_Focus", x: Keys((0f, 0f), (0.6f, 10f))));
-
-        Assert.IsFalse(MotionRules.TryValidate(clip, Rig, out string reason));
-        StringAssert.Contains("Track_Focus", reason);
     }
 
     [Test]

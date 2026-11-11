@@ -18,19 +18,6 @@ public class MotionValidatorTests
     }
 
     [Fact]
-    public void 문구는_코어_MotionRules의_것이다_Track_Focus는_키잉할_수_없다()
-    {
-        var editor = new MotionEditor(new MotionDocument());
-        editor.AddMotion("a", "character", 1f);
-        editor.AddChannel("a", "CharSlot_Track_Focus", MotionChannelKind.Position);
-        editor.SetKeys("a", "CharSlot_Track_Focus", MotionChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 0f), Fixtures.Key(1f, 0f) });
-
-        MotionProblem problem = Assert.Single(MotionValidator.Validate(editor.Document, RigFile.NodeIds));
-        Assert.Equal("a", problem.MotionName);
-        Assert.Contains("키잉할 수 없다", problem.Message, StringComparison.Ordinal);
-    }
-
-    [Fact]
     public void 세트에_없는_노드는_거부하고_노드_표가_없으면_노드_검사는_생략한다()
     {
         var editor = new MotionEditor(new MotionDocument());

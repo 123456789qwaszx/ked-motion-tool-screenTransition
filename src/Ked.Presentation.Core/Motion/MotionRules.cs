@@ -22,12 +22,6 @@ namespace Ked.Presentation.Core
         public const float Tolerance = 1e-4f;
 
         /// <summary>
-        /// 키잉 금지 노드. Track_Focus는 저작값이 아니라 해(解)다 — focus 프리셋 × ScreenPoint × 정착 체인에서
-        /// 풀려 나온다. 직접 키잉하면 place가 다음에 푸는 값과 싸운다.
-        /// </summary>
-        public static readonly IReadOnlyCollection<string> ForbiddenNodes = new[] { "CharSlot_Track_Focus" };
-
-        /// <summary>
         /// 클립 전체를 검증한다. rigNodeIds를 주면 노드가 그 스키마에 있는지도 본다(null이면 생략 —
         /// 스키마가 없는 자리, 예: 단위 테스트).
         /// </summary>
@@ -104,15 +98,6 @@ namespace Ked.Presentation.Core
             {
                 reason = "노드가 비어 있다";
                 return false;
-            }
-
-            foreach (string forbidden in ForbiddenNodes)
-            {
-                if (channel.Node == forbidden)
-                {
-                    reason = $"'{channel.Node}'는 키잉할 수 없다 — 저작값이 아니라 해(解)다";
-                    return false;
-                }
             }
 
             if (rigNodeIds != null && !rigNodeIds.Contains(channel.Node))

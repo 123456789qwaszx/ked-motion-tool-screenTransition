@@ -143,7 +143,6 @@ public class MainWindowTests
             {
                 window.AddMotionFromForm("wave", "character", "0.5");
                 Assert.Contains("CharacterPortrait_Track_Move_X", window.Viewport.NodeChoices);
-                Assert.DoesNotContain("CharSlot_Track_Focus", window.Viewport.NodeChoices);
 
                 window.Viewport.SelectedNode = "CharacterPortrait_Track_Move_X";
                 window.Viewport.Manipulator = ManipulatorMode.Move;

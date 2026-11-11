@@ -13,9 +13,7 @@ public partial class MainWindow
     /// <summary>테스트 손잡이 — "이벤트 추가 (지금 시각)".</summary>
     internal int? AddMotionEventFromForm() => AddMotionEvent();
 
-    /// <summary>테스트 손잡이 — 이벤트 줄 수와 한 줄의 칸들(시각 · 이름 · 값).</summary>
-    internal int EventRowCount => _eventRows.Children.Count;
-
+    /// <summary>테스트 손잡이 — 이벤트 한 줄의 칸들(시각 · 이름 · 값).</summary>
     internal (TextBox Time, TextBox Name, TextBox Value) EventRow(int index)
     {
         TextBox[] boxes = ((Panel)_eventRows.Children[index]).Children.OfType<TextBox>().ToArray();
