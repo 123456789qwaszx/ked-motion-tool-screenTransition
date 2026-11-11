@@ -5,8 +5,7 @@ namespace Mt.Authoring.Model;
 /// <summary>
 /// 저작본 ↔ 코어 클립. 수학·검증은 코어 것이므로 여기서는 모양만 바꾼다.
 ///
-/// 키가 있는 성분은 전부 옮긴다 — 클립은 mode를 모르므로 "전 구간 중립값인 성분은 무변"이라고 판단할 수 없다
-/// (absolute면 그 값으로 가는 뜻이 있다).
+/// 키가 있는 성분은 전부 옮긴다 — 전 구간 중립값인 성분도 빼지 않는다(저작본과 클립이 같은 모양이게).
 /// </summary>
 public static class MotionAssetCodec
 {
@@ -35,7 +34,6 @@ public static class MotionAssetCodec
             Name = asset.Name,
             Rig = asset.Rig,
             Duration = asset.Duration,
-            End = asset.End,
             Channels = channels,
             Events = asset.Events.Count == 0
                 ? null

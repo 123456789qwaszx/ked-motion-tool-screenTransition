@@ -12,7 +12,7 @@ namespace Mt.Authoring.Editing;
 /// 되돌리기는 문서 전체 스냅샷(<see cref="MotionDocumentJson"/>)이다: 되돌리기 한 번 = 조작 하나이고,
 /// 명령마다 역연산을 짓지 않으므로 새 명령이 생겨도 되돌리기가 빠질 수 없다.
 ///
-/// 명령은 모델을 고치되 **규칙을 강제하지 않는다** — 키를 길이 밖에 두거나 relative 첫 키를 0 아닌 값으로 두는 것은
+/// 명령은 모델을 고치되 **규칙을 강제하지 않는다** — 키를 길이 밖에 두는 것은
 /// 편집 중 자연스러운 중간 상태다. 어긋남은 <c>MotionValidator</c>가 계속 알리고, 내보내기만 막는다.
 /// 단 하나, 키 목록의 시각 오름차순은 편집기가 지킨다(그래프가 그것을 전제한다).
 /// </summary>
@@ -39,12 +39,7 @@ public sealed partial class MotionEditor
 
     // ── 모션 ──────────────────────────────────────────────────────────
 
-    public MotionAsset AddMotion(
-        string name,
-        string rig,
-        float duration,
-        MotionEnd end = MotionEnd.Restore,
-        MotionChannelMode previewMode = MotionChannelMode.Relative)
+    public MotionAsset AddMotion(string name, string rig, float duration)
     {
         ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(rig);
@@ -59,7 +54,7 @@ public sealed partial class MotionEditor
             throw new InvalidOperationException($"모션 '{name}'이 이미 있다 — 이름은 하나뿐이어야 한다.");
         }
 
-        var motion = new MotionAsset { Name = name, Rig = rig, Duration = duration, End = end, PreviewMode = previewMode };
+        var motion = new MotionAsset { Name = name, Rig = rig, Duration = duration };
         Mutate(MotionChangeKind.Structure, () => Document.Motions.Add(motion));
         return motion;
     }
@@ -101,25 +96,6 @@ public sealed partial class MotionEditor
     {
         MotionAsset motion = Require(name);
         Mutate(MotionChangeKind.Metadata, () => motion.Duration = seconds);
-    }
-
-    public void SetEnd(string name, MotionEnd end)
-    {
-        MotionAsset motion = Require(name);
-        Mutate(MotionChangeKind.Metadata, () => motion.End = end);
-    }
-
-    /// <summary>뷰포트의 렌즈(relative/absolute) — 키 값은 그대로이고 산출물에도 안 나간다(mode는 motion 커맨드가 정한다).</summary>
-    public void SetPreviewMode(string name, MotionChannelMode mode)
-    {
-        MotionAsset motion = Require(name);
-
-        if (motion.PreviewMode == mode)
-        {
-            return;
-        }
-
-        Mutate(MotionChangeKind.Metadata, () => motion.PreviewMode = mode);
     }
 
     // ── 채널 ──────────────────────────────────────────────────────────

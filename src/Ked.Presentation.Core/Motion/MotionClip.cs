@@ -23,38 +23,9 @@ namespace Ked.Presentation.Core
     }
 
     /// <summary>
-    /// 키 값을 시작값에 대한 변화로 읽을지(relative), 그 자체로 읽을지(absolute).
-    /// **채널이 아니라 쓰는 쪽(호출부)이 정한다** — 같은 클립을 "지금 자리에서"(relative)로도 "이 포즈로"(absolute)로도 쓸 수 있다.
-    /// relative의 뜻은 종류마다 다르다 — 위치·회전은 **덧셈**, 배율·불투명도는 **곱셈**(MotionMath.Neutral).
-    /// </summary>
-    public enum MotionChannelMode
-    {
-        Relative,
-        Absolute,
-    }
-
-    /// <summary>
-    /// 모션이 끝난 뒤 무엇이 남는가.
-    /// </summary>
-    public enum MotionEnd
-    {
-        /// <summary>
-        /// 아무것도 남기지 않는다 — 흔들기·끄덕임. 끝나면 노드가 **시작값으로 돌아간다**(재생이 시작값을 되쓴다).
-        /// 마지막 키가 중립값이 아니면 끝에서 튄다 — 규칙이 막지 않는다(mode를 모르면 중립값의 뜻이 없다).
-        /// </summary>
-        Restore,
-
-        /// <summary>
-        /// 마지막 키가 남는다 — 고개 숙인 채로, 자세 바꾸기. 채널마다 마지막 키가 그 노드에 남는다.
-        /// 중립값으로 끝나는 채널은 자연히 아무것도 남기지 않으므로, "어깨는 남고 고개는 돌아오는" 모션도 commit이다.
-        /// </summary>
-        Commit,
-    }
-
-    /// <summary>
     /// 모션의 채널 하나 — 노드 하나의 속성 하나를 시간에 따라 움직인다.
-    /// 성분(X·Y·Z)은 따로 키를 갖고, null인 성분은 "건드리지 않는다"(시작값 유지). 값은 **mode를 모른다** —
-    /// relative/absolute는 재생하는 쪽이 정한다(MotionChannelMode).
+    /// 성분(X·Y·Z)은 따로 키를 갖고, null인 성분은 "건드리지 않는다"(시작값 유지).
+    /// 키 값은 **가만히 선 자세(시작값)에 대한 값**이다 — 위치·회전은 더하고, 배율·불투명도는 곱한다(MotionMath).
     /// 키의 Time은 **초**다(이징 곡선의 정규화 0~1과 다르다). 마지막 키의 Time = 클립 길이.
     ///
     /// readonly가 아닌 이유: 유니티 직렬화([Serializable])를 타야 한다 — CurveKey와 같은 사정.
@@ -101,7 +72,7 @@ namespace Ked.Presentation.Core
     /// 어느 노드의 어느 값이 몇 초에 얼마인지, 여러 채널이 동시에. 키 하나의 수학은 CurveKey · CurveFunctions다.
     /// 값은 리그 로컬 단위(px·배율·도)다.
     ///
-    /// 종점은 평가 결과가 아니라 **키 값**이다 — commit이면 채널마다 마지막 키가 남고(MotionMath.EndValue), restore면 남는 것이 없다.
+    /// 길이를 지나면 채널마다 마지막 키가 남는다 — 종점은 평가 결과가 아니라 **키 값**이다(MotionMath.EndValue).
     /// </summary>
     [Serializable]
     public sealed class MotionClip
@@ -113,9 +84,6 @@ namespace Ked.Presentation.Core
 
         /// <summary>초. 모든 채널의 모든 성분이 이 시각에 마지막 키를 둔다(규칙).</summary>
         public float Duration;
-
-        /// <summary>끝난 뒤 무엇이 남는가.</summary>
-        public MotionEnd End;
 
         public MotionChannel[] Channels;
 

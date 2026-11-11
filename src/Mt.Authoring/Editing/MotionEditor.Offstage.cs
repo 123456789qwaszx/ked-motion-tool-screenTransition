@@ -61,11 +61,10 @@ public sealed partial class MotionEditor
         };
         distance = MathF.Round(distance);
 
-        // 상대값이면 "제자리에서 얼마나", 절대값이면 가만히 선 자리에 얹는다.
-        float rest = motion.PreviewMode == MotionChannelMode.Absolute ? (horizontal ? target.X : target.Y) : 0f;
+        // 키는 "제자리에서 얼마나".
         float end = Math.Min(start + seconds, motion.Duration);
-        float from = leaving ? rest : rest + distance;
-        float to = leaving ? rest + distance : rest;
+        float from = leaving ? 0f : distance;
+        float to = leaving ? distance : 0f;
         var keys = new List<KeyAsset>();
 
         if (start > MotionRules.Tolerance)

@@ -112,17 +112,6 @@ public class MotionEditorTests
     }
 
     [Fact]
-    public void 미리보기_mode는_모션의_것이고_채널에는_mode가_없다()
-    {
-        var editor = new MotionEditor(new MotionDocument());
-        editor.AddMotion("a", "character", 1f, MotionEnd.Commit, MotionChannelMode.Absolute);
-        editor.AddChannel("a", "N", MotionChannelKind.Position);
-
-        Assert.Equal(MotionChannelMode.Absolute, editor.Document.Find("a")!.PreviewMode);
-        Assert.Equal(MotionChannelMode.Relative, editor.AddMotion("b", "character", 1f).PreviewMode);
-    }
-
-    [Fact]
     public void Replace는_기록을_버린다()
     {
         var editor = new MotionEditor(new MotionDocument());
@@ -133,28 +122,6 @@ public class MotionEditorTests
         Assert.False(editor.CanUndo);
         Assert.Null(editor.Document.Find("a"));
         Assert.NotNull(editor.Document.Find("nod"));
-    }
-
-    [Fact]
-    public void SetPreviewMode는_렌즈만_바꾸고_키_값은_그대로이며_같으면_아무것도_안_한다()
-    {
-        var editor = new MotionEditor(new MotionDocument());
-        editor.AddMotion("nod", "character", 1f);
-        editor.AddChannel("nod", "A", MotionChannelKind.Position);
-        editor.SetKeys("nod", "A", MotionChannelKind.Position, Axis.X, new[] { Fixtures.Key(0f, 140f), Fixtures.Key(1f, 360f) });
-        long revision = editor.Revision;
-
-        editor.SetPreviewMode("nod", MotionChannelMode.Absolute);
-        MotionAsset nod = editor.Document.Find("nod")!;
-        Assert.Equal(MotionChannelMode.Absolute, nod.PreviewMode);
-        Assert.Equal(140f, nod.Channels[0].X!.Keys[0].V);
-        Assert.Equal(revision + 1, editor.Revision);
-
-        editor.SetPreviewMode("nod", MotionChannelMode.Absolute); // 같으면 아무것도 안 한다
-        Assert.Equal(revision + 1, editor.Revision);
-
-        editor.Undo();
-        Assert.Equal(MotionChannelMode.Relative, editor.Document.Find("nod")!.PreviewMode);
     }
 
     private static readonly CurveRef NodY = new("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);

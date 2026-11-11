@@ -3,7 +3,7 @@ using Mt.Authoring.Model;
 
 namespace Mt.Authoring.Graph;
 
-/// <summary>마야 Pre/Post Infinity — 첫/마지막 키 밖을 어떻게 이어 보이나. 보기 전용(산출물의 끝은 restore/commit).</summary>
+/// <summary>마야 Pre/Post Infinity — 첫/마지막 키 밖을 어떻게 이어 보이나. 보기 전용(재생은 길이를 지나면 마지막 키가 남는다).</summary>
 public enum InfinityMode
 {
     /// <summary>끝값 그대로(런타임과 같다).</summary>
@@ -66,7 +66,7 @@ public static class CurveSampler
 
     /// <summary>
     /// 길이로 감아 반복한 곡선(사이클 미리보기 — 마야 pre/post infinity cycle). 값은 <c>t mod duration</c>의 값이다.
-    /// 산출물에는 없는 보기다 — 실제 끝은 restore/commit 규칙이 정한다.
+    /// 저작 파일에는 없는 보기다 — 재생은 길이를 지나면 마지막 키가 남는다.
     /// </summary>
     public static List<GraphPoint> SampleCycled(IReadOnlyList<KeyAsset> keys, double duration, double t0, double t1, int count)
     {

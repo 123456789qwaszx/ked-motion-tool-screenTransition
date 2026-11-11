@@ -20,7 +20,7 @@ public class MotionAssetCodecTests
             Node = "N", Kind = MotionChannelKind.Euler,
             X = Curve(Fixtures.Key(0f, 0f), Fixtures.Key(1f, 0f)),
         };
-        var asset = new MotionAsset { Name = "a", Rig = "character", Duration = 1f, End = MotionEnd.Commit };
+        var asset = new MotionAsset { Name = "a", Rig = "character", Duration = 1f };
         asset.Channels.Add(scale);
         asset.Channels.Add(euler);
 

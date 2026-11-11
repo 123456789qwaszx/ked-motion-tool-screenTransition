@@ -1,12 +1,10 @@
 {
-  "schema": "motion-authoring/2",
+  "schema": "motion-authoring/3",
   "motions": [
     {
       "name": "pillar",
       "rig": "pillar",
       "duration": 5.5,
-      "end": "commit",
-      "previewMode": "relative",
       "channels": [
         {
           "node": "Backdrop",

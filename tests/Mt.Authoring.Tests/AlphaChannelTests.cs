@@ -23,11 +23,11 @@ public class AlphaChannelTests
     {
         var editor = new MotionEditor(new MotionDocument());
 
-        editor.AddMotion("fade", RigTemplates.EmojiKind, 1f, MotionEnd.Commit);
+        editor.AddMotion("fade", RigTemplates.EmojiKind, 1f);
         editor.AddChannel("fade", Part, MotionChannelKind.Alpha);
         editor.SetKeys("fade", Part, MotionChannelKind.Alpha, Axis.X, new[] { Linear(0f, 1f), Linear(1f, 0f) });
 
-        editor.AddMotion("dim", RigTemplates.EmojiKind, 1f, MotionEnd.Commit);
+        editor.AddMotion("dim", RigTemplates.EmojiKind, 1f);
         editor.AddChannel("dim", Body, MotionChannelKind.Alpha);
         editor.SetKeys("dim", Body, MotionChannelKind.Alpha, Axis.X, new[] { Linear(0f, 1f), Linear(1f, 0.5f) });
         return editor;
@@ -45,30 +45,21 @@ public class AlphaChannelTests
         MotionAsset fade = editor.Document.Find("fade")!;
         var alphas = new Dictionary<string, float>();
 
-        RectNodeTree pose = MotionPreview.Pose(template, fade, 0.25, MotionChannelMode.Relative, null, "e1/", alphas);
+        RectNodeTree pose = MotionPreview.Pose(template, fade, 0.25, null, "e1/", alphas);
         Near(0.75f, alphas["e1/" + Part]);
         Assert.Equal(template.GetState("e1/" + Part).AnchoredPosition, pose.GetState("e1/" + Part).AnchoredPosition); // 트리는 그대로
 
-        // relative는 곱이다 — 이미 0.5인 불투명도에서 흐려지면 0.5 × 0.75.
+        // 곱이다 — 이미 0.5인 불투명도에서 흐려지면 0.5 × 0.75.
         alphas = new Dictionary<string, float> { ["e1/" + Part] = 0.5f };
-        MotionPreview.Pose(template, fade, 0.25, MotionChannelMode.Relative, null, "e1/", alphas);
+        MotionPreview.Pose(template, fade, 0.25, null, "e1/", alphas);
         Near(0.375f, alphas["e1/" + Part]);
 
-        // absolute는 키 그대로.
-        alphas = new Dictionary<string, float> { ["e1/" + Part] = 0.5f };
-        MotionPreview.Pose(template, fade, 0.25, MotionChannelMode.Absolute, null, "e1/", alphas);
-        Near(0.75f, alphas["e1/" + Part]);
-
-        // 끝: commit은 남고(0), restore는 시작값 그대로다(표를 안 건드린다).
+        // 끝: 길이를 지나면 마지막 키가 남는다(0).
         alphas = new Dictionary<string, float>();
-        MotionPreview.Pose(template, fade, 9.0, MotionChannelMode.Relative, null, "e1/", alphas);
+        MotionPreview.Pose(template, fade, 9.0, null, "e1/", alphas);
         Near(0f, alphas["e1/" + Part]);
-        editor.SetEnd("fade", MotionEnd.Restore);
-        alphas = new Dictionary<string, float>();
-        MotionPreview.Pose(template, editor.Document.Find("fade")!, 9.0, MotionChannelMode.Relative, null, "e1/", alphas);
-        Assert.Empty(alphas);
 
         // 표를 안 주면 알파 채널은 건너뛴다(던지지 않는다).
-        MotionPreview.Pose(template, fade, 0.5, MotionChannelMode.Relative, null, "e1/");
+        MotionPreview.Pose(template, fade, 0.5, null, "e1/");
     }
 }

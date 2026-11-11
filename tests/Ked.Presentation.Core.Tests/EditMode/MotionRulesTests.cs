@@ -21,10 +21,7 @@ public class MotionRulesTests
         => new() { Node = node, Kind = kind, X = x, Y = y, Z = z };
 
     private static MotionClip Clip(float duration = 0.6f, params MotionChannel[] channels)
-        => new() { Name = "nod", Rig = "character", Duration = duration, End = MotionEnd.Commit, Channels = channels };
-
-    private static MotionClip Restore(float duration = 0.6f, params MotionChannel[] channels)
-        => new() { Name = "nod", Rig = "character", Duration = duration, End = MotionEnd.Restore, Channels = channels };
+        => new() { Name = "nod", Rig = "character", Duration = duration, Channels = channels };
 
     private static MotionChannel Nod => Channel(y: Keys((0f, 0f), (0.3f, -18f), (0.6f, 0f)));
 
@@ -110,39 +107,15 @@ public class MotionRulesTests
     }
 
     [Test]
-    public void 첫_키와_마지막_키의_값은_규칙이_보지_않는다_뜻은_커맨드가_정한다()
+    public void 첫_키와_마지막_키의_값은_규칙이_보지_않는다()
     {
-        // 0프레임 140 → 길이에서 360: absolute면 140→360, relative면 지금 값+140 → +360. 둘 다 유효한 모션이다.
+        // 0프레임 140 → 길이에서 360: 제자리+140 → +360. 유효한 모션이다.
         CurveKey[] from140 = Keys((0f, 140f), (0.6f, 360f));
 
         Assert.IsTrue(MotionRules.TryValidate(Clip(0.6f, Channel(y: from140)), null, out string reason), reason);
-        Assert.IsTrue(MotionRules.TryValidate(Restore(0.6f, Channel(y: from140)), null, out reason), reason);
 
-        // 배율도 같다 — 0에서 시작하는 배율도 모양으로는 유효하다(absolute로 쓰면 뜻이 있다).
+        // 배율도 같다 — 0에서 시작하는 배율도 모양으로는 유효하다(나타나는 움직임).
         Assert.IsTrue(MotionRules.TryValidate(Clip(0.6f, Channel(kind: MotionChannelKind.Scale, x: Keys((0f, 0f), (0.6f, 1f)))), null, out reason), reason);
-    }
-
-    [Test]
-    public void restore와_commit은_모양_규칙이_같다()
-    {
-        // 돌아오는 흔들림 — 통과.
-        Assert.IsTrue(MotionRules.TryValidate(Restore(0.6f, Nod), null, out string reason), reason);
-
-        // 마지막 키가 남는 키라도 restore로 선언할 수 있다 — 재생이 끝에서 시작값을 되쓴다(튐은 작가의 선택, 툴이 경고).
-        Assert.IsTrue(MotionRules.TryValidate(Restore(0.6f, Channel(y: Keys((0f, 0f), (0.6f, -18f)))), null, out reason), reason);
-        Assert.IsTrue(MotionRules.TryValidate(Clip(0.6f, Channel(y: Keys((0f, 0f), (0.6f, -18f)))), null, out reason), reason);
-
-        Assert.IsTrue(MotionRules.TryValidate(Restore(0.6f, Channel(kind: MotionChannelKind.Scale, x: Keys((0f, 1f), (0.3f, 1.2f), (0.6f, 1f)))), null, out reason), reason);
-    }
-
-    [Test]
-    public void end는_restore_또는_commit이어야_한다()
-    {
-        MotionClip clip = Clip(0.6f, Nod);
-        clip.End = (MotionEnd)7;
-
-        Assert.IsFalse(MotionRules.TryValidate(clip, null, out string reason));
-        StringAssert.Contains("end", reason);
     }
 
     [Test]

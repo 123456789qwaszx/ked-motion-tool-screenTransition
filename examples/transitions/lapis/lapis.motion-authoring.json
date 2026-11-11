@@ -1,12 +1,10 @@
 {
-  "schema": "motion-authoring/2",
+  "schema": "motion-authoring/3",
   "motions": [
     {
       "name": "lapis",
       "rig": "lapis",
       "duration": 4.4,
-      "end": "commit",
-      "previewMode": "relative",
       "channels": [
         {
           "node": "Backdrop",

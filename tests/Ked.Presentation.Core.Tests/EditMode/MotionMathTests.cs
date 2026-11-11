@@ -13,9 +13,6 @@ public class MotionMathTests
     // 0초 5 → 1초 7
     private static CurveKey[] From5To7 => new[] { new CurveKey(0f, 5f, 0f, 0f), new CurveKey(1f, 7f, 0f, 0f) };
 
-    private const MotionChannelMode Rel = MotionChannelMode.Relative;
-    private const MotionChannelMode Abs = MotionChannelMode.Absolute;
-
     private static MotionChannel Channel(MotionChannelKind kind, CurveKey[] x = null, CurveKey[] y = null, CurveKey[] z = null)
         => new() { Node = "CharacterPortrait_Track_Move", Kind = kind, X = x, Y = y, Z = z };
 
@@ -45,55 +42,38 @@ public class MotionMathTests
     }
 
     [Test]
-    public void relative는_시작값에_더하고_없는_성분은_시작값을_둔다()
+    public void 위치는_시작값에_더하고_없는_성분은_시작값을_둔다()
     {
         MotionChannel ch = Channel(MotionChannelKind.Position, x: Rise10);
         Vec3 start = new(100f, 50f, 0f);
 
-        Vec3 v = MotionMath.Compose(ch, Rel, start, 1f);
+        Vec3 v = MotionMath.Compose(ch, start, 1f);
 
         Assert.AreEqual(110f, v.X, Eps);
         Assert.AreEqual(50f, v.Y, Eps, "Y는 없다 → 시작값");
     }
 
     [Test]
-    public void 같은_채널을_relative로도_absolute로도_읽는다_첫_키가_중립값이_아니면_첫_프레임부터_움직인다()
+    public void 첫_키가_중립값이_아니면_첫_프레임부터_떨어져_있다()
     {
-        // 0프레임 x=140 → 1초 x=360. absolute면 140→360, relative면 지금 값+140 → 지금 값+360 (소유자 정의).
+        // 0프레임 x=140 → 1초 x=360: 제자리+140 → 제자리+360.
         CurveKey[] from140 = { new CurveKey(0f, 140f, 0f, 0f), new CurveKey(1f, 360f, 0f, 0f) };
         MotionChannel ch = Channel(MotionChannelKind.Position, x: from140);
         Vec3 start = new(20f, 0f, 0f);
 
-        Assert.AreEqual(140f, MotionMath.Compose(ch, Abs, start, 0f).X, Eps);
-        Assert.AreEqual(360f, MotionMath.Compose(ch, Abs, start, 1f).X, Eps);
-        Assert.AreEqual(160f, MotionMath.Compose(ch, Rel, start, 0f).X, Eps, "지금 값 + 140");
-        Assert.AreEqual(380f, MotionMath.Compose(ch, Rel, start, 1f).X, Eps);
+        Assert.AreEqual(160f, MotionMath.Compose(ch, start, 0f).X, Eps, "제자리 + 140");
+        Assert.AreEqual(380f, MotionMath.Compose(ch, start, 1f).X, Eps);
     }
 
     [Test]
-    public void absolute는_값_그_자체이고_없는_성분은_시작값을_둔다()
+    public void 배율은_곱셈이고_없는_성분은_1이라_시작값_그대로다()
     {
-        MotionChannel ch = Channel(MotionChannelKind.Euler, z: From5To7);
-        Vec3 start = new(1f, 2f, 30f);
-
-        Vec3 v0 = MotionMath.Compose(ch, Abs, start, 0f);
-        Vec3 v1 = MotionMath.Compose(ch, Abs, start, 1f);
-
-        Assert.AreEqual(5f, v0.Z, Eps, "t=0부터 키 값이다 — 시작값 30은 무시된다");
-        Assert.AreEqual(7f, v1.Z, Eps);
-        Assert.AreEqual(1f, v1.X, Eps, "X는 없다 → 시작값");
-        Assert.AreEqual(2f, v1.Y, Eps);
-    }
-
-    [Test]
-    public void relative_배율은_곱셈이고_없는_성분은_1이라_시작값_그대로다()
-    {
-        // 1 → 1.5 (relative 배율의 첫 키는 중립값 1)
+        // 1 → 1.5 (배율의 첫 키는 중립값 1)
         CurveKey[] up = { new CurveKey(0f, 1f, 0f, 0f), new CurveKey(1f, 1.5f, 0f, 0f) };
         MotionChannel ch = Channel(MotionChannelKind.Scale, x: up);
         Vec3 start = new(2f, 3f, 1f);
 
-        Vec3 v = MotionMath.Compose(ch, Rel, start, 1f);
+        Vec3 v = MotionMath.Compose(ch, start, 1f);
 
         Assert.AreEqual(3f, v.X, Eps, "2 × 1.5");
         Assert.AreEqual(3f, v.Y, Eps, "Y는 없다 → ×1");
@@ -107,13 +87,14 @@ public class MotionMathTests
     public void 끝값은_마지막_키를_합성한_것이고_길이에서의_Compose와_같다()
     {
         MotionChannel offset = Channel(MotionChannelKind.Position, x: Rise10, y: Rise10);
-        MotionChannel absolute = Channel(MotionChannelKind.Scale, x: From5To7);
+        MotionChannel scale = Channel(MotionChannelKind.Scale, x: From5To7);
         Vec3 start = new(3f, 4f, 1f);
 
-        Assert.AreEqual(MotionMath.Compose(offset, Rel, start, 1f), MotionMath.EndValue(offset, Rel, start));
-        Assert.AreEqual(MotionMath.Compose(absolute, Abs, start, 1f), MotionMath.EndValue(absolute, Abs, start));
-        Assert.AreEqual(13f, MotionMath.EndValue(offset, Rel, start).X, Eps);
-        Assert.AreEqual(1f, MotionMath.EndValue(absolute, Abs, start).Z, Eps, "Scale의 z는 시작값 그대로");
+        Assert.AreEqual(MotionMath.Compose(offset, start, 1f), MotionMath.EndValue(offset, start));
+        Assert.AreEqual(MotionMath.Compose(scale, start, 1f), MotionMath.EndValue(scale, start));
+        Assert.AreEqual(13f, MotionMath.EndValue(offset, start).X, Eps);
+        Assert.AreEqual(21f, MotionMath.EndValue(scale, start).X, Eps, "3 × 7");
+        Assert.AreEqual(1f, MotionMath.EndValue(scale, start).Z, Eps, "Scale의 z는 시작값 그대로");
     }
 
     [Test]

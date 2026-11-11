@@ -1,12 +1,10 @@
 {
-  "schema": "motion-authoring/2",
+  "schema": "motion-authoring/3",
   "motions": [
     {
       "name": "station",
       "rig": "station",
       "duration": 4.1,
-      "end": "commit",
-      "previewMode": "relative",
       "channels": [
         {
           "node": "Backdrop",

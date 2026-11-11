@@ -2,7 +2,7 @@ namespace Mt.Authoring.Preview;
 
 public enum PlaybackMode
 {
-    /// <summary>끝에서 멈춘다 — 끝 프레임이 restore/commit 규칙을 보여 주는 자리.</summary>
+    /// <summary>끝에서 멈춘다 — 마지막 키가 남은 끝 프레임.</summary>
     Once,
 
     /// <summary>범위 끝에서 처음으로 감는다.</summary>

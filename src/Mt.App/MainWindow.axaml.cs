@@ -31,8 +31,6 @@ namespace Mt.App;
 /// </summary>
 public partial class MainWindow : Window
 {
-    private static readonly string[] EndTokens = { "복원 (Restore)", "유지 (Commit)" }; // 차례 = MotionEnd
-    private static readonly string[] ModeTokens = { "상대값 (Relative)", "절대값 (Absolute)" }; // 차례 = MotionChannelMode
 
     private readonly DocumentSession _session = new();
     private readonly GraphEditorView _graph = new();
@@ -156,8 +154,6 @@ public partial class MainWindow : Window
     // 오른쪽 — 모션
     private readonly TextBox _motionName = new() { FontSize = 11 };
     private readonly TextBox _motionDuration = new() { FontSize = 11 };
-    private readonly ComboBox _motionEnd = new() { ItemsSource = EndTokens, FontSize = 11 };
-    private readonly ComboBox _motionDefaultMode = new() { ItemsSource = ModeTokens, FontSize = 11 };
 
     // 오른쪽 — 키
     private readonly TextBox _keyValue = new() { FontSize = 11 };
@@ -641,14 +637,14 @@ public partial class MainWindow : Window
     internal void SelectMotion(string name) => _motionList.SelectedItem = name;
 
     /// <summary>헤드리스 테스트가 폼을 채우는 손잡이 — 화면과 같은 명령 경로를 지난다.</summary>
-    internal void AddMotionFromForm(string name, string rig, string duration, MotionEnd end)
+    internal void AddMotionFromForm(string name, string rig, string duration)
     {
         if (!TryFloat(duration, out float seconds))
         {
             throw new InvalidOperationException("길이는 초 단위 숫자다.");
         }
 
-        AddMotion(name, rig, seconds, end);
+        AddMotion(name, rig, seconds);
     }
 
     /// <summary>테스트 손잡이 — 채널을 바로 더한다(UI에는 "채널 추가"가 없다: 채널 박스·매니퓰레이터가 첫 키에서 만든다).</summary>
@@ -936,7 +932,7 @@ public partial class MainWindow : Window
                 _graph.InvalidateVisual();
             }
         };
-        ToolTip.SetTip(_preInfinity, "Pre Infinity — 첫 키 앞을 어떻게 이어 보이나(보기만, 산출물의 끝은 restore/commit)");
+        ToolTip.SetTip(_preInfinity, "Pre Infinity — 첫 키 앞을 어떻게 이어 보이나(보기만 — 재생은 길이를 지나면 마지막 키가 남는다)");
         ToolTip.SetTip(_postInfinity, "Post Infinity — 마지막 키 뒤를 어떻게 이어 보이나(보기만)");
         ToolTip.SetTip(_valueSnap, "끌 때 키 값을 정수로(마야 Snap Values)");
         ToolTip.SetTip(_regionButton, "리전 툴(토글) — 상자로 고르고, 안을 끌면 이동, 모서리를 끌면 그 축만 반대쪽 기준 스케일. 다시 누르면 선택 툴(Q)로");
@@ -1284,7 +1280,7 @@ public partial class MainWindow : Window
         LeftPanel.Children.Add(_motionList);
 
         var addMotionButton = SmallButton("모션 추가", (_, _) => Guard("모션 추가", () => AddMotion()));
-        ToolTip.SetTip(addMotionButton, "이름(motion, motion_2…)·리그(선택 오브젝트의 rigKind)·길이 1초·끝 restore로 만든다 — 오른쪽 인스펙터에서 바꾼다");
+        ToolTip.SetTip(addMotionButton, "이름(motion, motion_2…)·리그(선택 오브젝트의 rigKind)·길이 1초로 만든다 — 오른쪽 인스펙터에서 바꾼다");
         LeftPanel.Children.Add(new StackPanel
         {
             Orientation = Orientation.Horizontal,
@@ -1362,10 +1358,6 @@ public partial class MainWindow : Window
         var panel = new StackPanel { Spacing = 4, Margin = new Avalonia.Thickness(0, 6, 0, 0) };
         panel.Children.Add(Labeled("이름", _motionName));
         panel.Children.Add(Labeled("길이(초)", _motionDuration));
-        panel.Children.Add(Labeled("종료 처리", _motionEnd));
-        ToolTip.SetTip(_motionEnd, "모션이 끝난 뒤 — 복원(restore) = 시작 자세로 돌아간다 · 유지(commit) = 마지막 키 값이 남는다");
-        panel.Children.Add(Labeled("재생 기준", _motionDefaultMode));
-        ToolTip.SetTip(_motionDefaultMode, "키 값을 어떻게 읽나 — 상대값(relative) = 시작값 + 키(배율은 ×) · 절대값(absolute) = 키 그대로. 뷰포트 미리보기와 매니퓰레이터·채널 박스가 포즈를 키 값으로 바꿀 때 쓴다. 파일에는 안 나간다: 재생은 대본의 <<motion slot 이름 relative|absolute>>가 정한다(생략 = relative)");
 
         panel.Children.Add(BuildAlphaPanel());
         panel.Children.Add(BuildEventPanel());
@@ -1379,20 +1371,6 @@ public partial class MainWindow : Window
             }
         }));
         OnCommit(_motionDuration, text => WithMotion(m => { if (TryFloat(text, out float v) && v != m.Duration) _session.Editor.SetDuration(m.Name, v); }));
-        _motionEnd.SelectionChanged += (_, _) => WithMotion(m =>
-        {
-            if (_motionEnd.SelectedIndex >= 0 && (MotionEnd)_motionEnd.SelectedIndex != m.End)
-            {
-                _session.Editor.SetEnd(m.Name, (MotionEnd)_motionEnd.SelectedIndex);
-            }
-        });
-        _motionDefaultMode.SelectionChanged += (_, _) => WithMotion(m =>
-        {
-            if (_motionDefaultMode.SelectedIndex >= 0 && (MotionChannelMode)_motionDefaultMode.SelectedIndex != m.PreviewMode)
-            {
-                _session.Editor.SetPreviewMode(m.Name, (MotionChannelMode)_motionDefaultMode.SelectedIndex);
-            }
-        });
         return panel;
     }
 
@@ -2245,13 +2223,9 @@ public partial class MainWindow : Window
             bool has = motion is not null;
             _motionName.IsEnabled = has;
             _motionDuration.IsEnabled = has;
-            _motionEnd.IsEnabled = has;
-            _motionDefaultMode.IsEnabled = has;
 
             _motionName.Text = motion?.Name ?? "";
             _motionDuration.Text = motion is null ? "" : motion.Duration.ToString("0.###", CultureInfo.InvariantCulture);
-            _motionEnd.SelectedIndex = motion is null ? -1 : (int)motion.End;
-            _motionDefaultMode.SelectedIndex = motion is null ? -1 : (int)motion.PreviewMode;
         }
         finally
         {
@@ -2324,10 +2298,10 @@ public partial class MainWindow : Window
     // ── 명령 ──────────────────────────────────────────────────────────
 
     /// <summary>
-    /// 모션 추가 — 이름은 motion, motion_2…, 리그는 선택 오브젝트의 rigKind(없으면 character), 길이 1초, 끝 restore.
+    /// 모션 추가 — 이름은 motion, motion_2…, 리그는 선택 오브젝트의 rigKind(없으면 열린 세트 · 첫 세트), 길이 1초.
     /// 전부 오른쪽 인스펙터에서 바꾼다. 테스트 손잡이는 값을 준다.
     /// </summary>
-    private void AddMotion(string? name = null, string? rig = null, float duration = 1f, MotionEnd end = MotionEnd.Restore)
+    private void AddMotion(string? name = null, string? rig = null, float duration = 1f)
     {
         name = (name ?? "").Trim();
 
@@ -2338,7 +2312,7 @@ public partial class MainWindow : Window
         }
 
         rig ??= _viewport.SelectedObject?.Rig ?? SelectedSet ?? _session.Editor.Document.Rigs.FirstOrDefault()?.Kind ?? "set";
-        _session.Editor.AddMotion(name, rig, duration, end);
+        _session.Editor.AddMotion(name, rig, duration);
         _motionList.SelectedItem = name;
     }
 

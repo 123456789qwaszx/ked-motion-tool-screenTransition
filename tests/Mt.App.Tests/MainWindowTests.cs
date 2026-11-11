@@ -61,7 +61,7 @@ public class MainWindowTests
 
             try
             {
-                window.AddMotionFromForm("nod", "character", "0.6", MotionEnd.Restore);
+                window.AddMotionFromForm("nod", "character", "0.6");
 
                 Assert.Equal("nod", window.Viewport.MotionName);
                 Assert.True(window.Viewport.HasRig);
@@ -95,7 +95,7 @@ public class MainWindowTests
 
             try
             {
-                window.AddMotionFromForm("nod", "character", "0.6", MotionEnd.Restore);
+                window.AddMotionFromForm("nod", "character", "0.6");
                 var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
                 window.AddChannelFromForm(y.Node, y.Kind);
                 window.EnsureComponent(y.Node, y.Kind, y.Axis);
@@ -141,7 +141,7 @@ public class MainWindowTests
 
             try
             {
-                window.AddMotionFromForm("wave", "character", "0.5", MotionEnd.Restore);
+                window.AddMotionFromForm("wave", "character", "0.5");
                 Assert.Contains("CharacterPortrait_Track_Move_X", window.Viewport.NodeChoices);
                 Assert.DoesNotContain("CharSlot_Track_Focus", window.Viewport.NodeChoices);
 
@@ -184,7 +184,7 @@ public class MainWindowTests
 
             try
             {
-                window.AddMotionFromForm("nod", "character", "0.5", MotionEnd.Restore);
+                window.AddMotionFromForm("nod", "character", "0.5");
                 var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
                 window.AddChannelFromForm(y.Node, y.Kind);
                 window.Session.Editor.SetKeys("nod", y.Node, y.Kind, y.Axis, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -18f), TestDocuments.Key(0.6f, 0f) });
@@ -259,13 +259,13 @@ public class MainWindowTests
 
             try
             {
-                window.AddMotionFromForm("", "character", "0.6", MotionEnd.Restore);
-                window.AddMotionFromForm("  ", "character", "0.6", MotionEnd.Restore);
+                window.AddMotionFromForm("", "character", "0.6");
+                window.AddMotionFromForm("  ", "character", "0.6");
 
                 Assert.Equal(new[] { "motion", "motion_2" }, window.Session.Editor.Document.Motions.Select(m => m.Name));
                 Assert.DoesNotContain(window.ProblemsShown, p => p.Message.Contains("이름은", StringComparison.Ordinal));
 
-                Assert.Throws<InvalidOperationException>(() => window.AddMotionFromForm("Nod", "character", "0.6", MotionEnd.Restore));
+                Assert.Throws<InvalidOperationException>(() => window.AddMotionFromForm("Nod", "character", "0.6"));
                 Assert.Equal(2, window.Session.Editor.Document.Motions.Count);
             }
             finally
@@ -285,7 +285,7 @@ public class MainWindowTests
 
             try
             {
-                window.AddMotionFromForm("nod", "character", "0.6", MotionEnd.Restore);
+                window.AddMotionFromForm("nod", "character", "0.6");
                 var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
                 window.AddChannelFromForm(y.Node, y.Kind);
                 window.Session.Editor.SetKeys("nod", y.Node, y.Kind, y.Axis, new[] { TestDocuments.Key(0f, 0f), TestDocuments.Key(0.3f, -18f), TestDocuments.Key(0.6f, 0f) });
@@ -370,7 +370,7 @@ public class MainWindowTests
 
             try
             {
-                window.AddMotionFromForm("a", "character", "1", MotionEnd.Restore);
+                window.AddMotionFromForm("a", "character", "1");
                 Assert.NotNull(window.Session.Editor.Document.Find("a"));
 
                 // 채널이 없는 모션은 유효하다(채널은 첫 키에서 생긴다) — 문제 칸에 아무것도 없다. 길이를 0으로 하면 보인다.
@@ -425,7 +425,7 @@ public class MainWindowTests
 
             try
             {
-                window.AddMotionFromForm("nod", "character", "0.6", MotionEnd.Restore);
+                window.AddMotionFromForm("nod", "character", "0.6");
                 var editor = window.Session.Editor;
 
                 foreach (Control focus in new Control[] { window.Graph, window.Dope, window.Viewport, window.Hierarchy })
@@ -475,7 +475,7 @@ public class MainWindowTests
 
             try
             {
-                window.AddMotionFromForm("nod", "character", "0.6", MotionEnd.Restore);
+                window.AddMotionFromForm("nod", "character", "0.6");
                 var editor = window.Session.Editor;
                 var y = new CurveRef("CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y);
                 editor.AddChannel("nod", y.Node, y.Kind);
@@ -539,7 +539,7 @@ public class MainWindowTests
 
             try
             {
-                window.AddMotionFromForm("step", "character", "0.6", MotionEnd.Commit);
+                window.AddMotionFromForm("step", "character", "0.6");
                 var editor = window.Session.Editor;
                 MotionAsset Step() => editor.Document.Find("step")!;
                 window.AutoKeyChecked = false;

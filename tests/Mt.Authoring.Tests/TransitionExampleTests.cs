@@ -27,7 +27,7 @@ public class TransitionExampleTests
     }
 
     private static RectNodeTree Pose(RectNodeTree template, MotionAsset timeline, double seconds, IDictionary<string, float>? alphas = null)
-        => MotionPreview.Pose(template, timeline, seconds, timeline.PreviewMode, null, "t/", alphas);
+        => MotionPreview.Pose(template, timeline, seconds, null, "t/", alphas);
 
     [Fact]
     public void 화면_이동_예시는_층_표에서_세트가_서고_문제_없이_돌고_저장된_파일과_같다()

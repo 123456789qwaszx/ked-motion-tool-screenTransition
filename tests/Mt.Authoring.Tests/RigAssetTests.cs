@@ -133,7 +133,7 @@ public class RigAssetTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddRig(RigTemplates.Emoji(parts: 3));
-        editor.AddMotion("in", RigTemplates.EmojiKind, 1f, MotionEnd.Commit);
+        editor.AddMotion("in", RigTemplates.EmojiKind, 1f);
         KeyAsset Lin(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Linear };
 
         foreach (string part in new[] { "Emoji_Part1", "Emoji_Part2", "Emoji_Part3" })
@@ -187,7 +187,7 @@ public class RigAssetTests
     {
         var editor = new MotionEditor(new MotionDocument());
         editor.AddRig(RigTemplates.Emoji(parts: 3));
-        editor.AddMotion("in", RigTemplates.EmojiKind, 1f, MotionEnd.Commit);
+        editor.AddMotion("in", RigTemplates.EmojiKind, 1f);
         KeyAsset Lin(float t, float v) => new() { T = t, V = v, Tangent = TangentMode.Linear };
         editor.AddChannel("in", "Emoji_Part1", MotionChannelKind.Position); // 0.4초에 움직이기 시작해 0.8초에 선다
         editor.SetKeys("in", "Emoji_Part1", MotionChannelKind.Position, Axis.X, new[] { Lin(0f, -100f), Lin(0.4f, -100f), Lin(0.8f, 0f), Lin(1f, 0f) });
@@ -233,11 +233,11 @@ public class RigAssetTests
         var editor = new MotionEditor(new MotionDocument());
         editor.AddRig(new RigAsset { Kind = "star" });
         editor.AddRigNode("star", "Sun");
-        editor.AddMotion("star_in", "star", 1f, MotionEnd.Commit);
+        editor.AddMotion("star_in", "star", 1f);
         editor.AddChannel("star_in", "Sun", MotionChannelKind.Position);
         editor.SetKeys("star_in", "Sun", MotionChannelKind.Position, Axis.Y, new[] { Lin(0f, -100f), Lin(1f, 0f) });
-        editor.AddMotion("star", "star", 1f, MotionEnd.Commit);
-        editor.AddMotion("rise", "star", 1f, MotionEnd.Commit);
+        editor.AddMotion("star", "star", 1f);
+        editor.AddMotion("rise", "star", 1f);
         editor.AddRig(new RigAsset { Kind = "town" });
 
         // 한 칸 — 세트의 이름을 딴 이름들(애니메이션 star · star_x)도 함께 바뀐다. 다른 이름(rise)은 그대로 그 세트를 가리킨다.
@@ -272,7 +272,7 @@ public class RigAssetTests
         editor.UpdateRigNode("town", "Sun", new RigNodeAsset { X = 300f, Y = 200f, Width = 100f, Height = 100f, Image = "art/sun.png", Alpha = true });
         editor.AddRigNode("town", "Leaf", "Group");
         editor.UpdateRigNode("town", "Leaf", new RigNodeAsset { X = 10f, Y = 20f, Width = 60f, Height = 80f, Rotation = 30f, Image = "art/leaf.png", Alpha = true });
-        editor.AddMotion("town_in", "town", 1f, MotionEnd.Commit);
+        editor.AddMotion("town_in", "town", 1f);
 
         // 왼쪽에서: 무대의 반(960) + 자리(300) + 너비의 반(50) = 1310만큼 왼쪽에서 출발한다. 0.2초부터 0.5초 동안 — 앞뒤로는 가만히. 한 칸.
         long revision = editor.Revision;
@@ -286,11 +286,6 @@ public class RigAssetTests
 
         // 부모의 자리를 더하고, 돈 오브젝트는 감싸는 원으로 넉넉히: 960 − (100 + 10) + √(30² + 40²) = 900.
         Assert.Equal(900f, editor.SlideFromOutside("town_in", "Leaf", StageSide.Right, 0f, 0.5f, stage));
-
-        // 절대값 애니메이션이면 가만히 선 자리에 얹는다(300 − 1310 → 300).
-        editor.AddMotion("abs_in", "town", 1f, MotionEnd.Commit, MotionChannelMode.Absolute);
-        editor.SlideFromOutside("abs_in", "Sun", StageSide.Left, 0f, 1f, stage);
-        Assert.Equal(new[] { -1010f, 300f }, editor.Document.Find("abs_in")!.FindChannel("Sun", MotionChannelKind.Position)!.X!.Keys.Select(k => k.V));
 
         // 길이 밖의 시작 · 없는 오브젝트는 막힌다.
         revision = editor.Revision;

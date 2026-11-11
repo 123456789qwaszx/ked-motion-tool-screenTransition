@@ -7,30 +7,18 @@ namespace Mt.Authoring.Preview;
 /// 시각 t의 포즈 — 세트 트리(세트로 세운 시작 상태)에 모션 채널을 얹은 것.
 ///
 /// 수학은 전부 코어다: 시작값 <see cref="MotionMath.StartOf"/>, 합성 <see cref="MotionMath.Compose"/>,
-/// 종점 <see cref="MotionMath.EndValue"/>. 그래서 뷰포트가 보여 주는 포즈 = 런타임이 재생하는 포즈다.
-///
-/// 끝 규칙도 런타임과 같다: 길이를 지나면 restore는 시작 상태(남기는 것이 없다), commit은 마지막 키(클레임)다.
-/// relative/absolute는 모션의 <see cref="MotionAsset.PreviewMode"/>(뷰포트의 렌즈)다 — 재생에서는 motion 커맨드의 인자가 그 자리다.
+/// 종점 <see cref="MotionMath.EndValue"/>. 그래서 뷰포트가 보여 주는 포즈 = 재생하는 포즈다.
+/// 키는 가만히 선 자세에 대한 값이고, 길이를 지나면 마지막 키가 남는다.
 /// </summary>
 public static class MotionPreview
 {
     /// <param name="isMuted">뮤트된 성분(재생에서 뺀다 — 시작값 그대로). null이면 없음.</param>
     /// <param name="keyPrefix">오브젝트 접두사(예: "set/") — 무대의 오브젝트 하나에 얹을 때. 비면 접두사 없는 트리.</param>
-    public static RectNodeTree Pose(RectNodeTree template, MotionAsset motion, double seconds, Func<Graph.CurveRef, bool>? isMuted = null, string keyPrefix = "")
-    {
-        ArgumentNullException.ThrowIfNull(motion);
-        return Pose(template, motion, seconds, motion.PreviewMode, isMuted, keyPrefix);
-    }
-
-    /// <summary>
-    /// mode를 쓰는 쪽이 정하는 포즈(재생에서는 motion 커맨드의 인자).
-    /// 모션의 <see cref="MotionAsset.PreviewMode"/>는 읽지 않는다.
-    /// </summary>
     /// <param name="alphas">
     /// 노드 키 → 불투명도(없는 키는 1). 알파 채널은 트리가 아니라 이 표에 얹힌다 — 불투명도는 <c>RectNodeState</c>에 없다(코어도 따로 든다).
-    /// 받은 표를 **그 자리에서 고친다**(앞 블록이 남긴 값이 뒤 블록의 시작값이 되게). null이면 알파 채널은 건너뛴다.
+    /// 받은 표를 **그 자리에서 고친다**. null이면 알파 채널은 건너뛴다.
     /// </param>
-    public static RectNodeTree Pose(RectNodeTree template, MotionAsset motion, double seconds, MotionChannelMode mode, Func<Graph.CurveRef, bool>? isMuted = null, string keyPrefix = "", IDictionary<string, float>? alphas = null)
+    public static RectNodeTree Pose(RectNodeTree template, MotionAsset motion, double seconds, Func<Graph.CurveRef, bool>? isMuted = null, string keyPrefix = "", IDictionary<string, float>? alphas = null)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(motion);
@@ -65,15 +53,8 @@ public static class MotionPreview
                 channels[i] = ch;
             }
         }
-        // 길이 자리(= 마지막 프레임)는 아직 클립 안이다 — 마지막 키의 포즈가 보인다. restore는 길이를 **지난** 뒤에야 시작 상태로 돌아간다.
-        // (전에는 길이 자리부터 되돌려서, 끝 프레임의 채널 박스가 키 값 대신 시작값을 보였다.)
+        // 길이를 지나면 마지막 키가 남는다(키에서 바로 읽는다 — 커브의 끝 평가와 같다).
         bool ended = seconds > motion.Duration + 1e-6;
-
-        if (ended && clip.End == MotionEnd.Restore)
-        {
-            return tree;
-        }
-
         float t = (float)Math.Max(0, seconds);
 
         foreach (MotionChannel channel in channels)
@@ -99,7 +80,7 @@ public static class MotionPreview
                 {
                     float from = alphas.TryGetValue(key, out float current) ? current : 1f;
                     Vec3 a0 = MotionMath.StartOf(channel, state, from);
-                    Vec3 a = ended ? MotionMath.EndValue(channel, mode, a0) : MotionMath.Compose(channel, mode, a0, t);
+                    Vec3 a = ended ? MotionMath.EndValue(channel, a0) : MotionMath.Compose(channel, a0, t);
                     alphas[key] = Math.Clamp(a.X, 0f, 1f);
                 }
 
@@ -107,7 +88,7 @@ public static class MotionPreview
             }
 
             Vec3 start = MotionMath.StartOf(channel, state);
-            Vec3 value = ended ? MotionMath.EndValue(channel, mode, start) : MotionMath.Compose(channel, mode, start, t);
+            Vec3 value = ended ? MotionMath.EndValue(channel, start) : MotionMath.Compose(channel, start, t);
             tree.SetState(key, Apply(channel.Kind, state, value));
         }
 

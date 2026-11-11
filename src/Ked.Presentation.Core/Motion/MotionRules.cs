@@ -8,9 +8,8 @@ namespace Ked.Presentation.Core
     // 모션 검증 — 런타임 로더와 저작 도구가 같은 규칙을 써야 한다.
     // 한쪽만 알면 "툴에서는 되는데 재생에서 사라지는" 모션이 생긴다.
     //
-    // 규칙은 **모양**만 본다(이름·길이·노드·종류·성분·키 시각). 값의 뜻(relative/absolute)은 재생하는 쪽이
-    // 정하므로 "첫 키가 중립값"·"restore의 마지막 키가 중립값" 같은 값 규칙은 없다 — 튀는 모션은 작가의 선택이고
-    // 저작 도구가 경고한다.
+    // 규칙은 **모양**만 본다(이름·길이·노드·종류·성분·키 시각). "첫 키가 중립값" 같은 값 규칙은 없다 —
+    // 첫 프레임부터 자리에서 떨어져 있는 것도 작가의 뜻이다.
     //
     // 어긋난 모션은 호출부가 로그 + 무시한다 — 조용히 빠뜨리지 않는다.
     // ─────────────────────────────────────────────────────────────────
@@ -52,19 +51,13 @@ namespace Ked.Presentation.Core
                 return false;
             }
 
-            if (!Enum.IsDefined(typeof(MotionEnd), clip.End))
-            {
-                reason = $"end는 restore 또는 commit이어야 한다 ({(int)clip.End})";
-                return false;
-            }
-
             // 채널이 없는 모션은 유효하다 — 아무것도 하지 않고 길이만큼 흐른다(저작 도구는 첫 키에서 채널을 만든다).
             HashSet<(string, MotionChannelKind)> seen = new();
             MotionChannel[] channels = clip.Channels ?? System.Array.Empty<MotionChannel>();
 
             for (int i = 0; i < channels.Length; i++)
             {
-                if (!TryValidateChannel(channels[i], clip.Duration, clip.End, rigNodeIds, out string why))
+                if (!TryValidateChannel(channels[i], clip.Duration, rigNodeIds, out string why))
                 {
                     reason = $"채널 {i}: {why}";
                     return false;
@@ -105,7 +98,7 @@ namespace Ked.Presentation.Core
         }
 
         public static bool TryValidateChannel(
-            in MotionChannel channel, float duration, MotionEnd end, ICollection<string> rigNodeIds, out string reason)
+            in MotionChannel channel, float duration, ICollection<string> rigNodeIds, out string reason)
         {
             if (string.IsNullOrEmpty(channel.Node))
             {

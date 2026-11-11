@@ -16,14 +16,14 @@ internal static class Fixtures
         var editor = new MotionEditor(new MotionDocument());
         editor.AddRig(RigTemplates.Character());
 
-        editor.AddMotion("nod", "character", 0.6f, MotionEnd.Restore, MotionChannelMode.Relative);
+        editor.AddMotion("nod", "character", 0.6f);
         editor.AddChannel("nod", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position);
         editor.SetKeys("nod", "CharacterPortrait_Track_Move_Y", MotionChannelKind.Position, Axis.Y, new[]
         {
             Key(0f, 0f), Key(0.3f, -18f), Key(0.6f, 0f),
         });
 
-        editor.AddMotion("bow", "character", 0.4f, MotionEnd.Commit, MotionChannelMode.Absolute);
+        editor.AddMotion("bow", "character", 0.4f);
         editor.AddChannel("bow", "CharacterPortrait_SwayPivot", MotionChannelKind.Euler);
         editor.SetKeys("bow", "CharacterPortrait_SwayPivot", MotionChannelKind.Euler, Axis.X, new[] { Key(0f, 0f), Key(0.4f, 0f) });
         editor.SetKeys("bow", "CharacterPortrait_SwayPivot", MotionChannelKind.Euler, Axis.Y, new[] { Key(0f, 0f), Key(0.4f, 0f) });

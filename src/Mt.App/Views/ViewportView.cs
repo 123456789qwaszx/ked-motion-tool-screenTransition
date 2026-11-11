@@ -711,7 +711,7 @@ public sealed class ViewportView : Control
             {
                 if (channel.Get(axis) is not null)
                 {
-                    values.Add((axis, PoseEdit.KeyValueFor(channel.Kind, motion.PreviewMode, PoseEdit.Component(channel.Kind, start, axis), PoseEdit.Component(channel.Kind, posed, axis))));
+                    values.Add((axis, PoseEdit.KeyValueFor(channel.Kind, PoseEdit.Component(channel.Kind, start, axis), PoseEdit.Component(channel.Kind, posed, axis))));
                 }
             }
 
@@ -758,7 +758,7 @@ public sealed class ViewportView : Control
 
     public void EndHoldScrub() => _holdScrub = false;
 
-    /// <summary>지금 포즈의 값으로 키를 놓는다 — 시작값은 세트(템플릿), 키 값은 모션의 재생 기준(relative/absolute)를 따른다.</summary>
+    /// <summary>지금 포즈의 값으로 키를 놓는다 — 시작값은 세트(템플릿), 키 값은 가만히 선 자세에 대한 값이다.</summary>
     private void KeyNow(string node, MotionChannelKind kind, IReadOnlyList<Axis> axes)
     {
         MotionAsset? motion = Motion;
@@ -771,14 +771,13 @@ public sealed class ViewportView : Control
             return;
         }
 
-        MotionChannelMode mode = motion.PreviewMode;
         RectNodeState start = StartStateOf(key);
         RectNodeState posed = pose.GetState(key);
         var values = new List<(Axis, float)>();
 
         foreach (Axis axis in axes)
         {
-            values.Add((axis, PoseEdit.KeyValueFor(kind, mode, PoseEdit.Component(kind, start, axis), PoseEdit.Component(kind, posed, axis))));
+            values.Add((axis, PoseEdit.KeyValueFor(kind, PoseEdit.Component(kind, start, axis), PoseEdit.Component(kind, posed, axis))));
         }
 
         _overrides.Remove(key);
@@ -1221,7 +1220,7 @@ public sealed class ViewportView : Control
         }
 
         return motion is not null && SelectedObject is { } o && CanWear(o)
-            ? MotionPreview.Pose(_template, motion, seconds, motion.PreviewMode, _flags.IsMuted, o.Prefix, alphas)
+            ? MotionPreview.Pose(_template, motion, seconds, _flags.IsMuted, o.Prefix, alphas)
             : _template.Clone();
     }
 
@@ -1312,7 +1311,7 @@ public sealed class ViewportView : Control
             return;
         }
 
-        float key = PoseEdit.KeyValueFor(MotionChannelKind.Alpha, motion.PreviewMode, 1f, Math.Clamp(value, 0f, 1f));
+        float key = PoseEdit.KeyValueFor(MotionChannelKind.Alpha, 1f, Math.Clamp(value, 0f, 1f));
         _editor.KeyComponents(motion.Name, node, MotionChannelKind.Alpha, (float)Math.Max(0, SnapTime(_clock.Time)), new[] { (Axis.X, Math.Clamp(key, 0f, 1f)) }, DefaultTangent);
     }
 
@@ -1399,7 +1398,7 @@ public sealed class ViewportView : Control
         string objectLabel = SelectedObject is { } so ? $"세트 {so.Rig}" : "오브젝트 없음";
         string motionLabel = motion is null
             ? "모션 없음"
-            : $"{motion.Name} · {(motion.End == MotionEnd.Restore ? "restore — 끝에서 시작 상태로" : "commit — 마지막 키가 남는다")}"
+            : motion.Name
               + (SelectedObject is { } wearer && !CanWear(wearer) ? " · 이 오브젝트의 리그에는 안 맞는다" : "");
         DrawLabel(context, $"{objectLabel} · {motionLabel}", new Point(stage.X + 8, stage.Y + 6));
     }

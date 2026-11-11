@@ -34,7 +34,7 @@ public class SetShellTests
                 window.Session.Editor.AddRig(RigTemplates.Emoji());
                 MotionEditor editor = window.Session.Editor;
                 string id = window.PlaceRig(RigTemplates.EmojiKind);
-                editor.AddMotion("vanish", RigTemplates.EmojiKind, 1f, MotionEnd.Commit);
+                editor.AddMotion("vanish", RigTemplates.EmojiKind, 1f);
                 window.SelectMotion("vanish");
                 window.Viewport.SelectedObjectId = id;
                 window.Viewport.SnapEnabled = false;
@@ -472,7 +472,7 @@ public class SetShellTests
                 window.NewSetFromForm();
                 window.SelectSetNode(null);
                 window.AddColorNodeFromForm(); // Color1 — 400×300, 무대 가운데
-                editor.AddMotion("set_in", "set", 1f, MotionEnd.Commit);
+                editor.AddMotion("set_in", "set", 1f);
                 Avalonia.Threading.Dispatcher.UIThread.RunJobs();
 
                 // 애니메이션을 고르지 않았으면 할 일이 없다.
